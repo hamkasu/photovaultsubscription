@@ -410,3 +410,155 @@ def handle_payment_failed(stripe_invoice):
     # Log payment failure
     current_app.logger.error(f"Payment failed for invoice: {stripe_invoice['id']}")
     # You could send email notification here
+
+
+# ============================================================================
+# ADMIN BILLING ROUTES
+# ============================================================================
+
+@billing_bp.route('/admin')
+@login_required
+def admin_dashboard():
+    """Admin billing dashboard with revenue and subscription metrics"""
+    # Check if user is admin
+    if not current_user.is_admin and not current_user.is_superuser:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    from sqlalchemy import func, extract
+    
+    # Get subscription statistics
+    total_subscriptions = UserSubscription.query.filter_by(status='active').count()
+    total_users = db.session.query(func.count(UserSubscription.user_id.distinct())).filter_by(status='active').scalar()
+    
+    # Get revenue statistics
+    total_revenue = db.session.query(func.sum(Invoice.total)).filter_by(status='paid').scalar() or 0
+    this_month_revenue = db.session.query(func.sum(Invoice.total)).filter(
+        Invoice.status == 'paid',
+        extract('year', Invoice.paid_date) == datetime.utcnow().year,
+        extract('month', Invoice.paid_date) == datetime.utcnow().month
+    ).scalar() or 0
+    
+    # Get plan distribution
+    plan_stats = db.session.query(
+        SubscriptionPlan.display_name,
+        func.count(UserSubscription.id).label('count')
+    ).join(UserSubscription).filter(
+        UserSubscription.status == 'active'
+    ).group_by(SubscriptionPlan.display_name).all()
+    
+    # Get recent subscriptions
+    recent_subscriptions = UserSubscription.query.filter_by(
+        status='active'
+    ).order_by(UserSubscription.created_at.desc()).limit(10).all()
+    
+    # Get recent invoices
+    recent_invoices = Invoice.query.order_by(Invoice.created_at.desc()).limit(20).all()
+    
+    # Get payment statistics
+    successful_payments = PaymentHistory.query.filter_by(status='succeeded').count()
+    failed_payments = PaymentHistory.query.filter_by(status='failed').count()
+    
+    return render_template('billing/admin_dashboard.html',
+                         total_subscriptions=total_subscriptions,
+                         total_users=total_users,
+                         total_revenue=total_revenue,
+                         this_month_revenue=this_month_revenue,
+                         plan_stats=plan_stats,
+                         recent_subscriptions=recent_subscriptions,
+                         recent_invoices=recent_invoices,
+                         successful_payments=successful_payments,
+                         failed_payments=failed_payments)
+
+
+@billing_bp.route('/admin/subscriptions')
+@login_required
+def admin_subscriptions():
+    """View all subscriptions"""
+    if not current_user.is_admin and not current_user.is_superuser:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Get filter parameters
+    status_filter = request.args.get('status', 'all')
+    plan_filter = request.args.get('plan', 'all')
+    
+    # Build query
+    query = UserSubscription.query
+    
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    
+    if plan_filter != 'all':
+        query = query.filter_by(plan_id=int(plan_filter))
+    
+    subscriptions = query.order_by(UserSubscription.created_at.desc()).all()
+    plans = SubscriptionPlan.query.all()
+    
+    return render_template('billing/admin_subscriptions.html',
+                         subscriptions=subscriptions,
+                         plans=plans,
+                         status_filter=status_filter,
+                         plan_filter=plan_filter)
+
+
+@billing_bp.route('/admin/invoices')
+@login_required
+def admin_invoices():
+    """View all invoices"""
+    if not current_user.is_admin and not current_user.is_superuser:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Get filter parameters
+    status_filter = request.args.get('status', 'all')
+    
+    # Build query
+    query = Invoice.query
+    
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    
+    invoices = query.order_by(Invoice.created_at.desc()).all()
+    
+    return render_template('billing/admin_invoices.html',
+                         invoices=invoices,
+                         status_filter=status_filter)
+
+
+@billing_bp.route('/admin/revenue')
+@login_required
+def admin_revenue():
+    """View revenue analytics"""
+    if not current_user.is_admin and not current_user.is_superuser:
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    from sqlalchemy import func, extract
+    
+    # Get monthly revenue for the last 12 months
+    monthly_revenue = []
+    for i in range(11, -1, -1):
+        target_date = datetime.utcnow() - timedelta(days=30*i)
+        revenue = db.session.query(func.sum(Invoice.total)).filter(
+            Invoice.status == 'paid',
+            extract('year', Invoice.paid_date) == target_date.year,
+            extract('month', Invoice.paid_date) == target_date.month
+        ).scalar() or 0
+        
+        monthly_revenue.append({
+            'month': target_date.strftime('%b %Y'),
+            'revenue': float(revenue)
+        })
+    
+    # Get revenue by plan
+    revenue_by_plan = db.session.query(
+        SubscriptionPlan.display_name,
+        func.sum(Invoice.total).label('revenue')
+    ).join(UserSubscription).join(Invoice).filter(
+        Invoice.status == 'paid'
+    ).group_by(SubscriptionPlan.display_name).all()
+    
+    return render_template('billing/admin_revenue.html',
+                         monthly_revenue=monthly_revenue,
+                         revenue_by_plan=revenue_by_plan)
