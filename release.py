@@ -37,8 +37,9 @@ def run_migrations():
         return True
     
     try:
-        from photovault import create_app, get_config
+        from photovault import create_app
         from photovault.extensions import db
+        from config import get_config
         
         # Create app with production config
         config_class = get_config()
