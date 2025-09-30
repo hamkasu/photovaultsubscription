@@ -118,6 +118,63 @@ def create_app(config_class=None):
     
     # Note: Upload file serving is handled securely via gallery.uploaded_file route with authentication
     
+    # Subscription enforcement middleware
+    @app.before_request
+    def enforce_subscription():
+        """Ensure authenticated users have selected a subscription plan"""
+        from flask import request, redirect, url_for
+        from flask_login import current_user
+        
+        # Skip check for non-authenticated users
+        if not current_user.is_authenticated:
+            return None
+        
+        # Skip check for admin/superuser accounts
+        if current_user.is_admin or current_user.is_superuser:
+            return None
+        
+        # List of routes that don't require a subscription
+        public_routes = [
+            'auth.login',
+            'auth.logout',
+            'auth.register',
+            'auth.forgot_password',
+            'auth.reset_password',
+            'billing.plans',
+            'billing.subscribe',
+            'billing.success',
+            'billing.dashboard',
+            'main.about',
+            'main.terms',
+            'main.privacy',
+            'main.contact',
+            'main.features',
+            'main.api_health',
+            'static'
+        ]
+        
+        # Get current endpoint
+        endpoint = request.endpoint
+        
+        # Skip check for public routes
+        if endpoint in public_routes or (endpoint and endpoint.startswith('auth.')):
+            return None
+        
+        # Check if user has an active subscription
+        from photovault.models import UserSubscription
+        active_subscription = UserSubscription.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        # If no active subscription, redirect to plans page
+        if not active_subscription:
+            from flask import flash
+            flash('Please choose a subscription plan to access PhotoVault features.', 'info')
+            return redirect(url_for('billing.plans'))
+        
+        return None
+    
     # Initialize database
     with app.app_context():
         # Create tables if they don't exist
