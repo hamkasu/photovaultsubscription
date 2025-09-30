@@ -76,9 +76,33 @@ Deployment is configured for Replit Autoscale:
 - Smart tagging and organization
 - Photo editing tools
 - Admin and superuser management
-- Billing/subscription system
+- Billing/subscription system with upgrade functionality
+
+## Billing & Subscription System
+### Upgrade Functionality
+- **Upgrades**: Free and paid users can upgrade to higher-tier plans instantly
+  - Immediate activation with prorated billing
+  - Secure payment-before-entitlement implementation
+  - Uses Stripe Subscription modification API
+  - Customer ownership verification
+- **Downgrades/Changes**: Handled via support contact
+  - Ensures safe processing at period end
+  - Prevents billing/entitlement mismatches
+- **Webhook Integration**: Syncs plan changes from Stripe to local database
+
+### Implementation Details
+- Route: `/billing/upgrade/<plan_id>` (POST)
+- Security: CSRF protection, customer verification
+- Payment: Stripe proration with error_if_incomplete behavior
+- UI: Clear messaging for different plan change types
 
 ## Recent Changes
+- **2025-09-30**: Subscription upgrade functionality implemented
+  - Added upgrade_plan route with Stripe integration
+  - Implemented secure payment-before-entitlement logic
+  - Updated billing UI to show upgrade options
+  - Enhanced webhook handler for plan synchronization
+  - Architect-reviewed and approved implementation
 - **2025-09-30**: Initial Replit setup completed
   - Installed Python dependencies
   - Configured PostgreSQL database
