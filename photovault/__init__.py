@@ -17,6 +17,44 @@ def _seed_subscription_plans(app):
     # Define default subscription plans for Malaysian market
     default_plans = [
         {
+            'name': 'free',
+            'display_name': 'Free Account',
+            'description': 'Get started with basic photo storage',
+            'price_myr': Decimal('0.00'),
+            'sst_rate': Decimal('0.00'),
+            'storage_gb': 0.1,
+            'max_photos': 50,
+            'max_family_vaults': 0,
+            'face_detection': False,
+            'photo_enhancement': False,
+            'smart_tagging': False,
+            'api_access': False,
+            'priority_support': False,
+            'billing_period': 'monthly',
+            'is_active': True,
+            'is_featured': False,
+            'sort_order': 1
+        },
+        {
+            'name': 'standard',
+            'display_name': 'Standard Plan',
+            'description': 'Affordable storage for everyday photos',
+            'price_myr': Decimal('9.00'),
+            'sst_rate': Decimal('6.00'),
+            'storage_gb': 5,
+            'max_photos': 500,
+            'max_family_vaults': 1,
+            'face_detection': False,
+            'photo_enhancement': False,
+            'smart_tagging': False,
+            'api_access': False,
+            'priority_support': False,
+            'billing_period': 'monthly',
+            'is_active': True,
+            'is_featured': False,
+            'sort_order': 2
+        },
+        {
             'name': 'basic',
             'display_name': 'Basic Plan',
             'description': 'Perfect for personal photo management',
@@ -33,7 +71,7 @@ def _seed_subscription_plans(app):
             'billing_period': 'monthly',
             'is_active': True,
             'is_featured': False,
-            'sort_order': 1
+            'sort_order': 3
         },
         {
             'name': 'pro',
@@ -52,7 +90,7 @@ def _seed_subscription_plans(app):
             'billing_period': 'monthly',
             'is_active': True,
             'is_featured': True,
-            'sort_order': 2
+            'sort_order': 4
         },
         {
             'name': 'premium',
@@ -71,7 +109,7 @@ def _seed_subscription_plans(app):
             'billing_period': 'monthly',
             'is_active': True,
             'is_featured': False,
-            'sort_order': 3
+            'sort_order': 5
         }
     ]
     
