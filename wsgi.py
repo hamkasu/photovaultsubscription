@@ -31,15 +31,9 @@ try:
     print(f"PhotoVault WSGI: Config = {app.config.__class__.__name__}")
     print(f"PhotoVault WSGI: Database URI set = {'Yes' if app.config.get('SQLALCHEMY_DATABASE_URI') else 'No'}")
     
-    # Test basic app creation
-    with app.app_context():
-        from photovault.extensions import db
-        try:
-            # Simple database connectivity test
-            db.session.execute(db.text('SELECT 1'))
-            print("PhotoVault WSGI: Database connectivity test PASSED")
-        except Exception as db_error:
-            print(f"PhotoVault WSGI: Database connectivity test FAILED: {db_error}")
+    # Test basic app creation (non-blocking)
+    # Database connectivity will be tested on first request, not during startup
+    print("PhotoVault WSGI: App created successfully, ready to handle requests")
             
 except Exception as e:
     print(f"PhotoVault WSGI: CRITICAL - App creation failed: {e}")
