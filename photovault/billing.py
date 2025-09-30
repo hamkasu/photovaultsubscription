@@ -20,19 +20,38 @@ stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 @billing_bp.route('/plans')
 def plans():
     """Display available subscription plans"""
-    plans = SubscriptionPlan.query.filter_by(is_active=True).order_by(SubscriptionPlan.sort_order).all()
+    from sqlalchemy.exc import OperationalError
     
-    # Get user's current subscription if logged in
-    current_subscription = None
-    if current_user.is_authenticated:
-        current_subscription = UserSubscription.query.filter_by(
-            user_id=current_user.id,
-            status='active'
-        ).first()
+    # Retry logic for database connection issues
+    max_retries = 3
+    retry_count = 0
     
-    return render_template('billing/plans.html', 
-                         plans=plans, 
-                         current_subscription=current_subscription)
+    while retry_count < max_retries:
+        try:
+            plans = SubscriptionPlan.query.filter_by(is_active=True).order_by(SubscriptionPlan.sort_order).all()
+            
+            # Get user's current subscription if logged in
+            current_subscription = None
+            if current_user.is_authenticated:
+                current_subscription = UserSubscription.query.filter_by(
+                    user_id=current_user.id,
+                    status='active'
+                ).first()
+            
+            return render_template('billing/plans.html', 
+                                 plans=plans, 
+                                 current_subscription=current_subscription)
+        except OperationalError as e:
+            retry_count += 1
+            current_app.logger.warning(f"Database connection error (attempt {retry_count}/{max_retries}): {str(e)}")
+            
+            # Close and remove the session to force a new connection
+            db.session.remove()
+            
+            if retry_count >= max_retries:
+                current_app.logger.error(f"Failed to connect to database after {max_retries} attempts")
+                flash('Unable to load pricing information. Please try again later.', 'danger')
+                return render_template('errors/500.html'), 500
 
 
 @billing_bp.route('/subscribe/<int:plan_id>', methods=['POST'])
