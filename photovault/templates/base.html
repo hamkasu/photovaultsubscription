@@ -116,6 +116,10 @@ CALMIC SDN BHD - "Committed to Excellence"
                        href="{{ url_for('family.index') }}" aria-current="{% if request.endpoint and request.endpoint.startswith('family.') %}page{% endif %}">
                         <i class="bi bi-house-heart"></i> Family
                     </a>
+                    <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('billing.') }}" 
+                       href="{{ url_for('billing.plans') }}" aria-current="{% if request.endpoint and request.endpoint.startswith('billing.') %}page{% endif %}">
+                        <i class="bi bi-credit-card"></i> Subscription
+                    </a>
                     <a class="nav-link {{ 'active' if request.endpoint == 'main.about' }}" 
                        href="{{ url_for('main.about') }}" aria-current="{% if request.endpoint == 'main.about' %}page{% endif %}">
                         <i class="bi bi-info-circle"></i> About
@@ -176,6 +180,9 @@ CALMIC SDN BHD - "Committed to Excellence"
                             <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
                                 <i class="bi bi-person" aria-hidden="true"></i> Profile
                             </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.dashboard') }}">
+                                <i class="bi bi-credit-card" aria-hidden="true"></i> My Subscription
+                            </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
                                 <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
@@ -188,6 +195,8 @@ CALMIC SDN BHD - "Committed to Excellence"
                 <div class="navbar-nav ms-auto">
                     <a class="nav-link {{ 'active' if request.endpoint == 'main.about' }}" 
                        href="{{ url_for('main.about') }}" aria-current="{% if request.endpoint == 'main.about' %}page{% endif %}">About</a>
+                    <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('billing.') }}" 
+                       href="{{ url_for('billing.plans') }}" aria-current="{% if request.endpoint and request.endpoint.startswith('billing.') %}page{% endif %}">Pricing</a>
                     <a class="nav-link {{ 'active' if request.endpoint == 'auth.login' }}" 
                        href="{{ url_for('auth.login') }}" aria-current="{% if request.endpoint == 'auth.login' %}page{% endif %}">Login</a>
                     <a class="nav-link {{ 'active' if request.endpoint == 'auth.register' }}" 
