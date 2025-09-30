@@ -97,17 +97,19 @@ Deployment is configured for Replit Autoscale:
 - UI: Clear messaging for different plan change types
 
 ## Recent Changes
-- **2025-09-30**: Subscription upgrade functionality implemented
+- **2025-09-30**: Fresh GitHub clone setup completed
+  - Installed Python 3.11 and all dependencies from requirements.txt
+  - Created PostgreSQL database using Replit's built-in database service
+  - Configured environment variables (.env file with SECRET_KEY)
+  - Database migration stamped as current (ad11b5287a15)
+  - Verified Flask development server running on 0.0.0.0:5000
+  - Configured deployment for Replit Autoscale with Gunicorn
+  - Application tested and verified working correctly
+- **Previous**: Subscription upgrade functionality implemented
   - Added upgrade_plan route with Stripe integration
   - Implemented secure payment-before-entitlement logic
   - Updated billing UI to show upgrade options
   - Enhanced webhook handler for plan synchronization
-  - Architect-reviewed and approved implementation
-- **2025-09-30**: Initial Replit setup completed
-  - Installed Python dependencies
-  - Configured PostgreSQL database
-  - Set up workflow and deployment
-  - Verified application functionality
 
 ## Architecture Notes
 - Uses application factory pattern (`photovault/__init__.py`)
