@@ -176,3 +176,246 @@ class VoiceMemo(db.Model):
     def __repr__(self):
         return f'<VoiceMemo {self.filename} for Photo {self.photo_id}>'
 
+
+# ============================================================================
+# BILLING MODELS - Malaysian Subscription System with SST Tax
+# ============================================================================
+
+class SubscriptionPlan(db.Model):
+    """Subscription plan model for Malaysian market with SST"""
+    __tablename__ = 'subscription_plan'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)  # Basic, Pro, Premium
+    display_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    
+    # Pricing in Malaysian Ringgit (MYR)
+    price_myr = db.Column(db.Numeric(10, 2), nullable=False)  # Base price before tax
+    sst_rate = db.Column(db.Numeric(5, 2), default=6.00)  # 6% Service Tax (SST)
+    
+    # Features and limits
+    storage_gb = db.Column(db.Integer, nullable=False)  # Storage limit in GB
+    max_photos = db.Column(db.Integer)  # Max photos (null = unlimited)
+    max_family_vaults = db.Column(db.Integer, default=0)  # Number of family vaults allowed
+    
+    # Feature flags
+    face_detection = db.Column(db.Boolean, default=False)
+    photo_enhancement = db.Column(db.Boolean, default=False)
+    smart_tagging = db.Column(db.Boolean, default=False)
+    api_access = db.Column(db.Boolean, default=False)
+    priority_support = db.Column(db.Boolean, default=False)
+    
+    # Stripe integration
+    stripe_price_id = db.Column(db.String(255))  # Stripe Price ID for subscriptions
+    stripe_product_id = db.Column(db.String(255))  # Stripe Product ID
+    
+    # Billing cycle
+    billing_period = db.Column(db.String(20), default='monthly')  # monthly, yearly
+    
+    # Status
+    is_active = db.Column(db.Boolean, default=True)
+    is_featured = db.Column(db.Boolean, default=False)
+    sort_order = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    subscriptions = db.relationship('UserSubscription', backref='plan', lazy='dynamic')
+    
+    @property
+    def total_price_myr(self):
+        """Calculate total price including SST"""
+        if self.price_myr and self.sst_rate:
+            return float(self.price_myr) * (1 + float(self.sst_rate) / 100)
+        return float(self.price_myr) if self.price_myr else 0
+    
+    @property
+    def sst_amount(self):
+        """Calculate SST tax amount"""
+        if self.price_myr and self.sst_rate:
+            return float(self.price_myr) * (float(self.sst_rate) / 100)
+        return 0
+    
+    def __repr__(self):
+        return f'<SubscriptionPlan {self.name}>'
+
+
+class UserSubscription(db.Model):
+    """User subscription model tracking active subscriptions"""
+    __tablename__ = 'user_subscription'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    plan_id = db.Column(db.Integer, db.ForeignKey('subscription_plan.id'), nullable=False)
+    
+    # Subscription status
+    status = db.Column(db.String(20), default='active')  # active, canceled, expired, trial
+    
+    # Stripe subscription details
+    stripe_subscription_id = db.Column(db.String(255), unique=True)
+    stripe_customer_id = db.Column(db.String(255))
+    
+    # Dates
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    current_period_start = db.Column(db.DateTime)
+    current_period_end = db.Column(db.DateTime)
+    canceled_at = db.Column(db.DateTime)
+    ended_at = db.Column(db.DateTime)
+    trial_end = db.Column(db.DateTime)
+    
+    # Billing
+    last_payment_date = db.Column(db.DateTime)
+    next_billing_date = db.Column(db.DateTime)
+    
+    # Metadata
+    cancel_at_period_end = db.Column(db.Boolean, default=False)
+    cancel_reason = db.Column(db.Text)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='subscriptions')
+    invoices = db.relationship('Invoice', backref='subscription', lazy='dynamic')
+    
+    @property
+    def is_active(self):
+        """Check if subscription is currently active"""
+        return self.status == 'active' and (
+            not self.current_period_end or self.current_period_end > datetime.utcnow()
+        )
+    
+    @property
+    def days_remaining(self):
+        """Days remaining in current billing period"""
+        if self.current_period_end:
+            delta = self.current_period_end - datetime.utcnow()
+            return max(0, delta.days)
+        return 0
+    
+    def __repr__(self):
+        return f'<UserSubscription {self.user_id}:{self.plan_id}>'
+
+
+class Invoice(db.Model):
+    """Invoice model for SST-compliant billing records"""
+    __tablename__ = 'invoice'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_number = db.Column(db.String(50), unique=True, nullable=False)  # INV-2025-001
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    subscription_id = db.Column(db.Integer, db.ForeignKey('user_subscription.id'))
+    
+    # Billing details
+    billing_name = db.Column(db.String(255))
+    billing_email = db.Column(db.String(255))
+    billing_address = db.Column(db.Text)
+    
+    # Malaysian business details (optional)
+    company_name = db.Column(db.String(255))
+    business_registration_number = db.Column(db.String(100))  # SSM registration
+    sst_registration_number = db.Column(db.String(100))  # SST number if applicable
+    
+    # Invoice amounts in MYR
+    subtotal = db.Column(db.Numeric(10, 2), nullable=False)  # Before tax
+    sst_rate = db.Column(db.Numeric(5, 2), default=6.00)  # SST percentage
+    sst_amount = db.Column(db.Numeric(10, 2), nullable=False)  # Tax amount
+    total = db.Column(db.Numeric(10, 2), nullable=False)  # Total including tax
+    
+    currency = db.Column(db.String(3), default='MYR')
+    
+    # Invoice details
+    description = db.Column(db.Text)
+    billing_period_start = db.Column(db.Date)
+    billing_period_end = db.Column(db.Date)
+    
+    # Status
+    status = db.Column(db.String(20), default='draft')  # draft, issued, paid, void
+    issue_date = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.DateTime)
+    paid_date = db.Column(db.DateTime)
+    
+    # Payment tracking
+    stripe_invoice_id = db.Column(db.String(255))
+    stripe_payment_intent_id = db.Column(db.String(255))
+    payment_method = db.Column(db.String(50))  # card, fpx, e-wallet
+    
+    # E-invoice compliance fields (for future MyInvois integration)
+    einvoice_uuid = db.Column(db.String(255))  # MyInvois UUID
+    einvoice_qr_code = db.Column(db.Text)  # QR code data
+    einvoice_validation_date = db.Column(db.DateTime)
+    
+    # Metadata
+    notes = db.Column(db.Text)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='invoices')
+    payment_records = db.relationship('PaymentHistory', backref='invoice', lazy='dynamic')
+    
+    @property
+    def is_paid(self):
+        """Check if invoice has been paid"""
+        return self.status == 'paid'
+    
+    @property
+    def is_overdue(self):
+        """Check if invoice is overdue"""
+        if self.status != 'issued' or not self.due_date:
+            return False
+        return datetime.utcnow() > self.due_date
+    
+    def __repr__(self):
+        return f'<Invoice {self.invoice_number}>'
+
+
+class PaymentHistory(db.Model):
+    """Payment history model for transaction records"""
+    __tablename__ = 'payment_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'))
+    
+    # Payment details
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(3), default='MYR')
+    
+    # Stripe details
+    stripe_payment_intent_id = db.Column(db.String(255), unique=True)
+    stripe_charge_id = db.Column(db.String(255))
+    
+    # Payment method
+    payment_method = db.Column(db.String(50))  # card, fpx, grabpay, tng, boost
+    card_brand = db.Column(db.String(20))  # visa, mastercard, amex
+    card_last4 = db.Column(db.String(4))  # Last 4 digits
+    
+    # Status
+    status = db.Column(db.String(20), default='pending')  # pending, succeeded, failed, refunded
+    
+    # Dates
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    refunded_date = db.Column(db.DateTime)
+    
+    # Additional info
+    description = db.Column(db.Text)
+    failure_reason = db.Column(db.Text)
+    receipt_url = db.Column(db.String(500))  # Stripe receipt URL
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='payment_history')
+    
+    @property
+    def is_successful(self):
+        """Check if payment was successful"""
+        return self.status == 'succeeded'
+    
+    def __repr__(self):
+        return f'<PaymentHistory {self.id} - {self.amount} {self.currency}>'
+
