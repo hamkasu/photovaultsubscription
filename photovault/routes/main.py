@@ -62,8 +62,8 @@ def dashboard():
         total_size_bytes = sum(photo.file_size or 0 for photo in photos)
         total_size_mb = round(total_size_bytes / 1024 / 1024, 2) if total_size_bytes > 0 else 0
         
-        # Calculate storage usage percentage (assuming 1GB = 1024MB limit for demo)
-        storage_limit_mb = 1024  # 1GB limit
+        # Calculate storage usage percentage (500MB limit per user)
+        storage_limit_mb = 500  # 500MB limit per user
         storage_usage_percent = (total_size_mb / storage_limit_mb * 100) if storage_limit_mb > 0 else 0
         
         stats = {
@@ -163,7 +163,7 @@ def profile():
         
         # Calculate storage in MB (float for accurate display)
         total_size_mb = round(total_size / 1024 / 1024, 2) if total_size > 0 else 0
-        storage_limit_mb = 100  # 100 MB limit
+        storage_limit_mb = 500  # 500MB limit per user
         storage_usage_percent = min(100, round(total_size_mb / storage_limit_mb * 100, 1)) if storage_limit_mb > 0 else 0
             
         stats = {
