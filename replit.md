@@ -17,13 +17,14 @@ PhotoVault is a Flask-based web application for professional photo management wi
 - **Mobile App**: React Native (Expo) in `photovault-ios/` directory
 
 ## Recent Changes
-- **2025-09-30**: Initial Replit setup completed
-  - Installed Python 3.11 and all dependencies
+- **2025-09-30**: GitHub import setup completed
+  - Installed Python 3.11 and all dependencies from requirements.txt
   - Configured PostgreSQL database with Replit's managed service
   - Created all database tables from SQLAlchemy models
   - Configured Flask development server for Replit proxy (0.0.0.0:5000)
   - Set up workflow for development server
   - Configured deployment with Gunicorn for autoscale deployment
+  - Added subscription plans: Free Basic (RM 0), Professional (RM 30.74), Premium (RM 62.54), Enterprise (RM 157.94)
 
 ## Configuration
 
