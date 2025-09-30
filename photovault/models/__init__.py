@@ -21,6 +21,9 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     is_superuser = db.Column(db.Boolean, default=False, nullable=False)
     
+    # Billing
+    stripe_customer_id = db.Column(db.String(255), unique=True)
+    
     # Relationships
     photos = db.relationship('Photo', backref='user', lazy=True, cascade='all, delete-orphan')
     albums = db.relationship('Album', backref='user', lazy=True, cascade='all, delete-orphan')

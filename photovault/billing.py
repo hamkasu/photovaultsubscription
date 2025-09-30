@@ -53,13 +53,16 @@ def subscribe(plan_id):
     
     try:
         # Create or get Stripe customer
-        if not hasattr(current_user, 'stripe_customer_id') or not current_user.stripe_customer_id:
+        if not current_user.stripe_customer_id:
             customer = stripe.Customer.create(
                 email=current_user.email,
                 name=current_user.username,
                 metadata={'user_id': current_user.id}
             )
             customer_id = customer.id
+            # Save customer ID to user
+            current_user.stripe_customer_id = customer_id
+            db.session.commit()
         else:
             customer_id = current_user.stripe_customer_id
         
@@ -140,6 +143,7 @@ def success():
                 next_billing_date=datetime.fromtimestamp(subscription.current_period_end)
             )
             db.session.add(user_sub)
+            db.session.flush()  # Flush to assign ID to user_sub
             
             # Create invoice
             invoice_number = f"INV-{datetime.utcnow().strftime('%Y%m')}-{current_user.id:04d}"
