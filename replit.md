@@ -1,92 +1,65 @@
 # PhotoVault - Professional Photo Management Platform
 
 ## Overview
-PhotoVault is a Flask-based web application for professional photo management with advanced features including:
-- Camera capture and photo upload
-- Photo enhancement and editing
-- Face detection and recognition
-- Family vault sharing
-- Smart tagging and organization
-- Voice memo attachments
-- Subscription management with Stripe integration
+PhotoVault is a Flask-based web application for professional photo management with advanced camera features, family vaults, photo enhancement, and face recognition capabilities. It includes an iOS companion app built with React Native and Expo.
 
 ## Project Structure
-- **Backend**: Flask (Python 3.11) web application
-- **Database**: PostgreSQL (Replit managed)
-- **Frontend**: HTML/CSS/JavaScript templates with Jinja2
-- **Mobile App**: React Native (Expo) in `photovault-ios/` directory
+- **Backend**: Flask web application (Python 3.11)
+  - Main app: `photovault/` package
+  - Entry point: `main.py` (development), `wsgi.py` (production)
+  - Routes: Authentication, Upload, Gallery, Family Vaults, Photo Detection, Admin
+  - Models: User, Photo, Album, Person, FamilyVault, Subscriptions, etc.
+  
+- **Frontend**: HTML templates with JavaScript
+  - Templates: `photovault/templates/`
+  - Static assets: `photovault/static/`
+  
+- **iOS App**: React Native/Expo app in `photovault-ios/`
 
-## Recent Changes
-- **2025-09-30**: Fresh GitHub import setup completed
-  - Installed Python 3.11 module with all development tools
-  - Installed all Python dependencies from requirements.txt
-  - Set up PostgreSQL database with Replit's managed service (Neon-backed)
-  - Verified all database tables exist and stamped migrations to current version
-  - Configured Flask development server on port 5000 (binds to 0.0.0.0)
-  - Workflow "PhotoVault Server" configured and running successfully
-  - Deployment configured with Gunicorn (2 workers, 120s timeout, autoscale)
-  - Application tested and confirmed working on Replit environment
-  - Fixed pricing page database error by adding subscription plans:
-    * Free Basic: RM 0.00 (1GB storage, 100 photos, 1 family vault)
-    * Professional: RM 30.00 + 6% SST (50GB, 5000 photos, 5 vaults, face detection)
-    * Premium: RM 60.00 + 6% SST (200GB, 20000 photos, 10 vaults, all features)
-    * Enterprise: RM 150.00 + 6% SST (1TB, 100000 photos, 50 vaults, priority support)
+## Database
+- **PostgreSQL** database provided by Replit
+- Tables automatically created from models
+- 18 tables including users, photos, albums, family vaults, subscriptions, etc.
 
-## Configuration
-
-### Environment Variables
+## Environment Configuration
 The following environment variables are configured:
-- `DATABASE_URL`: PostgreSQL connection string (Replit managed)
-- `SECRET_KEY`: Flask secret key for sessions (generated)
-- `FLASK_CONFIG`: Set to 'development' for dev mode
+- `DATABASE_URL`: PostgreSQL connection (auto-configured by Replit)
+- `SECRET_KEY`: Flask session secret
+- `FLASK_CONFIG`: Set to "development" or "production"
+- `FLASK_DEBUG`: Set to "True" for development
 
-### Server Configuration
-- **Development**: Flask dev server on port 5000 (binds to 0.0.0.0)
-- **Production**: Gunicorn with 2 workers, 120s timeout
-- **Host Header**: SERVER_NAME not set to allow Replit proxy flexibility
+## Running Locally
+The application runs automatically via the "PhotoVault Server" workflow on port 5000.
 
-## Running the Application
+## Deployment
+Configured for Replit Autoscale deployment using Gunicorn:
+- Server: Gunicorn with 2 workers and 2 threads
+- Port: 5000
+- WSGI entry: `wsgi:app`
 
-### Development
-The application runs automatically via the configured workflow:
-```bash
-python main.py
-```
+## Recent Setup (September 30, 2025)
+- Fresh GitHub import to Replit environment
+- Python 3.11 installed with all dependencies
+- PostgreSQL database created and initialized
+- Database schema created with 18 tables
+- Development workflow configured and tested
+- Deployment configuration set up for production
+- Application tested and verified working
 
-### Database Setup
-Database tables are created automatically on first run using SQLAlchemy's `db.create_all()`.
-For schema changes, migrations are available in `migrations/versions/`.
+## Features
+- User authentication and authorization
+- Photo upload and management
+- Camera interface for direct photo capture
+- Family vault sharing system
+- Photo enhancement and editing
+- Face detection and recognition
+- Smart tagging
+- Subscription/billing system (Stripe)
+- Admin and superuser dashboards
 
-### Deployment
-Configured for Replit Autoscale deployment with:
-- Gunicorn WSGI server
-- 2 workers
-- 120s timeout for image processing operations
-- Preload enabled for efficiency
-
-## Key Features
-1. **Photo Management**: Upload, organize, and enhance photos
-2. **Camera Integration**: Direct camera capture with landscape mode
-3. **Face Detection**: Automatic face detection and person tagging
-4. **Family Vaults**: Shared family photo collections with role-based access
-5. **Smart Tagging**: AI-powered photo organization
-6. **Voice Memos**: Audio attachments for photos
-7. **Subscription Plans**: Tiered pricing with Stripe integration
-
-## Mobile App (iOS)
-A companion React Native app is available in `photovault-ios/`:
-- Built with Expo
-- Camera integration
-- Photo upload and gallery
-- User authentication
-
-## Architecture Notes
-- Uses Flask application factory pattern
-- SQLAlchemy ORM for database management
-- Flask-Login for authentication
-- Flask-Migrate for database migrations
-- Replit Object Storage for file uploads
-- SendGrid for email notifications
-
-## User Preferences
-None yet - update this section as preferences are expressed.
+## Architecture Decisions
+- Using Flask's built-in development server for local development
+- Host set to 0.0.0.0 to work with Replit proxy
+- SERVER_NAME not set in development to avoid host verification issues
+- Database tables created using SQLAlchemy models (db.create_all())
+- Gunicorn configured for production deployment
