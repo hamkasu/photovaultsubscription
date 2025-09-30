@@ -1,129 +1,103 @@
 # PhotoVault - Professional Photo Management Platform
 
 ## Overview
-PhotoVault is a professional photo management platform with advanced camera features, built using Flask (Python) and PostgreSQL. This application allows users to securely store, organize, and manage their photos with features like face detection, photo enhancement, family vaults, and more.
+PhotoVault is a professional photo management platform with advanced camera features, photo organization, and family vault capabilities. This is a Flask-based web application with PostgreSQL database backend.
 
 ## Project Structure
 - **Backend**: Flask web application (Python 3.11)
-- **Database**: PostgreSQL (Replit-managed)
-- **Frontend**: Server-rendered HTML templates with Jinja2
-- **Image Processing**: OpenCV, Pillow, scikit-image
-- **Object Storage**: Replit Object Storage integration
-- **Mobile App**: React Native Expo app (photovault-ios/ directory)
+- **Database**: PostgreSQL (Replit managed)
+- **Frontend**: Server-side rendered HTML with JavaScript enhancements
+- **Mobile**: React Native Expo app in `photovault-ios/` folder (separate project)
 
-## Key Features
-- User authentication and authorization
-- Photo upload and management
-- Face detection and recognition
-- Image enhancement tools
-- Family photo vaults and sharing
-- Camera integration
-- Smart photo tagging
-- Photo galleries and albums
-- **Subscription billing system** with Stripe integration
-- **Malaysian SST tax compliance** (6% service tax)
-- **Invoice generation** with e-invoice readiness
+## Technology Stack
+- **Framework**: Flask 3.0.3
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Migrations**: Alembic/Flask-Migrate
+- **Image Processing**: OpenCV, Pillow, scikit-image
+- **Authentication**: Flask-Login
+- **Production Server**: Gunicorn
+- **Storage**: Replit Object Storage integration
 
 ## Configuration
-
 ### Environment Variables
-The application uses the following environment variables (automatically configured):
-- `DATABASE_URL`: PostgreSQL connection string
-- `SECRET_KEY`: Flask secret key (auto-generated in dev)
-- `FLASK_CONFIG`: Set to 'development' for local dev
-- `FLASK_ENV`: Set to 'development' for local dev
-- `FLASK_DEBUG`: Set to 'false' in production
-- `STRIPE_SECRET_KEY`: Stripe API key for payment processing
-- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret (optional)
+- `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
+- `SECRET_KEY`: Flask secret key for sessions
+- `FLASK_CONFIG`: Set to 'development' or 'production'
+- `FLASK_ENV`: Environment mode
+- `FLASK_DEBUG`: Debug mode toggle
 
-### Development Setup
-The development workflow runs on port 5000 using the Flask development server:
+### Replit Setup (Completed)
+- ✅ Python dependencies installed from requirements.txt
+- ✅ PostgreSQL database provisioned and configured
+- ✅ Database stamped with latest migration (d5b4630ee3ad)
+- ✅ Workflow configured to run Flask on port 5000
+- ✅ Deployment configured for Replit Autoscale with Gunicorn
+
+## Development
+### Running the Application
+The application runs automatically via the configured workflow:
+- Entry point: `main.py`
+- Development server: Flask built-in (runs on 0.0.0.0:5000)
+- Production server: Gunicorn with 4 workers
+
+### Database Migrations
 ```bash
-python main.py
-```
+# Check current migration
+flask db current
 
-### Production Deployment
-Configured for Replit Autoscale deployment using Gunicorn:
-```bash
-gunicorn wsgi:app --bind 0.0.0.0:5000 --workers 2
-```
+# Create new migration
+flask db migrate -m "description"
 
-## Database
-- **Type**: PostgreSQL
-- **Migrations**: Managed using Flask-Migrate (Alembic)
-- **Schema**: Includes users, photos, albums, families, vaults, billing tables, and more
-
-Main tables:
-- Users and authentication
-- Photos, albums, and people tagging
-- Family vaults and sharing
-- **Subscription plans** (Basic, Pro, Premium)
-- **User subscriptions** with Stripe integration
-- **Invoices** with SST tax breakdown
-- **Payment history** for transaction records
-
-To run migrations:
-```bash
+# Apply migrations
 flask db upgrade
+
+# Rollback migration
+flask db downgrade
 ```
+
+### Proxy Configuration
+The Flask app is configured for Replit's proxy environment:
+- No `SERVER_NAME` set in development (allows flexible host headers)
+- `SESSION_COOKIE_SAMESITE` set to 'Lax' for proxy compatibility
+- Server binds to 0.0.0.0:5000
+
+## Deployment
+Deployment is configured for Replit Autoscale:
+- **Type**: Autoscale (stateless web app)
+- **Command**: `gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=4 wsgi:app`
+- **Port**: 5000
+- **Config**: Production settings via `wsgi.py`
+
+## Features
+- Photo upload and management
+- Advanced camera features with landscape mode
+- Photo detection and face recognition
+- Family vaults for shared photo collections
+- Smart tagging and organization
+- Photo editing tools
+- Admin and superuser management
+- Billing/subscription system
 
 ## Recent Changes
-- **2025-09-30**: GitHub import successfully configured for Replit
-  - Installed Python 3.11 and all dependencies from requirements.txt
-  - Created PostgreSQL database with Replit integration
-  - Verified database schema at migration ad11b5287a15 (all tables exist)
-  - Configured development workflow on port 5000 using Flask dev server
-  - Set up Autoscale deployment with Gunicorn and release.py build script
-  - Application tested and verified working correctly
-- **2025-09-30**: Implemented comprehensive billing system for Malaysian market
-  - Integrated Stripe payment processing with Replit secrets (STRIPE_SECRET_KEY)
-  - Created billing database models: SubscriptionPlan, UserSubscription, Invoice, PaymentHistory
-  - Added 6% SST (Malaysian Service Tax) compliance to all pricing and invoices
-  - Defined 3 subscription plans: Basic (RM 10.49/mo), Pro (RM 31.69/mo), Premium (RM 63.49/mo)
-  - Built subscription management: subscribe, upgrade, cancel, reactivate
-  - Implemented Stripe webhook handlers for payment events and subscription updates
-  - Created user billing dashboard with subscription status, payment history, and invoices
-  - Built admin billing dashboard for revenue analytics and subscription monitoring
-  - Added stripe_customer_id field to User model for payment tracking
-
-## Dependencies
-Key Python packages:
-- Flask 3.0.3
-- SQLAlchemy 2.0.25
-- psycopg2-binary 2.9.9
-- Pillow 11.0.0
-- opencv-python-headless 4.8.0.76
-- gunicorn 21.2.0
-- sendgrid 6.12.5
-- stripe 11.1.1
-- replit-object-storage 1.0.2
+- **2025-09-30**: Initial Replit setup completed
+  - Installed Python dependencies
+  - Configured PostgreSQL database
+  - Set up workflow and deployment
+  - Verified application functionality
 
 ## Architecture Notes
-- Uses Flask application factory pattern
-- Blueprints for modular routing (auth, admin, gallery, family, billing, etc.)
-- SQLAlchemy ORM for database operations
-- WTForms for form handling and validation
-- Flask-Login for session management
-- CSRF protection enabled
-- Stripe integration for subscription billing
-- Malaysian SST tax calculations on all invoices
+- Uses application factory pattern (`photovault/__init__.py`)
+- Blueprint-based route organization in `photovault/routes/`
+- Database models in `photovault/models.py`
+- Configuration classes in `photovault/config.py` and root `config.py`
+- Static files served from `photovault/static/`
+- Templates in `photovault/templates/`
 
-## File Storage
-- Photos are stored using Replit Object Storage
-- Upload security includes file type validation and virus scanning
-- Maximum file size: 16MB
-- Supported formats: PNG, JPG, JPEG, GIF, BMP, WEBP
-
-## Security Features
-- Password hashing with Werkzeug
-- CSRF protection on all forms
-- Secure session management
-- SSL/HTTPS in production
-- File upload validation
-- User authentication and authorization
-
-## Notes
-- The application is currently configured for development environment
-- PostgreSQL database is pre-configured and ready to use
-- Mobile app in photovault-ios/ is separate and requires Expo setup
-- Face detection models use Haar cascade (DNN models optional)
+## Important Files
+- `main.py`: Development entry point
+- `wsgi.py`: Production WSGI entry point
+- `config.py`: Configuration loader
+- `photovault/__init__.py`: Application factory
+- `photovault/config.py`: Configuration classes
+- `requirements.txt`: Python dependencies
+- `migrations/`: Database migration files
