@@ -1,0 +1,102 @@
+modules = ["web", "nodejs-20", "python-3.11"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "sqlite", "tcl", "tk", "zlib"]
+
+[agent]
+expertMode = true
+integrations = ["replitmail:1.0.0", "python_sendgrid:1.0.0", "python_database:1.0.0"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 41187
+externalPort = 8081
+
+[[ports]]
+localPort = 41463
+externalPort = 9000
+
+[[ports]]
+localPort = 41769
+externalPort = 8080
+
+[[ports]]
+localPort = 42149
+externalPort = 8000
+
+[[ports]]
+localPort = 42417
+externalPort = 6800
+
+[[ports]]
+localPort = 43265
+externalPort = 5173
+
+[[ports]]
+localPort = 43417
+externalPort = 3003
+
+[[ports]]
+localPort = 43721
+externalPort = 6000
+
+[[ports]]
+localPort = 44603
+externalPort = 3002
+
+[[ports]]
+localPort = 44751
+externalPort = 3001
+
+[[ports]]
+localPort = 44821
+externalPort = 3000
+
+[[ports]]
+localPort = 45421
+externalPort = 4200
+
+[[ports]]
+localPort = 45979
+externalPort = 5000
+
+[[ports]]
+localPort = 46027
+externalPort = 8008
+
+[[ports]]
+localPort = 46433
+externalPort = 8099
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "PhotoVault Frontend"
+
+[[workflows.workflow]]
+name = "PhotoVault Frontend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export SECRET_KEY=\"replit-photovault-dev-key-$(date +%s)\" && export FLASK_CONFIG=development && export FLASK_ENV=development && export FLASK_DEBUG=false && python main.py"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:5000", "--workers", "2", "--worker-class", "sync", "--timeout", "120", "--log-level", "info", "--access-logfile", "-", "--error-logfile"]
+build = ["python", "release.py"]
