@@ -26,6 +26,11 @@ PhotoVault is a Flask-based web application for professional photo management wi
   - Workflow "PhotoVault Server" configured and running successfully
   - Deployment configured with Gunicorn (2 workers, 120s timeout, autoscale)
   - Application tested and confirmed working on Replit environment
+  - Fixed pricing page database error by adding subscription plans:
+    * Free Basic: RM 0.00 (1GB storage, 100 photos, 1 family vault)
+    * Professional: RM 30.00 + 6% SST (50GB, 5000 photos, 5 vaults, face detection)
+    * Premium: RM 60.00 + 6% SST (200GB, 20000 photos, 10 vaults, all features)
+    * Enterprise: RM 150.00 + 6% SST (1TB, 100000 photos, 50 vaults, priority support)
 
 ## Configuration
 
