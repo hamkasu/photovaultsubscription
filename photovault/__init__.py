@@ -9,6 +9,105 @@ from photovault.extensions import db, login_manager, migrate, csrf
 from photovault.config import config
 import os
 
+def _seed_subscription_plans(app):
+    """Ensure all default subscription plans exist in the database (upsert behavior)"""
+    from photovault.models import SubscriptionPlan
+    from decimal import Decimal
+    
+    # Define default subscription plans for Malaysian market
+    default_plans = [
+        {
+            'name': 'basic',
+            'display_name': 'Basic Plan',
+            'description': 'Perfect for personal photo management',
+            'price_myr': Decimal('19.90'),
+            'sst_rate': Decimal('6.00'),
+            'storage_gb': 10,
+            'max_photos': 1000,
+            'max_family_vaults': 1,
+            'face_detection': True,
+            'photo_enhancement': False,
+            'smart_tagging': False,
+            'api_access': False,
+            'priority_support': False,
+            'billing_period': 'monthly',
+            'is_active': True,
+            'is_featured': False,
+            'sort_order': 1
+        },
+        {
+            'name': 'pro',
+            'display_name': 'Pro Plan',
+            'description': 'Enhanced features for serious photographers',
+            'price_myr': Decimal('39.90'),
+            'sst_rate': Decimal('6.00'),
+            'storage_gb': 50,
+            'max_photos': 5000,
+            'max_family_vaults': 3,
+            'face_detection': True,
+            'photo_enhancement': True,
+            'smart_tagging': True,
+            'api_access': False,
+            'priority_support': False,
+            'billing_period': 'monthly',
+            'is_active': True,
+            'is_featured': True,
+            'sort_order': 2
+        },
+        {
+            'name': 'premium',
+            'display_name': 'Premium Plan',
+            'description': 'Unlimited storage and all features',
+            'price_myr': Decimal('79.90'),
+            'sst_rate': Decimal('6.00'),
+            'storage_gb': 500,
+            'max_photos': None,
+            'max_family_vaults': 10,
+            'face_detection': True,
+            'photo_enhancement': True,
+            'smart_tagging': True,
+            'api_access': True,
+            'priority_support': True,
+            'billing_period': 'monthly',
+            'is_active': True,
+            'is_featured': False,
+            'sort_order': 3
+        }
+    ]
+    
+    try:
+        plans_created = 0
+        plans_updated = 0
+        
+        # Upsert each plan - create if missing, update if exists
+        for plan_data in default_plans:
+            plan_name = plan_data['name']
+            existing_plan = SubscriptionPlan.query.filter_by(name=plan_name).first()
+            
+            if existing_plan:
+                # Update existing plan with current defaults
+                for key, value in plan_data.items():
+                    if key != 'name':  # Don't update the unique name field
+                        setattr(existing_plan, key, value)
+                plans_updated += 1
+            else:
+                # Create new plan
+                plan = SubscriptionPlan(**plan_data)
+                db.session.add(plan)
+                plans_created += 1
+        
+        db.session.commit()
+        
+        if plans_created > 0 or plans_updated > 0:
+            app.logger.info(f"Subscription plans: created {plans_created}, updated {plans_updated}")
+        else:
+            app.logger.info("All subscription plans already up to date")
+            
+    except Exception as e:
+        app.logger.error(f"Failed to seed subscription plans: {str(e)}")
+        db.session.rollback()
+
+
 def _create_superuser_if_needed(app):
     """Create superuser account from environment variables if no superuser exists"""
     from photovault.models import User
@@ -184,6 +283,9 @@ def create_app(config_class=None):
                 db.create_all()
             except Exception as e:
                 app.logger.warning(f"Table creation warning (may already exist): {str(e)}")
+        
+        # Seed default subscription plans
+        _seed_subscription_plans(app)
         
         # Bootstrap superuser account if environment variables are set
         _create_superuser_if_needed(app)
