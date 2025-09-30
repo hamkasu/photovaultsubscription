@@ -93,6 +93,21 @@
                                 <button class="btn btn-secondary w-100" disabled>
                                     <i class="bi bi-check-circle"></i> Current Plan
                                 </button>
+                            {% elif current_subscription %}
+                                <form method="POST" action="{{ url_for('billing.upgrade_plan', plan_id=plan.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if plan.price_myr > current_subscription.plan.price_myr %}
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-arrow-up-circle"></i> Upgrade Now (Prorated)
+                                        </button>
+                                        <small class="text-muted d-block mt-2">You'll only pay the difference</small>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-secondary w-100">
+                                            <i class="bi bi-envelope"></i> Contact Support to Switch
+                                        </button>
+                                        <small class="text-muted d-block mt-2">Changes processed at period end</small>
+                                    {% endif %}
+                                </form>
                             {% else %}
                                 <form method="POST" action="{{ url_for('billing.subscribe', plan_id=plan.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

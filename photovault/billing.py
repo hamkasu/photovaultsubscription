@@ -287,7 +287,7 @@ def reactivate_subscription():
 @billing_bp.route('/upgrade/<int:plan_id>', methods=['POST'])
 @login_required
 def upgrade_plan(plan_id):
-    """Upgrade to a different subscription plan"""
+    """Upgrade or change subscription plan"""
     new_plan = SubscriptionPlan.query.get_or_404(plan_id)
     
     # Get current subscription
@@ -300,19 +300,66 @@ def upgrade_plan(plan_id):
         flash('No active subscription found. Please subscribe first.', 'warning')
         return redirect(url_for('billing.plans'))
     
+    # Verify ownership
+    if subscription.user_id != current_user.id:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('billing.dashboard'))
+    
     if subscription.plan_id == plan_id:
         flash('You are already on this plan.', 'info')
         return redirect(url_for('billing.dashboard'))
     
+    # Check if new plan has Stripe price ID configured
+    if not new_plan.stripe_price_id:
+        flash('This plan is not available for online subscription. Please contact support.', 'warning')
+        return redirect(url_for('billing.plans'))
+    
     try:
-        # Update Stripe subscription
-        # This will prorate the charges automatically
+        current_plan = subscription.plan
+        is_upgrade = new_plan.price_myr > current_plan.price_myr
+        
+        # Retrieve the Stripe subscription and verify customer ownership
         stripe_sub = stripe.Subscription.retrieve(subscription.stripe_subscription_id)
         
-        # Update subscription with new plan
-        # Note: You would need to create Stripe Price IDs for each plan first
-        flash('Plan upgrade feature coming soon. Please contact support.', 'info')
+        # Verify customer ownership for security
+        if stripe_sub.customer != subscription.stripe_customer_id:
+            current_app.logger.error(f"Customer mismatch for subscription {subscription.id}")
+            flash('Unauthorized access to subscription.', 'danger')
+            return redirect(url_for('billing.dashboard'))
         
+        # For upgrades: apply immediately with proration (payment required before entitlement)
+        # For downgrades/changes: requires Stripe Price IDs - show message to contact support
+        if is_upgrade:
+            # Immediate upgrade with proration - require successful payment
+            updated_sub = stripe.Subscription.modify(
+                subscription.stripe_subscription_id,
+                items=[{
+                    'id': stripe_sub['items']['data'][0].id,
+                    'price': new_plan.stripe_price_id,
+                }],
+                proration_behavior='create_prorations',
+                payment_behavior='error_if_incomplete'  # Require successful payment
+            )
+            
+            # Only update entitlements after successful payment
+            if updated_sub.status == 'active':
+                subscription.plan_id = plan_id
+                subscription.current_period_start = datetime.fromtimestamp(updated_sub.current_period_start)
+                subscription.current_period_end = datetime.fromtimestamp(updated_sub.current_period_end)
+                db.session.commit()
+                
+                flash(f'Successfully upgraded to {new_plan.display_name}! You have been charged a prorated amount.', 'success')
+            else:
+                # Payment requires action - inform user
+                flash(f'Your upgrade requires payment confirmation. Please check your payment method.', 'warning')
+        else:
+            # For downgrades: simplified approach - inform user to contact support
+            # Full implementation requires proper Stripe Price ID configuration and Subscription Schedules
+            flash(f'To switch to {new_plan.display_name}, please contact support for assistance. Downgrades will be processed at the end of your current billing period.', 'info')
+        
+    except stripe.error.StripeError as e:
+        current_app.logger.error(f"Stripe error upgrading plan: {str(e)}")
+        flash(f'Payment error: {str(e)}', 'danger')
     except Exception as e:
         current_app.logger.error(f"Error upgrading plan: {str(e)}")
         flash(f'Error upgrading plan: {str(e)}', 'danger')
@@ -374,9 +421,22 @@ def handle_subscription_updated(stripe_subscription):
     ).first()
     
     if subscription:
+        # Update subscription dates and status
         subscription.current_period_start = datetime.fromtimestamp(stripe_subscription['current_period_start'])
         subscription.current_period_end = datetime.fromtimestamp(stripe_subscription['current_period_end'])
         subscription.status = stripe_subscription['status']
+        
+        # Update plan_id based on the actual Stripe subscription item price
+        if stripe_subscription.get('items') and stripe_subscription['items'].get('data'):
+            stripe_price_id = stripe_subscription['items']['data'][0].get('price', {}).get('id')
+            if stripe_price_id:
+                # Find the plan with matching Stripe price ID
+                new_plan = SubscriptionPlan.query.filter_by(stripe_price_id=stripe_price_id).first()
+                if new_plan and new_plan.id != subscription.plan_id:
+                    # Plan has changed (e.g., scheduled downgrade took effect)
+                    subscription.plan_id = new_plan.id
+                    current_app.logger.info(f"Updated subscription {subscription.id} to plan {new_plan.name}")
+        
         db.session.commit()
 
 
