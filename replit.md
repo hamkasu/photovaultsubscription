@@ -61,15 +61,25 @@ The development server is configured via workflow:
 
 ## Deployment Configuration
 
-### Production Settings
+### Replit Deployment (Autoscale)
 - **Deployment Type**: Autoscale (stateless web app)
 - **Production Server**: Gunicorn with 2 workers
 - **Command**: `gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=2 main:app`
 - **Environment**: FLASK_CONFIG=production (set automatically in production)
 
+### Railway Deployment
+- **Build System**: Nixpacks (automatically detects Python 3.11)
+- **Release Phase**: `python release.py` (runs database migrations)
+- **Start Command**: `gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --worker-class sync --timeout 120`
+- **Configuration Files**:
+  - `nixpacks.toml` - Railway build configuration
+  - `Procfile` - Alternative process file (backup)
+  - `wsgi.py` - Production WSGI entry point
+  - `release.py` - Database migration and setup script
+
 ### Required Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string (auto-configured)
-- `SECRET_KEY` - Flask secret key (should be set for production)
+- `DATABASE_URL` / `RAILWAY_DATABASE_URL` / `POSTGRES_URL` / `DATABASE_PRIVATE_URL` - PostgreSQL connection (Railway auto-provides)
+- `SECRET_KEY` - Flask secret key (**REQUIRED** for production - must be set manually)
 - `SENDGRID_API_KEY` - Email service (optional)
 - `STRIPE_PUBLISHABLE_KEY` - Payment processing (optional)
 - `STRIPE_SECRET_KEY` - Payment processing (optional)
@@ -84,6 +94,14 @@ The development server is configured via workflow:
 5. ✅ Configured development workflow: `FLASK_CONFIG=development python main.py`
 6. ✅ Set up autoscale deployment with Gunicorn for production
 7. ✅ Verified application is working correctly (homepage, login page tested)
+
+### Railway Deployment Configuration - Completed
+1. ✅ Verified and tested WSGI production entry point (wsgi.py)
+2. ✅ Fixed release.py to accept all Railway database URL variants (DATABASE_URL, RAILWAY_DATABASE_URL, POSTGRES_URL, DATABASE_PRIVATE_URL)
+3. ✅ Unified Gunicorn configuration between Procfile and nixpacks.toml
+4. ✅ Confirmed release script handles database migrations correctly
+5. ✅ Tested production configuration with Railway-compatible settings
+6. ✅ All Railway deployment files verified and ready (nixpacks.toml, Procfile, wsgi.py, release.py)
 
 ### Application Status
 - **Server**: Running successfully on port 5000

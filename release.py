@@ -225,8 +225,11 @@ def verify_environment():
     """Verify critical environment variables are set"""
     print("PhotoVault Release: Verifying environment configuration...")
     
-    # Check for database URL (Railway may use either variable)
-    database_url = os.environ.get('DATABASE_URL') or os.environ.get('RAILWAY_DATABASE_URL')
+    # Check for database URL (Railway may use any of these variables - match ProductionConfig)
+    database_url = (os.environ.get('DATABASE_URL') or 
+                   os.environ.get('RAILWAY_DATABASE_URL') or 
+                   os.environ.get('POSTGRES_URL') or 
+                   os.environ.get('DATABASE_PRIVATE_URL'))
     
     optional_vars = ['SECRET_KEY', 'UPLOAD_FOLDER']
     
@@ -234,7 +237,7 @@ def verify_environment():
     missing_optional = []
     
     if not database_url:
-        missing_required.append('DATABASE_URL or RAILWAY_DATABASE_URL')
+        missing_required.append('DATABASE_URL, RAILWAY_DATABASE_URL, POSTGRES_URL, or DATABASE_PRIVATE_URL')
     
     for var in optional_vars:
         if not os.environ.get(var):
