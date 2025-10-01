@@ -48,26 +48,53 @@ Configured for Replit Autoscale deployment using Gunicorn:
 - Cache-Control headers added to prevent caching issues in Replit proxy environment
 - Deployment configured for Replit Autoscale with Gunicorn (2 workers)
 - Application tested and verified working successfully with homepage displaying correctly
-## Railway Deployment Troubleshooting
+## Railway Deployment Fixes (October 1, 2025)
 
-Based on your screenshots, the app starts successfully but returns 502 errors on HTTP requests. Here are the critical items to verify:
+The app was experiencing 502 Bad Gateway errors on Railway. The following fixes were implemented:
 
-**Environment Variables Required in Railway:**
-1. `DATABASE_URL` or `POSTGRES_URL` - PostgreSQL connection string (appears to be set ✓)
-2. `SECRET_KEY` - Flask session secret (appears to be set ✓)
-3. `FLASK_CONFIG=production` (appears to be set ✓)
-4. `FLASK_ENV=production` (appears to be set ✓)
+### Fixes Applied:
 
-**Procfile Configuration:**
-- The Procfile correctly binds Gunicorn to `0.0.0.0:$PORT` - this is necessary for Railway
-- Gunicorn command: `web: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120`
+**1. Health Check Endpoints Added** (for better diagnostics):
+- `/health` - Simple text response "OK" for monitoring
+- `/api` - Basic API health check (no database required)
+- `/api/health/db` - Database connectivity check with sanitized error responses
 
-**Next Steps to Fix 502 Error:**
-1. Check Railway Deploy Logs for any runtime errors during first HTTP request
-2. Verify DATABASE_URL is correctly formatted (should start with `postgresql://` not `postgres://`)
-3. Check if app crashes on first request - look for Python tracebacks in logs
-4. Ensure Railway service is configured to use Nixpacks builder (railway.json already sets this)
-5. Try reducing workers to 1 temporarily to see if it's a concurrency issue
+**2. Procfile Optimized**:
+- Reduced workers from 2 to 1 (better for Railway's resource constraints)
+- Increased timeout from 120 to 180 seconds for slow cold starts
+- Changed log level to debug for better diagnostics
+- Removed `--preload` flag to avoid SQLAlchemy connection pool issues
+- Final: `web: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 180 --log-level debug --access-logfile - --error-logfile -`
+
+**3. Improved Error Handling**:
+- Database initialization now catches errors gracefully
+- App continues to start even if DB init fails (allows health checks to work)
+- Environment-aware: `create_all()` only runs in development (FLASK_CONFIG=development)
+- Production mode verifies connectivity with SELECT 1 instead of creating tables
+
+**4. Security Improvements**:
+- Database health endpoint no longer exposes raw exception details
+- Errors are logged server-side but sanitized in public responses
+
+### Environment Variables Required in Railway:
+1. `DATABASE_URL` or `POSTGRES_URL` - PostgreSQL connection string
+2. `SECRET_KEY` - Flask session secret (required for sessions)
+3. `FLASK_CONFIG=production` - Set environment to production
+4. Ensure DATABASE_URL uses `postgresql://` prefix (not `postgres://`)
+
+### Testing Health Endpoints:
+```bash
+curl https://your-railway-app.railway.app/health
+curl https://your-railway-app.railway.app/api
+curl https://your-railway-app.railway.app/api/health/db
+```
+
+### Production Deployment Checklist:
+- ✓ Set FLASK_CONFIG=production in Railway
+- ✓ Ensure DATABASE_URL is properly formatted
+- ✓ Set SECRET_KEY environment variable
+- ✓ Run Alembic migrations: `alembic upgrade head`
+- ✓ Monitor health endpoints after deployment
 
 ## Features
 - User authentication and authorization

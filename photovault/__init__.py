@@ -296,6 +296,8 @@ def create_app(config_class=None):
             'main.contact',
             'main.features',
             'main.api_health',
+            'main.db_health',
+            'main.health_check',
             'static'
         ]
         
@@ -321,19 +323,31 @@ def create_app(config_class=None):
         
         return None
     
-    # Initialize database
+    # Initialize database - with improved error handling for Railway/production
     with app.app_context():
-        # Create tables if they don't exist (for all databases including PostgreSQL)
         try:
-            db.create_all()
-            app.logger.info("Database tables initialized successfully")
+            # Only run create_all in development - production should use migrations
+            # Use FLASK_CONFIG as authoritative source of environment
+            is_development = os.environ.get('FLASK_CONFIG', 'development') == 'development'
+            
+            if is_development:
+                db.create_all()
+                app.logger.info("Database tables initialized successfully (development mode)")
+            else:
+                # In production, verify database connectivity without creating tables
+                db.session.execute(db.text('SELECT 1'))
+                app.logger.info("Database connection verified (production mode)")
+            
+            # Seed default subscription plans (only if db connection works)
+            _seed_subscription_plans(app)
+            
+            # Bootstrap superuser account if environment variables are set
+            _create_superuser_if_needed(app)
         except Exception as e:
-            app.logger.warning(f"Table creation warning (may already exist): {str(e)}")
-        
-        # Seed default subscription plans
-        _seed_subscription_plans(app)
-        
-        # Bootstrap superuser account if environment variables are set
-        _create_superuser_if_needed(app)
+            # Log error but don't crash the app - allow it to start even if DB init fails
+            # This allows health checks to work and helps diagnose Railway deployment issues
+            app.logger.error(f"Database initialization error: {str(e)}")
+            app.logger.error("App will continue to start, but database operations may fail")
+            # In production, this will be caught by health checks
     
     return app

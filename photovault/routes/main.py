@@ -398,8 +398,27 @@ def edit_person(person_id):
 
 @main_bp.route('/api', methods=['GET', 'HEAD'])
 def api_health():
-    """API health check endpoint"""
-    return jsonify({'status': 'ok', 'service': 'PhotoVault'})
+    """API health check endpoint - no database required"""
+    return jsonify({'status': 'ok', 'service': 'PhotoVault'}), 200
+
+@main_bp.route('/api/health/db', methods=['GET'])
+def db_health():
+    """Database health check endpoint"""
+    try:
+        from photovault.extensions import db
+        import logging
+        # Try a simple database query
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({'status': 'ok', 'database': 'connected'}), 200
+    except Exception as e:
+        # Log full error details for debugging but don't expose them publicly
+        logging.error(f"Database health check failed: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'database': 'disconnected'}), 500
+
+@main_bp.route('/health', methods=['GET', 'HEAD'])
+def health_check():
+    """Simple health check for Railway/production monitoring"""
+    return 'OK', 200
 
 @main_bp.route('/api/person/delete/<int:person_id>', methods=['DELETE'])
 @login_required
