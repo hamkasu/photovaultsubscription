@@ -96,7 +96,7 @@ def subscribe(plan_id):
         
         checkout_session = stripe.checkout.Session.create(
             customer=customer_id,
-            payment_method_types=['card', 'fpx'],  # Card and Malaysian FPX
+            payment_method_types=['card'],  # Only card for subscriptions (FPX doesn't support recurring)
             line_items=[{
                 'price_data': {
                     'currency': 'myr',
