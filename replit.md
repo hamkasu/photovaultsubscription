@@ -48,6 +48,26 @@ Configured for Replit Autoscale deployment using Gunicorn:
 - Cache-Control headers added to prevent caching issues in Replit proxy environment
 - Deployment configured for Replit Autoscale with Gunicorn (2 workers)
 - Application tested and verified working successfully with homepage displaying correctly
+## Railway Deployment Troubleshooting
+
+Based on your screenshots, the app starts successfully but returns 502 errors on HTTP requests. Here are the critical items to verify:
+
+**Environment Variables Required in Railway:**
+1. `DATABASE_URL` or `POSTGRES_URL` - PostgreSQL connection string (appears to be set ✓)
+2. `SECRET_KEY` - Flask session secret (appears to be set ✓)
+3. `FLASK_CONFIG=production` (appears to be set ✓)
+4. `FLASK_ENV=production` (appears to be set ✓)
+
+**Procfile Configuration:**
+- The Procfile correctly binds Gunicorn to `0.0.0.0:$PORT` - this is necessary for Railway
+- Gunicorn command: `web: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120`
+
+**Next Steps to Fix 502 Error:**
+1. Check Railway Deploy Logs for any runtime errors during first HTTP request
+2. Verify DATABASE_URL is correctly formatted (should start with `postgresql://` not `postgres://`)
+3. Check if app crashes on first request - look for Python tracebacks in logs
+4. Ensure Railway service is configured to use Nixpacks builder (railway.json already sets this)
+5. Try reducing workers to 1 temporarily to see if it's a concurrency issue
 
 ## Features
 - User authentication and authorization
