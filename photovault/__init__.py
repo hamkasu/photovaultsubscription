@@ -255,6 +255,15 @@ def create_app(config_class=None):
     
     # Note: Upload file serving is handled securely via gallery.uploaded_file route with authentication
     
+    # Add cache control headers for Replit environment
+    @app.after_request
+    def add_cache_control_headers(response):
+        """Add cache control headers to prevent caching issues in Replit proxy"""
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    
     # Subscription enforcement middleware
     @app.before_request
     def enforce_subscription():
