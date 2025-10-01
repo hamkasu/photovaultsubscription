@@ -420,6 +420,38 @@ def health_check():
     """Simple health check for Railway/production monitoring"""
     return 'OK', 200
 
+@main_bp.route('/api/debug/plans', methods=['GET'])
+def debug_plans():
+    """Debug endpoint to check subscription plans in database"""
+    try:
+        from photovault.models import SubscriptionPlan
+        from photovault.extensions import db
+        
+        plans = SubscriptionPlan.query.all()
+        plans_data = [{
+            'id': p.id,
+            'name': p.name,
+            'display_name': p.display_name,
+            'price_myr': float(p.price_myr),
+            'total_price_myr': p.total_price_myr,
+            'sst_amount': p.sst_amount,
+            'is_active': p.is_active
+        } for p in plans]
+        
+        return jsonify({
+            'status': 'ok',
+            'count': len(plans),
+            'plans': plans_data
+        }), 200
+    except Exception as e:
+        import logging
+        logging.error(f"Debug plans error: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'type': type(e).__name__
+        }), 500
+
 @main_bp.route('/api/person/delete/<int:person_id>', methods=['DELETE'])
 @login_required
 def delete_person(person_id):
