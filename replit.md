@@ -1,94 +1,103 @@
-# PhotoVault - Professional Photo Management Platform
+# PhotoVault - Photo Management Platform
 
 ## Overview
-PhotoVault is a Flask-based photo management application with advanced features including face detection, photo enhancement, smart tagging, and family vault sharing.
+PhotoVault is a professional photo management platform with advanced camera features, face detection, photo enhancement, and family vault sharing capabilities. Built with Flask/Python backend and includes a React Native mobile app.
 
-**Copyright**: 2025 Calmic Sdn Bhd. All rights reserved.
+## Project Structure
+- **Backend**: Flask application (Python 3.12)
+- **Database**: PostgreSQL (via Replit Database)
+- **Frontend**: Server-side rendered templates with JavaScript
+- **Mobile**: React Native Expo app in `photovault-ios/` directory
 
-## Project Architecture
+## Recent Changes (October 1, 2025)
+- Initial Replit environment setup completed
+- Python dependencies installed (numpy 1.26.4 for opencv compatibility)
+- PostgreSQL database created and schema initialized
+- Workflow configured to run on port 5000
+- Deployment configuration set up for Replit Autoscale
 
-### Backend (Flask)
-- **Framework**: Flask 3.0.3
-- **Database**: PostgreSQL (via SQLAlchemy)
-- **Authentication**: Flask-Login
-- **Migrations**: Alembic via Flask-Migrate
-- **Image Processing**: OpenCV, Pillow, scikit-image
-- **Storage**: Replit Object Storage integration
-- **Email**: SendGrid integration
-- **Payments**: Stripe integration
+## Architecture
 
-### Project Structure
-```
-photovault/              # Main application package
-├── routes/              # Blueprint routes (auth, upload, photo, family, etc.)
-├── models.py            # Database models
-├── config.py            # Configuration classes
-├── extensions.py        # Flask extensions initialization
-├── services/            # Business logic services
-├── utils/               # Utility functions (face detection, image enhancement)
-├── templates/           # Jinja2 HTML templates
-└── static/              # CSS, JavaScript, images
+### Backend Components
+- **Application Factory**: `photovault/__init__.py` - Flask app factory with extension initialization
+- **Configuration**: `photovault/config.py` - Environment-specific configs (Development, Production, Testing)
+- **Models**: `photovault/models.py` - SQLAlchemy database models
+- **Routes**: `photovault/routes/` - Blueprint-based route handlers
+- **Services**: `photovault/services/` - Business logic (storage, face detection, sendgrid)
+- **Utils**: `photovault/utils/` - Helper functions (image enhancement, face recognition, metadata extraction)
 
-migrations/              # Alembic database migrations
-main.py                  # Development entry point
-wsgi.py                  # Production entry point
-config.py                # Configuration helper
-requirements.txt         # Python dependencies
-```
+### Key Features
+1. **User Management**: Authentication, registration, subscription-based access control
+2. **Photo Upload**: Multiple upload methods with face detection and metadata extraction
+3. **Photo Enhancement**: Old photo restoration using OpenCV
+4. **Face Detection**: Automatic face detection and recognition
+5. **Family Vaults**: Shared photo collections with member management
+6. **Smart Tagging**: AI-powered photo tagging and organization
+7. **Billing**: Stripe integration for subscription management
+8. **Storage**: Replit Object Storage for photo files
+
+### Database Schema
+- **Users**: User accounts with subscription status
+- **Photos**: Photo metadata and relationships
+- **FamilyVaults**: Shared photo collections
+- **VaultMembers**: Vault membership and permissions
+- **SubscriptionPlans**: Pricing tiers and features
+- **UserSubscriptions**: Active user subscriptions
 
 ## Development Setup
 
 ### Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string (auto-set by Replit)
-- `FLASK_CONFIG`: Set to 'development' for dev mode
-- `SECRET_KEY`: Flask secret key (optional for dev, required for production)
-
-### Database
-- Using PostgreSQL database provided by Replit
-- Database tables are auto-created on first run in development mode
-- Migrations are stamped with Alembic
+- `DATABASE_URL`: PostgreSQL connection string (auto-configured)
+- `FLASK_CONFIG`: Set to `development` for development mode
+- `SECRET_KEY`: Flask session secret (generated if not provided)
 
 ### Running Locally
-The workflow is configured to run: `FLASK_CONFIG=development python main.py`
-- Server binds to `0.0.0.0:5000`
-- Debug mode is disabled by default
-- Database tables are created automatically
+The workflow "PhotoVault Server" runs: `FLASK_CONFIG=development python main.py`
+- Server runs on port 5000
+- Debug mode enabled in development
+- Auto-reloads on code changes
 
-## Deployment Configuration
+### Database Migrations
+```bash
+flask db upgrade  # Apply migrations
+flask db stamp head  # Mark current state
+```
 
-### Production Deployment (Replit Autoscale)
-- **Command**: `gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=2 --timeout=120 wsgi:app`
-- **Port**: 5000 (required for Replit)
-- **Entry Point**: `wsgi.py` (forces production config)
-- **Workers**: 2 (suitable for stateless web apps)
+## Deployment
 
-### Required for Production
-1. Set `SECRET_KEY` environment variable
-2. Set `DATABASE_URL` to production PostgreSQL instance
-3. Run migrations: `flask db upgrade`
+### Replit Autoscale
+Configured for autoscale deployment using Gunicorn:
+- Workers: 2 sync workers
+- Timeout: 120 seconds
+- Binds to port 5000
+- Production config automatically applied
 
-## Key Features
-- User authentication and registration
-- Photo upload with automatic metadata extraction
-- Face detection and recognition
-- Photo enhancement tools
-- Smart tagging system
-- Family vault sharing
-- Subscription-based access control (Free, Standard, Basic, Pro, Premium)
-- Admin dashboard
-- SendGrid email integration for invitations
+### Production Requirements
+- Set `SECRET_KEY` environment variable
+- Database migrations must be run
+- Ensure `DATABASE_URL` is configured
 
-## Recent Changes (2025-10-01)
-- Imported project from GitHub
-- Installed Python 3.11 and all dependencies
-- Set up PostgreSQL database with Replit integration
-- Created database tables and stamped migrations
-- Configured workflow for port 5000 with proper host binding
-- Configured deployment settings for Replit Autoscale
-- Verified application runs successfully
+## Dependencies
 
-## Notes
-- Cache control headers are set to prevent caching issues in Replit proxy
-- Session cookies configured for Replit environment
-- Subscription enforcement middleware ensures users have active plans
-- Default subscription plans are seeded automatically on startup
+### Core
+- Flask 3.0.3
+- SQLAlchemy 2.0.25
+- PostgreSQL (psycopg2-binary)
+- Gunicorn 21.2.0
+
+### Image Processing
+- Pillow 11.0.0
+- OpenCV (headless) 4.8.0.76
+- numpy 1.26.4 (pinned for opencv compatibility)
+
+### Integrations
+- Stripe (payment processing)
+- SendGrid (email notifications)
+- Replit Object Storage (file storage)
+
+## Known Issues
+- scikit-image installation takes too long, currently skipped (optional feature)
+- numpy must be <2.0 for opencv compatibility
+
+## User Preferences
+None specified yet.
