@@ -13,10 +13,6 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 42149
-externalPort = 8000
-
-[[ports]]
 localPort = 42417
 externalPort = 6800
 
@@ -85,7 +81,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python main.py"
+args = "FLASK_CONFIG=development python main.py"
 waitForPort = 5000
 
 [deployment]
