@@ -48,7 +48,7 @@ PhotoVault is a professional photo management platform with advanced camera feat
 
 ### Running the Application
 The development server is configured via workflow:
-- Command: `python main.py`
+- Command: `FLASK_CONFIG=development python main.py`
 - Serves on: http://0.0.0.0:5000
 
 ### Database Management
@@ -64,8 +64,8 @@ The development server is configured via workflow:
 ### Production Settings
 - **Deployment Type**: Autoscale (stateless web app)
 - **Production Server**: Gunicorn with 2 workers
-- **Command**: `gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=2 wsgi:app`
-- **Environment**: FLASK_CONFIG=production
+- **Command**: `gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=2 main:app`
+- **Environment**: FLASK_CONFIG=production (set automatically in production)
 
 ### Required Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string (auto-configured)
@@ -76,14 +76,19 @@ The development server is configured via workflow:
 
 ## Recent Changes (October 1, 2025)
 
-### Initial Replit Setup
+### GitHub Import Setup (Fresh Clone)
 1. Installed Python 3.11 and all dependencies from requirements.txt
-2. Created PostgreSQL database using Replit's managed database
-3. Ran database migrations and stamped schema as current
-4. Configured Flask app for Replit environment (no host restrictions)
-5. Set up development workflow running on port 5000
-6. Configured autoscale deployment with Gunicorn
-7. Verified application is working correctly
+2. Created PostgreSQL database using Replit's managed database (Neon)
+3. Initialized database schema using `db.create_all()` in development mode
+4. Seeded subscription plans (Free, Standard, Basic, Pro, Premium) 
+5. Configured development workflow: `FLASK_CONFIG=development python main.py`
+6. Set up autoscale deployment with Gunicorn for production
+7. Verified application is working correctly (homepage, login page tested)
+
+### Database Initialization Note
+- Database was initialized using `db.create_all()` rather than migrations due to migration compatibility issues
+- All required tables created successfully including users, photos, family vaults, subscriptions, etc.
+- Subscription plans automatically seeded on first run
 
 ### Database Schema
 The application uses a comprehensive schema including:
