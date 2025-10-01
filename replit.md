@@ -1,115 +1,100 @@
 # PhotoVault - Professional Photo Management Platform
 
 ## Overview
-PhotoVault is a Flask-based web application for professional photo management with advanced camera features, family vaults, photo enhancement, and face recognition capabilities. It includes an iOS companion app built with React Native and Expo.
+PhotoVault is a professional photo management platform with advanced camera features, built with Flask (Python) and PostgreSQL. It provides secure photo storage, family vault sharing, face detection, photo enhancement, and smart tagging capabilities.
 
-## Project Structure
-- **Backend**: Flask web application (Python 3.11)
-  - Main app: `photovault/` package
-  - Entry point: `main.py` (development), `wsgi.py` (production)
-  - Routes: Authentication, Upload, Gallery, Family Vaults, Photo Detection, Admin
-  - Models: User, Photo, Album, Person, FamilyVault, Subscriptions, etc.
-  
-- **Frontend**: HTML templates with JavaScript
-  - Templates: `photovault/templates/`
-  - Static assets: `photovault/static/`
-  
-- **iOS App**: React Native/Expo app in `photovault-ios/`
+## Project Architecture
 
-## Database
-- **PostgreSQL** database provided by Replit
-- Tables automatically created from models
-- 18 tables including users, photos, albums, family vaults, subscriptions, etc.
+### Technology Stack
+- **Backend**: Flask 3.0.3 (Python 3.11)
+- **Database**: PostgreSQL (Replit managed)
+- **ORM**: SQLAlchemy 2.0.25 with Flask-Migrate/Alembic
+- **Image Processing**: Pillow, OpenCV, scikit-image
+- **Authentication**: Flask-Login
+- **Storage**: Replit Object Storage
+- **Email**: SendGrid integration
+- **Payment**: Stripe integration
 
-## Environment Configuration
-The following environment variables are configured:
-- `DATABASE_URL`: PostgreSQL connection (auto-configured by Replit)
-- `SECRET_KEY`: Flask session secret
-- `FLASK_CONFIG`: Set to "development" or "production"
-- `FLASK_DEBUG`: Set to "True" for development
+### Project Structure
+- `photovault/` - Main application package
+  - `routes/` - Blueprint route handlers (auth, gallery, family, admin, etc.)
+  - `models.py` - SQLAlchemy database models
+  - `config.py` - Configuration classes (Development, Production, Testing)
+  - `services/` - Business logic services (face detection, montage, sendgrid)
+  - `templates/` - Jinja2 HTML templates
+  - `static/` - CSS, JavaScript, images
+  - `utils/` - Utility functions (file handling, security, metadata)
+- `migrations/` - Alembic database migrations
+- `main.py` - Development entry point
+- `wsgi.py` - Production entry point (Gunicorn)
 
-## Running Locally
-The application runs automatically via the "PhotoVault Server" workflow on port 5000.
+### Key Features
+1. **Photo Upload & Management** - Secure photo upload with metadata extraction
+2. **Camera Integration** - Full screen camera with landscape mode
+3. **Family Vaults** - Shared photo collections with invite system
+4. **Face Detection** - AI-powered face recognition (OpenCV)
+5. **Photo Enhancement** - Image processing and editing tools
+6. **Smart Tagging** - Automatic photo categorization
+7. **Subscription Plans** - Tiered plans (Free, Standard, Basic, Pro, Premium)
+8. **Admin Dashboard** - User management and statistics
 
-## Deployment
-Configured for Replit Autoscale deployment using Gunicorn:
-- Server: Gunicorn with 2 workers and 2 threads
-- Port: 5000
-- WSGI entry: `wsgi:app`
+## Development Setup
 
-## Recent Setup (October 1, 2025)
-- Fresh GitHub import to Replit environment
-- Python 3.11 module already installed from .replit configuration
-- Python dependencies installed from requirements.txt (Flask, SQLAlchemy, Gunicorn, etc.)
-- PostgreSQL database created and initialized via Replit integration
-- Database schema initialized using db.create_all() and migrations marked as up-to-date
-- Development workflow configured to run Flask server on port 5000
-- Server configured to listen on 0.0.0.0 for Replit proxy compatibility
-- Cache-Control headers added to prevent caching issues in Replit proxy environment
-- Deployment configured for Replit Autoscale with Gunicorn (2 workers)
-- Application tested and verified working successfully with homepage displaying correctly
-## Railway Deployment Fixes (October 1, 2025)
+### Environment Configuration
+- **Port**: 5000 (required for Replit)
+- **Host**: 0.0.0.0 (allows Replit proxy)
+- **Database**: PostgreSQL via DATABASE_URL environment variable
+- **Flask Config**: Development mode (FLASK_CONFIG=development)
 
-The app was experiencing 502 Bad Gateway errors on Railway. The following fixes were implemented:
+### Running the Application
+The development server is configured via workflow:
+- Command: `python main.py`
+- Serves on: http://0.0.0.0:5000
 
-### Fixes Applied:
+### Database Management
+- **Migrations**: Use Flask-Migrate commands
+  - `flask db upgrade` - Apply migrations
+  - `flask db stamp head` - Mark database as current
+  - `flask db migrate -m "message"` - Create new migration
+- **Auto-initialization**: Tables created automatically in development mode
+- **Default Data**: Subscription plans seeded on startup
 
-**1. Health Check Endpoints Added** (for better diagnostics):
-- `/health` - Simple text response "OK" for monitoring
-- `/api` - Basic API health check (no database required)
-- `/api/health/db` - Database connectivity check with sanitized error responses
+## Deployment Configuration
 
-**2. Procfile Optimized**:
-- Reduced workers from 2 to 1 (better for Railway's resource constraints)
-- Increased timeout from 120 to 180 seconds for slow cold starts
-- Changed log level to debug for better diagnostics
-- Removed `--preload` flag to avoid SQLAlchemy connection pool issues
-- Final: `web: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 180 --log-level debug --access-logfile - --error-logfile -`
+### Production Settings
+- **Deployment Type**: Autoscale (stateless web app)
+- **Production Server**: Gunicorn with 2 workers
+- **Command**: `gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=2 wsgi:app`
+- **Environment**: FLASK_CONFIG=production
 
-**3. Improved Error Handling**:
-- Database initialization now catches errors gracefully
-- App continues to start even if DB init fails (allows health checks to work)
-- Environment-aware: `create_all()` only runs in development (FLASK_CONFIG=development)
-- Production mode verifies connectivity with SELECT 1 instead of creating tables
+### Required Environment Variables
+- `DATABASE_URL` - PostgreSQL connection string (auto-configured)
+- `SECRET_KEY` - Flask secret key (should be set for production)
+- `SENDGRID_API_KEY` - Email service (optional)
+- `STRIPE_PUBLISHABLE_KEY` - Payment processing (optional)
+- `STRIPE_SECRET_KEY` - Payment processing (optional)
 
-**4. Security Improvements**:
-- Database health endpoint no longer exposes raw exception details
-- Errors are logged server-side but sanitized in public responses
+## Recent Changes (October 1, 2025)
 
-### Environment Variables Required in Railway:
-1. `DATABASE_URL` or `POSTGRES_URL` - PostgreSQL connection string
-2. `SECRET_KEY` - Flask session secret (required for sessions)
-3. `FLASK_CONFIG=production` - Set environment to production
-4. Ensure DATABASE_URL uses `postgresql://` prefix (not `postgres://`)
+### Initial Replit Setup
+1. Installed Python 3.11 and all dependencies from requirements.txt
+2. Created PostgreSQL database using Replit's managed database
+3. Ran database migrations and stamped schema as current
+4. Configured Flask app for Replit environment (no host restrictions)
+5. Set up development workflow running on port 5000
+6. Configured autoscale deployment with Gunicorn
+7. Verified application is working correctly
 
-### Testing Health Endpoints:
-```bash
-curl https://your-railway-app.railway.app/health
-curl https://your-railway-app.railway.app/api
-curl https://your-railway-app.railway.app/api/health/db
-```
+### Database Schema
+The application uses a comprehensive schema including:
+- Users (with admin/superuser roles, subscriptions)
+- Photos (with metadata, face detection, tags)
+- Family Vaults (shared photo collections)
+- Vault Invitations (member management)
+- Subscription Plans & User Subscriptions
+- Voice Memos (attached to photos)
 
-### Production Deployment Checklist:
-- ✓ Set FLASK_CONFIG=production in Railway
-- ✓ Ensure DATABASE_URL is properly formatted
-- ✓ Set SECRET_KEY environment variable
-- ✓ Run Alembic migrations: `alembic upgrade head`
-- ✓ Monitor health endpoints after deployment
-
-## Features
-- User authentication and authorization
-- Photo upload and management
-- Camera interface for direct photo capture
-- Family vault sharing system
-- Photo enhancement and editing
-- Face detection and recognition
-- Smart tagging
-- Subscription/billing system (Stripe)
-- Admin and superuser dashboards
-
-## Architecture Decisions
-- Using Flask's built-in development server for local development
-- Host set to 0.0.0.0 to work with Replit proxy
-- SERVER_NAME not set in development to avoid host verification issues
-- Database tables created using SQLAlchemy models (db.create_all())
-- Gunicorn configured for production deployment
+## User Preferences
+- Development server runs on port 5000 with host 0.0.0.0
+- Database migrations managed via Flask-Migrate
+- Production deployment uses Gunicorn with autoscale

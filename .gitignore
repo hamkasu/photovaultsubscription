@@ -70,3 +70,6 @@ config_local.py
 # Temporary files
 *.tmp
 *.temp
+
+# Python libraries (Replit)
+.pythonlibs/
