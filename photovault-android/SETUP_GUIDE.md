@@ -78,7 +78,7 @@ All endpoints are defined in `ApiService.kt`:
 1. **Android Studio Hedgehog (2023.1.1) or later**
 2. **JDK 17**
 3. **Android SDK 34**
-4. **OpenCV Android SDK 4.8.0**
+4. **Internet connection** (for Maven dependency downloads)
 
 ### Setup Steps
 
@@ -91,20 +91,14 @@ cd photovault-android
 # Open in Android Studio: File > Open > Select photovault-android folder
 ```
 
-#### 3. Install OpenCV (Critical!)
-The app requires OpenCV Android SDK:
+#### 3. OpenCV Configuration ✅
+The app uses **OpenCV 4.12.0** from official Maven Central (automatically downloaded):
 
-**Option A: Download AAR (Recommended)**
-1. Download OpenCV Android 4.8.0 from: https://opencv.org/releases/
-2. Extract and locate `opencv-4.8.0.aar`
-3. Copy to: `photovault-android/app/libs/opencv-4.8.0.aar`
-4. The build.gradle already references it: `implementation files('libs/opencv-4.8.0.aar')`
-
-**Option B: Use Maven Repository**
-Edit `app/build.gradle` and replace the files() line with:
 ```gradle
-implementation 'com.quickbirdstudios:opencv:4.5.3.0'
+implementation 'org.opencv:opencv:4.12.0'
 ```
+
+No manual AAR download needed - Gradle will fetch it automatically during build.
 
 #### 4. Create Missing Layout XML Files
 

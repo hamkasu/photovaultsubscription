@@ -93,8 +93,8 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     
-    // Image processing - OpenCV Android SDK
-    implementation 'com.quickbirdstudios:opencv:4.5.3.0'
+    // Image processing - OpenCV Android SDK (Official)
+    implementation 'org.opencv:opencv:4.12.0'
     
     // Glide for image loading
     implementation 'com.github.bumptech.glide:glide:4.16.0'
