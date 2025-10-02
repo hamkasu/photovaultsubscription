@@ -1,321 +1,672 @@
-# PhotoVault Android Client - Setup Guide
+# PhotoVault Android Client - Complete Setup Guide
 
-## Overview
-The PhotoVault Android client is now integrated with the Replit backend and includes all major features:
+## 📱 Overview
 
-- ✅ Advanced Camera with edge detection and batch capture
-- ✅ Image Enhancement Pipeline (OpenCV)
-- ✅ Gallery UI with search, filtering, and timeline view
-- ✅ Family Vaults with member invitations
-- ✅ Offline-first architecture with upload queue
-- ✅ Photo metadata editing (tags, people, location, description)
-- ✅ Face detection integration (backend API)
-- ✅ Background upload with WorkManager
+PhotoVault Android is a professional photo digitization and management app that connects to the PhotoVault backend. It features advanced camera capabilities, AI-powered enhancement, and family vault sharing.
 
-## Architecture
+### ✨ Key Features
 
-### Implemented Components
+- **📸 Advanced Camera**: Edge detection, batch capture, manual controls, grid overlay
+- **🎨 AI Enhancement**: Perspective correction, color restoration, denoising, sharpening
+- **💾 Offline-First**: Capture and store locally, sync when online
+- **👨‍👩‍👧‍👦 Family Vaults**: Share photos with family members
+- **🔍 Smart Organization**: Search, filter, tag photos with metadata
+- **⬆️ Background Upload**: Automatic sync via WorkManager
 
-#### 1. Core Infrastructure
-- **Application**: `PhotoVaultApplication.kt` - Initializes OpenCV, Database, API, Repositories
-- **Database**: Room database with Photo, UploadQueue, FamilyVault entities
-- **Network**: Retrofit API client configured for Replit backend
-- **Background**: WorkManager for automatic photo uploads
+### 📊 Technical Stack
 
-#### 2. Camera Module
-- **CameraActivity**: Full-featured camera with CameraX
-- **EdgeDetector**: OpenCV-based photo edge detection
-- **ImageEnhancer**: Perspective correction, color restoration, denoising, sharpening
-- Features: Grid overlay, manual focus/exposure, batch mode, flash control
+- **Language**: Kotlin
+- **Architecture**: MVVM + Repository Pattern
+- **Camera**: CameraX
+- **Image Processing**: OpenCV 4.12.0
+- **Database**: Room (SQLite)
+- **Network**: Retrofit + OkHttp
+- **Image Loading**: Glide
+- **Background Tasks**: WorkManager
+- **Min SDK**: 26 (Android 8.0)
+- **Target SDK**: 34 (Android 14)
 
-#### 3. Gallery Module
-- **GalleryActivity**: Photo grid with filtering (All, Uploaded, Pending, Enhanced)
-- **GalleryAdapter**: RecyclerView adapter with Glide image loading
-- **Search**: Full-text search across filename, tags, people, description
-- **Sorting**: By date or name
+---
 
-#### 4. Photo Detail Module
-- **PhotoDetailActivity**: Full-screen photo view with metadata
-- **MetadataEditDialog**: Edit description, tags, people, location
-- Actions: Share, delete, edit metadata
-
-#### 5. Family Vaults Module
-- **VaultListActivity**: Browse all family vaults
-- **VaultDetailActivity**: View vault photos and members
-- **CreateVaultDialog**: Create new family vault
-- **InviteMemberDialog**: Invite members via email
-
-#### 6. Authentication Module
-- **LoginActivity**: User login with JWT token
-- **RegisterActivity**: New user registration
-- **UserRepository**: Manages auth state and tokens
-
-#### 7. Data Layer
-- **PhotoRepository**: Photo CRUD, upload queue management
-- **UserRepository**: Authentication and user management
-- **DAOs**: PhotoDao, UploadQueueDao, FamilyVaultDao
-
-## Configuration
-
-### Backend URL
-The app is configured to use the Replit backend:
-```kotlin
-// In app/build.gradle
-buildConfigField "String", "API_BASE_URL", 
-    "\"https://62fd2792-7858-474f-abf0-1533e39f5256-00-3uuvecowo9aq1.kirk.replit.dev\""
-```
-
-### API Endpoints
-All endpoints are defined in `ApiService.kt`:
-- Authentication: `/auth/login`, `/auth/register`
-- Photos: `/upload`, `/gallery/photos`, `/photo/{id}`
-- Family Vaults: `/family/vaults`, `/family/vault/{id}`
-- Face Detection: `/api/photo-detection/extract`
-
-## Building the App
+## 🚀 Quick Start
 
 ### Prerequisites
-1. **Android Studio Hedgehog (2023.1.1) or later**
-2. **JDK 17**
-3. **Android SDK 34**
-4. **Internet connection** (for Maven dependency downloads)
 
-### Setup Steps
+Before you begin, ensure you have:
 
-#### 1. Install Android Studio
-Download from: https://developer.android.com/studio
+1. **Android Studio** - Hedgehog (2023.1.1) or later
+   - Download: https://developer.android.com/studio
+   
+2. **JDK 17** - Required for Gradle
+   - Usually bundled with Android Studio
+   
+3. **Android SDK 34** - Install via Android Studio SDK Manager
+   - Tools → SDK Manager → SDK Platforms → Android 14.0 (API 34)
+   
+4. **Internet Connection** - For downloading dependencies
 
-#### 2. Open Project
+### Step 1: Clone and Open Project
+
 ```bash
+# Navigate to the Android project directory
 cd photovault-android
-# Open in Android Studio: File > Open > Select photovault-android folder
+
+# Open in Android Studio
+# File → Open → Select 'photovault-android' folder
 ```
 
-#### 3. OpenCV Configuration ✅
-The app uses **OpenCV 4.12.0** from official Maven Central (automatically downloaded):
+### Step 2: Configure Backend URL
+
+Update the backend URL in `app/build.gradle`:
 
 ```gradle
-implementation 'org.opencv:opencv:4.12.0'
+android {
+    buildTypes {
+        release {
+            buildConfigField "String", "API_BASE_URL", 
+                "\"https://YOUR-REPLIT-DOMAIN.replit.dev\""
+        }
+        debug {
+            buildConfigField "String", "API_BASE_URL", 
+                "\"https://YOUR-REPLIT-DOMAIN.replit.dev\""
+        }
+    }
+}
 ```
 
-No manual AAR download needed - Gradle will fetch it automatically during build.
+Replace `YOUR-REPLIT-DOMAIN` with your actual PhotoVault backend domain.
 
-#### 4. Create Missing Layout XML Files
+### Step 3: Sync Project
 
-The Kotlin code is complete, but you need to create the following layout XML files in Android Studio:
-
-**Required Layouts** (create in `app/src/main/res/layout/`):
-
-1. **activity_gallery.xml**
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout 
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"/>
-    </com.google.android.material.appbar.AppBarLayout>
-    
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp">
-            
-            <com.google.android.material.chip.ChipGroup
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_all"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="All"
-                    style="@style/Widget.Material3.Chip.Filter"/>
-                    
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_uploaded"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Uploaded"
-                    style="@style/Widget.Material3.Chip.Filter"/>
-                    
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_pending"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pending"
-                    style="@style/Widget.Material3.Chip.Filter"/>
-                    
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_enhanced"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Enhanced"
-                    style="@style/Widget.Material3.Chip.Filter"/>
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-        
-        <TextView
-            android:id="@+id/text_photo_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="0 photos"/>
-        
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </LinearLayout>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+File → Sync Project with Gradle Files
 ```
 
-2. **item_photo_grid.xml** - Photo grid item
-3. **activity_photo_detail.xml** - Photo detail screen
-4. **dialog_metadata_edit.xml** - Metadata editing dialog
-5. **activity_vault_list.xml** - Vault list screen
-6. **item_vault.xml** - Vault list item
-7. **activity_vault_detail.xml** - Vault detail screen
-8. **dialog_create_vault.xml** - Create vault dialog
-9. **dialog_invite_member.xml** - Invite member dialog
+Android Studio will automatically:
+- Download all dependencies (including OpenCV 4.12.0)
+- Configure build tools
+- Index project files
 
-**Menu XMLs** (create in `app/src/main/res/menu/`):
-- `gallery_menu.xml` - Search and sort options
-- `vault_detail_menu.xml` - Vault actions
+**Note**: OpenCV 4.12.0 is fetched automatically from Maven Central - no manual AAR download needed!
 
-**Drawables** (create in `app/src/main/res/drawable/`):
-- `placeholder_photo.xml` - Simple placeholder for images
+### Step 4: Build Project
 
-#### 5. Sync Gradle
-In Android Studio: File > Sync Project with Gradle Files
+```
+Build → Make Project
+```
 
-#### 6. Build and Run
-1. Connect Android device or start emulator
-2. Click Run button or press Shift+F10
+Or use keyboard shortcut: **Ctrl+F9** (Windows/Linux) or **Cmd+F9** (Mac)
+
+### Step 5: Run on Device
+
+1. **Connect Android Device** (USB Debugging enabled) or **Start Emulator**
+2. Click **Run** button (green play icon) or press **Shift+F10**
 3. Select target device
+4. App will install and launch automatically
 
-## Manual Testing Checklist
+---
 
-Once the app builds successfully:
+## 🏗️ Project Architecture
 
-### Camera Testing
-- [ ] Camera preview appears
+### Directory Structure
+
+```
+photovault-android/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/calmic/photovault/
+│   │   │   │   ├── camera/          # Edge detection & enhancement
+│   │   │   │   ├── data/            # Room database, DAOs, entities
+│   │   │   │   ├── network/         # Retrofit API service
+│   │   │   │   ├── ui/              # Activities & UI components
+│   │   │   │   │   ├── auth/        # Login, Register
+│   │   │   │   │   ├── camera/      # Camera Activity
+│   │   │   │   │   ├── gallery/     # Gallery, Photo Detail
+│   │   │   │   │   ├── photo/       # Photo detail & editing
+│   │   │   │   │   └── vault/       # Family Vaults
+│   │   │   │   ├── util/            # Upload worker, helpers
+│   │   │   │   └── PhotoVaultApplication.kt
+│   │   │   ├── res/
+│   │   │   │   ├── layout/          # XML layouts
+│   │   │   │   ├── drawable/        # Icons, images
+│   │   │   │   ├── menu/            # Menu resources
+│   │   │   │   └── values/          # Strings, colors, themes
+│   │   │   └── AndroidManifest.xml
+│   ├── build.gradle                 # App-level build config
+│   └── proguard-rules.pro          # ProGuard configuration
+├── build.gradle                     # Project-level build config
+├── settings.gradle                  # Gradle settings
+└── gradle.properties               # Gradle properties
+```
+
+### Core Components
+
+#### 1. Application Class
+**`PhotoVaultApplication.kt`** - Initializes:
+- OpenCV library
+- Room database
+- Retrofit API client
+- Photo repository
+- User repository
+
+#### 2. Data Layer
+
+**Database Entities:**
+- `Photo` - Local photo storage with metadata
+- `UploadQueue` - Upload queue management
+- `FamilyVault` - Family vault information
+
+**DAOs (Data Access Objects):**
+- `PhotoDao` - Photo CRUD operations
+- `UploadQueueDao` - Queue management
+- `FamilyVaultDao` - Vault operations
+
+**Repositories:**
+- `PhotoRepository` - Photo business logic
+- `UserRepository` - Authentication & user management
+
+#### 3. Network Layer
+
+**`ApiService.kt`** - Retrofit interface defining endpoints:
+```kotlin
+@POST("/auth/login")
+suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+@Multipart
+@POST("/upload")
+suspend fun uploadPhoto(@Part photo: MultipartBody.Part): Response<UploadResponse>
+
+@GET("/family/vaults")
+suspend fun getFamilyVaults(): Response<VaultsResponse>
+```
+
+#### 4. UI Layer (MVVM Pattern)
+
+**Activities:**
+- `MainActivity` - Home screen, navigation hub
+- `LoginActivity` / `RegisterActivity` - Authentication
+- `CameraActivity` - Photo capture & enhancement
+- `GalleryActivity` - Photo grid with filters
+- `PhotoDetailActivity` - Full photo view & editing
+- `VaultListActivity` - Family vaults list
+- `VaultDetailActivity` - Vault photos & members
+
+**Adapters:**
+- `GalleryAdapter` - RecyclerView adapter for photo grid
+- `VaultAdapter` - RecyclerView adapter for vault list
+
+#### 5. Image Processing
+
+**`EdgeDetector.kt`** - OpenCV-based edge detection:
+- Detects photo borders in camera preview
+- Uses Canny edge detection + contour finding
+- Identifies rectangular shapes (photos)
+
+**`ImageEnhancer.kt`** - Auto-enhancement pipeline:
+- Perspective correction (dewarp)
+- CLAHE (Contrast Limited Adaptive Histogram Equalization)
+- Color restoration
+- Denoising (fastNlMeansDenoisingColored)
+- Unsharp masking (sharpening)
+
+#### 6. Background Processing
+
+**`UploadWorker.kt`** - WorkManager implementation:
+- Uploads queued photos to backend
+- Retries on failure with exponential backoff
+- Runs only when network available
+- Updates photo upload status
+
+---
+
+## 🔧 Configuration
+
+### API Endpoints
+
+All endpoints defined in `ApiService.kt`:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/auth/login` | POST | User login |
+| `/auth/register` | POST | User registration |
+| `/upload` | POST | Upload photo with metadata |
+| `/gallery/photos` | GET | Get user's photos |
+| `/photo/{id}` | GET | Get photo details |
+| `/family/vaults` | GET | Get family vaults |
+| `/family/vault/{id}` | POST | Create vault |
+| `/family/vault/{id}/photos` | GET | Get vault photos |
+| `/family/vault/{id}/invite` | POST | Invite member |
+| `/api/photo-detection/extract` | POST | Face detection |
+
+### Permissions
+
+Defined in `AndroidManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+    android:maxSdkVersion="32" />
+```
+
+### Database Schema
+
+**Photo Table:**
+```kotlin
+@Entity(tableName = "photos")
+data class Photo(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val fileName: String,
+    val localUri: String,
+    val fileSize: Long,
+    val capturedAt: Long,
+    val isUploaded: Boolean = false,
+    val uploadedAt: Long? = null,
+    val serverId: Int? = null,
+    val isEnhanced: Boolean = false,
+    val description: String? = null,
+    val tags: String? = null,
+    val people: String? = null,
+    val location: String? = null,
+    val vaultId: Int? = null
+)
+```
+
+---
+
+## 🎯 Features Deep Dive
+
+### Camera Module
+
+**Advanced Features:**
+- **Edge Detection**: Real-time photo border detection using OpenCV
+- **Grid Overlay**: 3x3 grid for composition
+- **Manual Controls**: Tap-to-focus, exposure adjustment
+- **Batch Mode**: Capture multiple photos rapidly
+- **Flash Control**: Off, On, Torch modes
+- **Auto-Enhancement**: Apply enhancement pipeline after capture
+
+**How It Works:**
+1. User opens camera
+2. CameraX provides preview stream
+3. EdgeDetector analyzes frames for photo borders
+4. User taps capture
+5. High-resolution photo saved locally
+6. ImageEnhancer processes image (optional)
+7. Photo saved to Room database
+8. Queued for upload
+
+### Gallery Module
+
+**Features:**
+- Photo grid (3 columns)
+- Filter chips: All, Uploaded, Pending, Enhanced
+- Search by filename, tags, people, description
+- Sort by date or name
+- Upload status indicators
+
+**Implementation:**
+```kotlin
+// Filter photos
+private fun applyFilter() {
+    filteredPhotos = when (currentFilter) {
+        FilterType.ALL -> allPhotos
+        FilterType.UPLOADED -> allPhotos.filter { it.isUploaded }
+        FilterType.PENDING -> allPhotos.filter { !it.isUploaded }
+        FilterType.ENHANCED -> allPhotos.filter { it.isEnhanced }
+    }
+    adapter.submitList(filteredPhotos)
+    updatePhotoCount()
+}
+```
+
+### Family Vaults
+
+**Capabilities:**
+- Create vaults with name and description
+- Invite members via email
+- View vault photos
+- Add photos to vaults
+- Download for offline viewing
+
+**Workflow:**
+1. User creates vault
+2. Backend generates unique vault ID
+3. User invites family members
+4. Members receive email invitation
+5. Members can view/add photos to vault
+
+### Background Upload
+
+**WorkManager Implementation:**
+```kotlin
+val uploadRequest = OneTimeWorkRequestBuilder<UploadWorker>()
+    .setConstraints(
+        Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+    )
+    .setBackoffCriteria(
+        BackoffPolicy.EXPONENTIAL,
+        WorkRequest.MIN_BACKOFF_MILLIS,
+        TimeUnit.MILLISECONDS
+    )
+    .build()
+
+WorkManager.getInstance(context).enqueue(uploadRequest)
+```
+
+**Features:**
+- Runs only when network available
+- Exponential backoff on failure
+- Automatic retry
+- Updates UI on completion
+
+---
+
+## ✅ Testing Checklist
+
+### Pre-Flight Checks
+- [ ] Backend is running and accessible
+- [ ] Device has internet connection
+- [ ] Camera permission granted
+- [ ] Storage permission granted (if needed)
+
+### Authentication Flow
+- [ ] Register new user successfully
+- [ ] Login with valid credentials
+- [ ] Token persists after app restart
+- [ ] Logout clears session
+- [ ] Invalid credentials show error
+
+### Camera & Capture
+- [ ] Camera preview loads
 - [ ] Edge detection highlights photo borders
-- [ ] Grid overlay displays
-- [ ] Tap to focus works
-- [ ] Batch capture mode captures multiple photos
-- [ ] Flash toggle works
+- [ ] Grid overlay toggles on/off
+- [ ] Tap-to-focus works
+- [ ] Flash modes work (Off, On, Torch)
+- [ ] Batch mode captures multiple photos
 - [ ] Photos save to local storage
+- [ ] Enhanced photos look better than originals
 
-### Gallery Testing
+### Gallery & Organization
 - [ ] All photos display in grid
 - [ ] Filter chips work (All, Uploaded, Pending, Enhanced)
-- [ ] Search finds photos by name/tags/people
+- [ ] Search finds photos by keywords
 - [ ] Sort by date/name works
+- [ ] Photo count updates correctly
 - [ ] Tap photo opens detail view
 
-### Photo Detail Testing
+### Photo Details & Editing
 - [ ] Full image displays
 - [ ] Metadata shown correctly
 - [ ] Edit metadata dialog works
-- [ ] Save updates database
-- [ ] Delete removes photo
+- [ ] Tags, people, location save
+- [ ] Share photo works
+- [ ] Delete removes photo from database
 
-### Family Vaults Testing
-- [ ] Vault list loads
-- [ ] Create new vault works
-- [ ] Tap vault opens detail
+### Family Vaults
+- [ ] Vault list loads from server
+- [ ] Create new vault succeeds
+- [ ] Tap vault opens detail view
 - [ ] Vault photos display
-- [ ] Invite member sends invitation
+- [ ] Invite member sends email
 - [ ] Add photos to vault works
+- [ ] Download for offline viewing
 
-### Background Upload Testing
+### Background Upload
 - [ ] Photos queue for upload
-- [ ] WorkManager uploads in background
+- [ ] Upload happens in background
 - [ ] Upload status updates in gallery
-- [ ] Failed uploads retry
+- [ ] Failed uploads retry automatically
+- [ ] Upload works when app is closed
 
-### Authentication Testing
-- [ ] Login with valid credentials works
-- [ ] Register new user works
-- [ ] Token persists across app restarts
-- [ ] Logout clears session
+---
 
-## Troubleshooting
-
-### OpenCV Not Found
-```
-Error: Could not find opencv-4.8.0.aar
-```
-**Solution**: Download OpenCV AAR and place in `app/libs/` directory
+## 🐛 Troubleshooting
 
 ### Build Errors
+
+#### Problem: "Could not resolve org.opencv:opencv:4.12.0"
+**Solution:**
+1. Check internet connection
+2. Verify Maven Central is accessible
+3. Sync project: `File → Sync Project with Gradle Files`
+4. Clean build: `Build → Clean Project` then rebuild
+
+#### Problem: "SDK location not found"
+**Solution:**
+Create `local.properties` in project root:
+```properties
+sdk.dir=/path/to/Android/Sdk
 ```
-Error: Missing layout file
+
+#### Problem: "Execution failed for task ':app:mergeDebugResources'"
+**Solution:**
+1. Check for duplicate resources in `res/` folders
+2. Clean build: `Build → Clean Project`
+3. Invalidate caches: `File → Invalidate Caches → Invalidate and Restart`
+
+### Runtime Errors
+
+#### Problem: "OpenCV initialization failed"
+**Cause:** OpenCV library not loaded properly
+
+**Solution:**
+1. Check Gradle synced successfully
+2. Verify `org.opencv:opencv:4.12.0` in dependencies
+3. Clean and rebuild project
+4. Uninstall app and reinstall
+
+#### Problem: "Unable to resolve host" / "Network error"
+**Cause:** Cannot connect to backend
+
+**Solution:**
+1. Verify backend is running: Open backend URL in browser
+2. Check `API_BASE_URL` in `build.gradle` matches Replit domain
+3. Ensure device has internet (not just WiFi connected)
+4. Check firewall/network restrictions
+5. Try from different network
+
+#### Problem: "Permission denied" for camera
+**Cause:** Camera permission not granted
+
+**Solution:**
+1. Grant permission when prompted
+2. Or manually: `Settings → Apps → PhotoVault → Permissions → Camera → Allow`
+3. Restart app after granting
+
+#### Problem: "SQLiteException: no such table"
+**Cause:** Database schema mismatch
+
+**Solution:**
+1. Uninstall app completely
+2. Clean project: `Build → Clean Project`
+3. Rebuild and install fresh
+
+### Performance Issues
+
+#### Problem: "App is slow/laggy"
+**Solutions:**
+- Enable R8/ProGuard minification in release build
+- Use release build for testing performance
+- Check device has sufficient storage
+- Reduce image quality in camera settings
+- Enable image caching in Glide
+
+#### Problem: "Camera preview is choppy"
+**Solutions:**
+- Disable edge detection temporarily
+- Reduce preview resolution
+- Close background apps
+- Test on physical device (not emulator)
+
+---
+
+## 🚢 Building for Release
+
+### 1. Configure Signing
+
+Create `keystore.properties` in project root:
+```properties
+storePassword=yourStorePassword
+keyPassword=yourKeyPassword
+keyAlias=yourKeyAlias
+storeFile=path/to/keystore.jks
 ```
-**Solution**: Create all required layout XML files using Android Studio's layout editor
 
-### API Connection Failed
+Update `app/build.gradle`:
+```gradle
+android {
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+    
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 
+                'proguard-rules.pro'
+        }
+    }
+}
 ```
-Error: Unable to resolve host
+
+### 2. Build Release APK
+
+```bash
+./gradlew assembleRelease
 ```
-**Solution**: 
-1. Check device has internet connection
-2. Verify Replit backend is running
-3. Check API_BASE_URL in build.gradle matches your Replit domain
 
-### Camera Permission Denied
-**Solution**: Grant camera permission in device Settings > Apps > PhotoVault > Permissions
+Output: `app/build/outputs/apk/release/app-release.apk`
 
-## Next Steps
+### 3. Build App Bundle (for Play Store)
 
-### Enhancements to Consider
-1. **Biometric Authentication** - Use fingerprint/face unlock
-2. **Cloud Backup** - Auto-backup to Google Drive
-3. **Photo Filters** - Instagram-style filters
-4. **Video Support** - Capture and enhance videos
-5. **OCR Text Detection** - Extract text from photos
-6. **Timeline View** - Group photos by date
-7. **Map View** - Show photos on map by location
-8. **Slideshow** - Auto-playing photo slideshow
-9. **Print Ordering** - Order physical prints
-10. **AR Preview** - Preview how physical photos will look
+```bash
+./gradlew bundleRelease
+```
 
-### Performance Optimizations
-1. Image caching with Glide
-2. Pagination for large photo libraries
-3. Thumbnail generation optimization
-4. Background processing for enhancements
-5. Database query optimization
+Output: `app/build/outputs/bundle/release/app-release.aab`
 
-## Support
+---
 
-For issues with:
-- **Android Development**: Check Android Studio logs
-- **Backend API**: Check PhotoVault Flask server logs
-- **OpenCV**: Verify AAR file is correctly placed
-- **Build Errors**: Run `./gradlew clean build` in terminal
+## 📈 Performance Optimization
 
-## Resources
+### Best Practices Implemented
 
+1. **Image Loading** - Glide with caching
+2. **Database Queries** - LiveData with Room
+3. **Background Work** - WorkManager with constraints
+4. **Memory Management** - Bitmap recycling, weak references
+5. **Network Calls** - Coroutines with proper error handling
+6. **UI Responsiveness** - RecyclerView with ViewBinding
+
+### Recommended Improvements
+
+- Implement pagination for large photo galleries
+- Add database indices for faster queries
+- Use DiffUtil for RecyclerView updates
+- Implement WorkManager periodic sync
+- Add Crashlytics for crash reporting
+- Implement analytics (Firebase/MixPanel)
+
+---
+
+## 🔐 Security Considerations
+
+### Implemented
+
+- JWT token authentication
+- HTTPS for all network calls
+- Secure local storage (Room database)
+- ProGuard obfuscation in release builds
+- Input validation on forms
+
+### Recommended Additions
+
+- Certificate pinning for API calls
+- Encrypted SharedPreferences for tokens
+- Biometric authentication
+- SQL injection prevention (parameterized queries)
+- Runtime permissions best practices
+
+---
+
+## 📚 Resources
+
+### Official Documentation
 - [Android Developer Docs](https://developer.android.com)
-- [CameraX Documentation](https://developer.android.com/training/camerax)
+- [CameraX Guide](https://developer.android.com/training/camerax)
 - [OpenCV Android](https://opencv.org/android/)
 - [Room Database](https://developer.android.com/training/data-storage/room)
 - [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager)
 - [Retrofit](https://square.github.io/retrofit/)
+- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+
+### Libraries Used
+- **CameraX** v1.3.1 - Camera functionality
+- **OpenCV** v4.12.0 - Image processing
+- **Room** v2.6.1 - Local database
+- **Retrofit** v2.9.0 - REST API client
+- **Glide** v4.16.0 - Image loading
+- **WorkManager** v2.9.0 - Background tasks
+- **Material Components** v1.11.0 - UI components
+
+---
+
+## 🆘 Getting Help
+
+### Common Issues
+- Check this guide's **Troubleshooting** section first
+- Review Android Studio **Logcat** for error messages
+- Check **Backend logs** on Replit for API errors
+
+### Support Channels
+- **Android Studio**: Built-in Logcat and debugger
+- **Backend API**: Check PhotoVault Flask server logs on Replit
+- **OpenCV**: Verify library version matches (4.12.0)
+- **Build Issues**: Run `./gradlew clean build --stacktrace`
+
+---
+
+## 🎉 Success!
+
+Once setup is complete, you should have:
+- ✅ Fully functional Android app
+- ✅ Connected to PhotoVault backend
+- ✅ Camera with edge detection
+- ✅ Auto-enhancement pipeline
+- ✅ Gallery with search/filter
+- ✅ Family vault sharing
+- ✅ Background upload system
+
+**Next Steps:**
+1. Test all features using the checklist above
+2. Customize branding (colors, logo, app name)
+3. Add your own enhancements
+4. Build release version for distribution
+5. Publish to Google Play Store (optional)
+
+---
+
+## 📝 Version History
+
+- **v1.0.0** (Current)
+  - Initial release
+  - OpenCV 4.12.0 integration
+  - Complete feature set
+  - Offline-first architecture
+  - Family vault support
+
+---
+
+**Happy coding! 📱✨**
