@@ -56,13 +56,11 @@ class MainActivity : AppCompatActivity() {
         }
         
         binding.btnGallery.setOnClickListener {
-            // Navigate to gallery (implement later)
-            Toast.makeText(this, "Gallery coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, com.calmic.photovault.ui.gallery.GalleryActivity::class.java))
         }
         
         binding.btnVaults.setOnClickListener {
-            // Navigate to vaults (implement later)
-            Toast.makeText(this, "Family Vaults coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, com.calmic.photovault.ui.vault.VaultListActivity::class.java))
         }
     }
     

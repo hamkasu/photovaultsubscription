@@ -98,6 +98,10 @@ class PhotoRepository(
         }
     }
     
+    suspend fun updatePhoto(photo: Photo) = withContext(Dispatchers.IO) {
+        photoDao.updatePhoto(photo)
+    }
+    
     suspend fun deletePhoto(photoId: Long) = withContext(Dispatchers.IO) {
         val photo = photoDao.getPhotoById(photoId)
         photo?.let {
