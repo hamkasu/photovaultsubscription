@@ -70,6 +70,11 @@ PhotoVault is a professional photo management platform built with Flask (Python 
 5. Configured development workflow to run on port 5000
 6. Tested application successfully - homepage loads correctly
 7. Configured deployment for Replit Autoscale with Gunicorn
+8. Fixed billing system to work in development mode without Stripe:
+   - Updated subscribe route to allow direct subscriptions without payment when STRIPE_SECRET_KEY is not configured
+   - Updated upgrade_plan route to allow plan changes without Stripe integration in development
+   - Added proper error handling with database rollback on failures
+   - Development mode subscriptions show "(Development mode - no payment required)" message
 
 ## Deployment
 - **Target**: Autoscale (stateless web application)
