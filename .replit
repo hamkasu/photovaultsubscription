@@ -82,4 +82,4 @@ waitForPort = 5000
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:5000", "--workers", "1", "--worker-class", "sync", "--timeout", "120", "--log-level", "info", "--access-logfile", "-", "--error-logfile"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--workers=4", "--timeout=120", "--access-logfile=-", "--error-logfile=-", "wsgi:app"]
