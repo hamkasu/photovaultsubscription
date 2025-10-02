@@ -57,7 +57,7 @@ def plans():
 @billing_bp.route('/subscribe/<int:plan_id>', methods=['POST'])
 @login_required
 def subscribe(plan_id):
-    """Create Stripe checkout session for subscription"""
+    """Create Stripe checkout session for subscription or direct subscribe in development"""
     plan = SubscriptionPlan.query.get_or_404(plan_id)
     
     # Check if user already has an active subscription
@@ -70,6 +70,36 @@ def subscribe(plan_id):
         flash('You already have an active subscription. Please cancel it first before subscribing to a new plan.', 'warning')
         return redirect(url_for('billing.dashboard'))
     
+    # Check if Stripe is configured
+    stripe_configured = bool(os.getenv('STRIPE_SECRET_KEY'))
+    
+    # Development mode: create subscription directly without Stripe
+    if not stripe_configured:
+        try:
+            # Create user subscription record directly
+            user_sub = UserSubscription(
+                user_id=current_user.id,
+                plan_id=plan_id,
+                status='active',
+                start_date=datetime.utcnow(),
+                current_period_start=datetime.utcnow(),
+                current_period_end=datetime.utcnow() + timedelta(days=30),
+                next_billing_date=datetime.utcnow() + timedelta(days=30)
+            )
+            db.session.add(user_sub)
+            db.session.commit()
+            
+            current_app.logger.info(f"Development mode: User {current_user.id} subscribed to {plan.name}")
+            flash(f'Successfully subscribed to {plan.display_name}! (Development mode - no payment required)', 'success')
+            return redirect(url_for('billing.dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating subscription in development mode: {str(e)}")
+            flash(f'Error creating subscription: {str(e)}', 'danger')
+            return redirect(url_for('billing.plans'))
+    
+    # Production mode: use Stripe
     try:
         # Create or get Stripe customer
         if not current_user.stripe_customer_id:
