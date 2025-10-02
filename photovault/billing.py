@@ -328,6 +328,26 @@ def upgrade_plan(plan_id):
         flash('You are already on this plan.', 'info')
         return redirect(url_for('billing.dashboard'))
     
+    # Check if Stripe is configured
+    stripe_configured = bool(os.getenv('STRIPE_SECRET_KEY'))
+    
+    # Development mode: allow plan changes without Stripe
+    if not stripe_configured:
+        try:
+            current_plan = subscription.plan
+            subscription.plan_id = plan_id
+            db.session.commit()
+            
+            current_app.logger.info(f"Development mode: User {current_user.id} changed plan from {current_plan.name} to {new_plan.name}")
+            flash(f'Successfully changed to {new_plan.display_name}! (Development mode - no payment required)', 'success')
+            return redirect(url_for('billing.dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error changing plan in development mode: {str(e)}")
+            flash(f'Error changing plan: {str(e)}', 'danger')
+            return redirect(url_for('billing.dashboard'))
+    
+    # Production mode: require Stripe integration
     # Check if new plan has Stripe price ID configured
     if not new_plan.stripe_price_id:
         flash('This plan is not available for online subscription. Please contact support.', 'warning')
