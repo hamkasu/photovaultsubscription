@@ -2200,3 +2200,213 @@ def recover_corrupted_photo(photo_id):
             'success': False,
             'error': 'Recovery failed due to unexpected error'
         }), 500
+
+
+@photo_bp.route('/api/photo/<int:photo_id>/colorize', methods=['POST'])
+@login_required
+def colorize_photo_route(photo_id):
+    """
+    Colorize a black and white photo
+    
+    Args:
+        photo_id: ID of the photo to colorize
+        
+    Request JSON:
+        method: 'auto', 'dnn', or 'basic' (optional, default: 'auto')
+        
+    Returns:
+        JSON with success status and colorized photo information
+    """
+    try:
+        from photovault.utils.colorization import get_colorizer
+        from photovault.services.app_storage_service import app_storage
+        
+        photo = Photo.query.get_or_404(photo_id)
+        
+        if photo.user_id != current_user.id and not current_user.is_admin:
+            return jsonify({
+                'success': False,
+                'error': 'Unauthorized access to this photo'
+            }), 403
+        
+        data = request.get_json() or {}
+        method = data.get('method', 'auto')
+        
+        if method not in ['auto', 'dnn', 'basic']:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid colorization method. Use auto, dnn, or basic'
+            }), 400
+        
+        colorizer = get_colorizer()
+        
+        try:
+            is_grayscale = colorizer.is_grayscale(photo.file_path)
+        except FileNotFoundError as e:
+            logger.error(f"Photo file not found: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Photo file not found or has been deleted'
+            }), 404
+        except RuntimeError as e:
+            logger.error(f"Photo file corrupted: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Photo file is corrupted or invalid'
+            }), 500
+        
+        if not is_grayscale:
+            return jsonify({
+                'success': False,
+                'error': 'Photo is already in color',
+                'is_grayscale': False
+            }), 400
+        
+        unique_id = str(uuid.uuid4())
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        file_extension = os.path.splitext(photo.filename)[1] or '.jpg'
+        
+        colorized_filename = f"{current_user.id}_{unique_id}_colorized_{timestamp}{file_extension}"
+        
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        colorized_path = os.path.join(user_folder, colorized_filename)
+        
+        logger.info(f"Colorizing photo {photo_id} using method: {method}")
+        
+        try:
+            colorized_path, actual_method = colorizer.colorize_image(photo.file_path, colorized_path, method=method)
+        except RuntimeError as e:
+            if 'DNN model not available' in str(e) or 'not initialized' in str(e):
+                if method == 'dnn':
+                    return jsonify({
+                        'success': False,
+                        'error': 'DNN colorization model not available. Use method="basic" or method="auto" instead.'
+                    }), 400
+                else:
+                    raise
+            else:
+                raise
+        
+        thumbnail_path = None
+        thumbnail_filename = f"{current_user.id}_{unique_id}_colorized_thumb_{timestamp}.jpg"
+        thumbnail_full_path = os.path.join(user_folder, thumbnail_filename)
+        
+        if create_thumbnail_local(colorized_path, thumbnail_full_path):
+            thumbnail_path = thumbnail_full_path
+        
+        image_info = get_image_info(colorized_path)
+        
+        new_photo = Photo(
+            filename=colorized_filename,
+            original_name=f"colorized_{photo.original_name}",
+            file_path=colorized_path,
+            thumbnail_path=thumbnail_path,
+            file_size=image_info.get('size_bytes') if image_info else None,
+            width=image_info.get('width') if image_info else None,
+            height=image_info.get('height') if image_info else None,
+            mime_type=f"image/{image_info.get('format', 'jpeg').lower()}" if image_info else 'image/jpeg',
+            upload_source='colorization',
+            user_id=current_user.id,
+            album_id=photo.album_id,
+            description=f"Colorized version of {photo.original_name}"
+        )
+        
+        db.session.add(new_photo)
+        db.session.commit()
+        
+        logger.info(f"Created colorized photo {new_photo.id} from original {photo_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo colorized successfully',
+            'original_photo_id': photo_id,
+            'colorized_photo_id': new_photo.id,
+            'method_used': actual_method,
+            'colorized_photo': {
+                'id': new_photo.id,
+                'filename': new_photo.filename,
+                'original_name': new_photo.original_name,
+                'width': new_photo.width,
+                'height': new_photo.height,
+                'file_size': new_photo.file_size,
+                'created_at': new_photo.created_at.isoformat() if new_photo.created_at else None,
+                'thumbnail_url': url_for('gallery.uploaded_file', 
+                                        user_id=current_user.id, 
+                                        filename=thumbnail_filename) if thumbnail_path else None,
+                'image_url': url_for('gallery.uploaded_file', 
+                                    user_id=current_user.id, 
+                                    filename=colorized_filename)
+            }
+        })
+        
+    except RuntimeError as e:
+        logger.error(f"Colorization model error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    except Exception as e:
+        logger.error(f"Colorization failed for photo {photo_id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'Colorization failed due to unexpected error'
+        }), 500
+
+
+@photo_bp.route('/api/photo/<int:photo_id>/check-grayscale', methods=['GET'])
+@login_required
+def check_grayscale_route(photo_id):
+    """
+    Check if a photo is grayscale (black and white)
+    
+    Args:
+        photo_id: ID of the photo to check
+        
+    Returns:
+        JSON with is_grayscale boolean
+    """
+    try:
+        from photovault.utils.colorization import get_colorizer
+        
+        photo = Photo.query.get_or_404(photo_id)
+        
+        if photo.user_id != current_user.id and not current_user.is_admin:
+            return jsonify({
+                'success': False,
+                'error': 'Unauthorized access to this photo'
+            }), 403
+        
+        colorizer = get_colorizer()
+        
+        try:
+            is_grayscale = colorizer.is_grayscale(photo.file_path)
+        except FileNotFoundError as e:
+            logger.error(f"Photo file not found: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Photo file not found or has been deleted'
+            }), 404
+        except RuntimeError as e:
+            logger.error(f"Photo file corrupted: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Photo file is corrupted or invalid'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo_id,
+            'is_grayscale': is_grayscale,
+            'can_colorize': is_grayscale
+        })
+        
+    except Exception as e:
+        logger.error(f"Grayscale check failed for photo {photo_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to check photo color mode'
+        }), 500
