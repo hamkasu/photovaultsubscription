@@ -709,3 +709,43 @@ class PaymentHistory(db.Model):
     
     def __repr__(self):
         return f'<PaymentHistory {self.id} - {self.amount} {self.currency}>'
+
+
+class SocialMediaConnection(db.Model):
+    """Social media account connection model"""
+    __tablename__ = 'social_media_connection'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Platform details
+    platform = db.Column(db.String(50), nullable=False)  # instagram, facebook, twitter, pinterest
+    platform_user_id = db.Column(db.String(255))  # Platform-specific user ID
+    platform_username = db.Column(db.String(255))  # Platform username/handle
+    
+    # OAuth tokens
+    access_token = db.Column(db.Text, nullable=False)  # OAuth access token
+    refresh_token = db.Column(db.Text)  # OAuth refresh token (if available)
+    token_expires_at = db.Column(db.DateTime)  # Token expiration time
+    
+    # Connection status
+    is_active = db.Column(db.Boolean, default=True)
+    last_used_at = db.Column(db.DateTime)  # Last time this connection was used
+    
+    # Platform-specific metadata
+    connection_data = db.Column(db.JSON)  # Store platform-specific data (e.g., page IDs, board IDs)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='social_media_connections')
+    
+    # Composite unique constraint - one connection per user per platform
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'platform', name='_user_platform_uc'),
+    )
+    
+    def __repr__(self):
+        return f'<SocialMediaConnection {self.user_id} - {self.platform}>'
