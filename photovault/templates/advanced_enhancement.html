@@ -378,6 +378,8 @@ body {
 
         <!-- Enhancement Features -->
         <div class="features-card">
+            <input type="hidden" id="current-photo-id" value="{{ photo.id if photo else '' }}">
+            
             <div class="features-header">
                 <i class="bi bi-info-circle"></i>
                 <h5 class="mb-0">Enhancement Features</h5>
@@ -419,6 +421,33 @@ body {
                     <h6>Canvas</h6>
                     <p>Manual Editing</p>
                 </div>
+            </div>
+
+            <!-- Colorization Section -->
+            <div id="colorization-options" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+                <div class="features-header">
+                    <i class="bi bi-palette"></i>
+                    <h5 class="mb-0">Colorization Options</h5>
+                </div>
+                <div class="d-flex gap-2 justify-content-center flex-wrap mt-3">
+                    <button id="colorize-btn" class="btn-enhance">
+                        <i class="bi bi-palette"></i> Colorize (Traditional)
+                    </button>
+                    <button id="colorize-ai-btn" class="btn-enhance">
+                        <i class="bi bi-stars"></i> Colorize with AI
+                    </button>
+                    <button id="analyze-enhancement-btn" class="btn-reset">
+                        <i class="bi bi-graph-up-arrow"></i> AI Enhancement Analysis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div id="colorization-progress" style="display: none; margin-top: 2rem;">
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 100%"></div>
+                </div>
+                <p class="text-center mt-2 text-muted progress-message">Processing...</p>
             </div>
 
             <!-- Action Buttons -->
@@ -642,4 +671,46 @@ function showMessage(message, type) {
     }, 5000);
 }
 </script>
+
+<!-- AI Guidance Modal -->
+<div class="modal fade" id="ai-guidance-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-stars"></i> AI Guidance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ai-guidance-content">
+                    <!-- AI guidance will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhancement Analysis Modal -->
+<div class="modal fade" id="enhancement-analysis-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-graph-up-arrow"></i> Enhancement Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="analysis-content">
+                    <!-- Analysis results will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/colorization.js') }}"></script>
 {% endblock %}

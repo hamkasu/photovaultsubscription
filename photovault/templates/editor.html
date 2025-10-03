@@ -117,6 +117,32 @@ CALMIC SDN BHD - "Committed to Excellence"
                     <!-- End Modified Color Picker Section -->
 
                     <hr>
+
+                    <!-- Colorization Section -->
+                    <input type="hidden" id="current-photo-id" value="{{ photo.id }}">
+                    
+                    <div id="colorization-options" style="display: none;" class="mb-3">
+                        <h6 class="mb-3"><i class="bi bi-palette"></i> Colorization Options</h6>
+                        <button id="colorize-btn" class="btn btn-info w-100 mb-2">
+                            <i class="bi bi-palette"></i> Colorize (Traditional)
+                        </button>
+                        <button id="colorize-ai-btn" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-stars"></i> Colorize with AI
+                        </button>
+                        <button id="analyze-enhancement-btn" class="btn btn-outline-info w-100 mb-2">
+                            <i class="bi bi-graph-up-arrow"></i> AI Enhancement Analysis
+                        </button>
+                        <hr>
+                    </div>
+
+                    <!-- Progress Indicator -->
+                    <div id="colorization-progress" style="display: none;" class="mb-3">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        <small class="text-muted progress-message">Processing...</small>
+                    </div>
+
                     <div class="mb-3">
                         <div class="btn-group w-100 mb-2" role="group">
                             <button class="btn btn-outline-secondary" onclick="undo()" title="Undo (Ctrl+Z)">
@@ -147,8 +173,49 @@ CALMIC SDN BHD - "Committed to Excellence"
     </div>
 </div>
 
+<!-- AI Guidance Modal -->
+<div class="modal fade" id="ai-guidance-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-stars"></i> AI Guidance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ai-guidance-content">
+                    <!-- AI guidance will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhancement Analysis Modal -->
+<div class="modal fade" id="enhancement-analysis-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-graph-up-arrow"></i> Enhancement Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="analysis-content">
+                    <!-- Analysis results will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
 <script src="{{ url_for('static', filename='js/editor-enhanced.js') }}"></script>
+<script src="{{ url_for('static', filename='js/colorization.js') }}"></script>
 <script>
     // Pass the photo ID to the JavaScript
     const photoId = {{ photo.id }};

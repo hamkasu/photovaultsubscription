@@ -48,3 +48,6 @@ stripe==11.1.1
 
 # Replit Services
 replit-object-storage==1.0.2
+
+# AI Integration
+openai>=1.0.0

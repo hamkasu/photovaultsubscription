@@ -244,6 +244,7 @@ def create_app(config_class=None):
     from photovault.routes.family import family_bp
     from photovault.routes.smart_tagging import smart_tagging_bp
     from photovault.routes.social_media import social_media_bp
+    from photovault.routes.colorization import colorization_bp
     from photovault.billing import billing_bp
     
     app.register_blueprint(main_bp)
@@ -258,6 +259,7 @@ def create_app(config_class=None):
     app.register_blueprint(family_bp)
     app.register_blueprint(smart_tagging_bp)
     app.register_blueprint(social_media_bp)
+    app.register_blueprint(colorization_bp)
     app.register_blueprint(billing_bp)
     
     # Note: Upload file serving is handled securely via gallery.uploaded_file route with authentication
