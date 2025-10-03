@@ -13,7 +13,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 38295
+localPort = 42725
 externalPort = 3003
 
 [[ports]]
@@ -69,7 +69,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python dev.py"
+args = "python main.py"
 waitForPort = 5000
 
 [deployment]
