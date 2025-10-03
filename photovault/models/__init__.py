@@ -494,6 +494,7 @@ class SubscriptionPlan(db.Model):
     face_detection = db.Column(db.Boolean, default=False)
     photo_enhancement = db.Column(db.Boolean, default=False)
     smart_tagging = db.Column(db.Boolean, default=False)
+    social_media_integration = db.Column(db.Boolean, default=False)
     api_access = db.Column(db.Boolean, default=False)
     priority_support = db.Column(db.Boolean, default=False)
     
