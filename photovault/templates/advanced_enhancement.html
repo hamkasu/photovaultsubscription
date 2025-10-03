@@ -1,14 +1,6 @@
 <!--
 PhotoVault - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
-
-This software is proprietary and confidential. Unauthorized copying, distribution,
-modification, or use of this software is strictly prohibited.
-
-Website: https://www.calmic.com.my
-Email: support@calmic.com.my
-
-CALMIC SDN BHD - "Committed to Excellence"
 -->
 
 {% extends "base.html" %}
@@ -17,47 +9,217 @@ CALMIC SDN BHD - "Committed to Excellence"
 {% block extra_css %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
-.enhancement-container {
+body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 90vh;
+    min-height: 100vh;
+}
+
+.enhancement-container {
     padding: 2rem 0;
 }
 
-.feature-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: transform 0.3s ease;
+.enhancement-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 2rem;
 }
 
-.feature-card:hover {
-    transform: translateY(-5px);
+.enhancement-header h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+}
+
+.enhancement-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
 }
 
 .opencv-badge {
     background: linear-gradient(45deg, #ff6b6b, #ee5a24);
     color: white;
-    padding: 0.25rem 0.75rem;
+    padding: 0.4rem 1rem;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: bold;
+    display: inline-block;
+    margin-top: 0.5rem;
 }
 
-.enhancement-preview {
-    border-radius: 10px;
-    max-width: 100%;
+.preview-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    margin-bottom: 1.5rem;
+}
+
+.preview-tabs {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tab-button {
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.tab-button.active {
+    background: #667eea;
+    color: white;
+}
+
+.tab-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.image-preview-section {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.image-column {
+    flex: 1;
+    max-width: 48%;
+    text-align: center;
+}
+
+.image-column h6 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.preview-image {
+    width: 100%;
+    height: auto;
     max-height: 400px;
     object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.tool-section {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+.single-image-view {
+    text-align: center;
+}
+
+.features-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+}
+
+.features-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.features-header i {
+    color: #667eea;
+    font-size: 1.5rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.feature-item {
+    text-align: center;
     padding: 1.5rem;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.feature-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.feature-item h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.feature-item p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-enhance {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-enhance:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-reset {
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-reset:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
 }
 
 .processing-overlay {
@@ -67,63 +229,50 @@ CALMIC SDN BHD - "Committed to Excellence"
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    display: none;
+}
+
+.processing-overlay.active {
+    display: flex;
 }
 
 .processing-content {
     background: white;
-    padding: 2rem;
+    padding: 2rem 3rem;
     border-radius: 15px;
     text-align: center;
-    max-width: 400px;
 }
 
-.btn-enhance {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border: none;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 25px;
-    font-weight: bold;
-    transition: all 0.3s ease;
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
 }
 
-.btn-enhance:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.before-after-container {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.image-container {
-    flex: 1;
-    min-width: 300px;
-    text-align: center;
-}
-
-.canvas-editor {
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    max-width: 100%;
-    background: white;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
-    .before-after-container {
+    .image-preview-section {
         flex-direction: column;
     }
     
-    .image-container {
-        min-width: 100%;
+    .image-column {
+        max-width: 100%;
+    }
+    
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
 }
 </style>
@@ -132,280 +281,160 @@ CALMIC SDN BHD - "Committed to Excellence"
 {% block content %}
 <div class="enhancement-container">
     <div class="container">
-        <!-- Header Section -->
-        <div class="row mb-4">
-            <div class="col-12 text-center text-white">
-                <h1 class="display-4 mb-3">
-                    <i class="bi bi-magic"></i> Advanced Image Enhancement
-                </h1>
-                <p class="lead mb-4">Professional-grade image processing powered by OpenCV computer vision</p>
-                {% if opencv_available %}
-                    <span class="opencv-badge">
-                        <i class="bi bi-cpu"></i> OpenCV Powered
-                    </span>
-                {% else %}
-                    <div class="alert alert-warning d-inline-block">
-                        <i class="bi bi-exclamation-triangle"></i> 
-                        OpenCV not available - limited features
-                    </div>
-                {% endif %}
-            </div>
+        <!-- Header -->
+        <div class="enhancement-header">
+            <h1>Advanced Image Enhancement</h1>
+            <p>Professional-grade image processing powered by OpenCV computer vision</p>
+            {% if opencv_available %}
+            <span class="opencv-badge">
+                <i class="bi bi-cpu"></i> OpenCV Powered
+            </span>
+            {% endif %}
         </div>
 
-        <!-- Photo Selection or Current Photo -->
+        <!-- Photo Selection (if no photo selected) -->
         {% if not photo %}
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="feature-card p-4">
-                    <h4 class="mb-3"><i class="bi bi-images"></i> Select Photo to Enhance</h4>
-                    <div class="row">
-                        {% for p in photos %}
-                        <div class="col-md-3 col-sm-4 col-6 mb-3">
-                            <div class="card">
-                                <img src="{{ url_for('gallery.uploaded_file', user_id=p.user_id, filename=p.filename) }}" 
-                                     class="card-img-top" style="height: 150px; object-fit: cover;">
-                                <div class="card-body p-2">
-                                    <small class="text-muted">{{ p.original_name[:20] }}...</small>
-                                    <a href="{{ url_for('main.enhance_photo', photo_id=p.id) }}" 
-                                       class="btn btn-primary btn-sm w-100 mt-1">
-                                        <i class="bi bi-magic"></i> Enhance
-                                    </a>
-                                </div>
-                            </div>
+        <div class="preview-card">
+            <h5 class="mb-4"><i class="bi bi-images"></i> Select Photo to Enhance</h5>
+            <div class="row">
+                {% for p in photos %}
+                <div class="col-md-3 col-sm-4 col-6 mb-3">
+                    <div class="card h-100">
+                        <img src="{{ url_for('gallery.uploaded_file', user_id=p.user_id, filename=p.filename) }}" 
+                             class="card-img-top" style="height: 150px; object-fit: cover;">
+                        <div class="card-body p-2">
+                            <small class="text-muted d-block mb-2">{{ p.original_name[:20] }}...</small>
+                            <a href="{{ url_for('main.enhance_photo', photo_id=p.id) }}" 
+                               class="btn btn-primary btn-sm w-100">
+                                <i class="bi bi-magic"></i> Enhance
+                            </a>
                         </div>
-                        {% endfor %}
                     </div>
-                    {% if not photos %}
-                    <div class="text-center py-4">
-                        <i class="bi bi-image" style="font-size: 3rem; color: #ccc;"></i>
-                        <p class="text-muted mt-2">No photos available. Upload some photos first!</p>
-                        <a href="{{ url_for('main.upload') }}" class="btn btn-primary">
-                            <i class="bi bi-upload"></i> Upload Photos
-                        </a>
-                    </div>
-                    {% endif %}
                 </div>
+                {% endfor %}
             </div>
+            {% if not photos %}
+            <div class="text-center py-5">
+                <i class="bi bi-image" style="font-size: 3rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No photos available. Upload some photos first!</p>
+                <a href="{{ url_for('main.upload') }}" class="btn btn-enhance mt-2">
+                    <i class="bi bi-upload"></i> Upload Photos
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 
-        <!-- Main Enhancement Interface -->
+        <!-- Enhancement Interface (when photo is selected) -->
         {% if photo %}
-        <div class="row">
-            <!-- Left Column: Enhancement Tools -->
-            <div class="col-lg-4">
-                <div class="feature-card p-3 mb-4">
-                    <h5 class="mb-3">
-                        <i class="bi bi-gear-fill"></i> Enhancement Settings
-                    </h5>
-                    <small class="text-muted mb-3 d-block">Enhancing: {{ photo.original_name }}</small>
-
-                    <!-- OpenCV Processing Tools -->
-                    {% if opencv_available %}
-                    <div class="tool-section">
-                        <h6 class="text-dark mb-3">
-                            <i class="bi bi-cpu"></i> OpenCV Processing
-                        </h6>
-                        
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="enableCLAHE" checked>
-                                <label class="form-check-label text-dark" for="enableCLAHE">
-                                    <strong>CLAHE Enhancement</strong><br>
-                                    <small>Contrast Limited Adaptive Histogram Equalization</small>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="enableDenoising" checked>
-                                <label class="form-check-label text-dark" for="enableDenoising">
-                                    <strong>Bilateral Filtering</strong><br>
-                                    <small>Noise reduction while preserving edges</small>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="enableAutoLevels" checked>
-                                <label class="form-check-label text-dark" for="enableAutoLevels">
-                                    <strong>Auto-Levels</strong><br>
-                                    <small>Automatic histogram stretching</small>
-                                </label>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-enhance w-100 mb-2" onclick="applyOpenCVEnhancement()">
-                            <i class="bi bi-magic"></i> Apply OpenCV Enhancement
-                        </button>
-                    </div>
-                    {% endif %}
-
-                    <!-- Manual Adjustments -->
-                    <div class="tool-section">
-                        <h6 class="text-dark mb-3">
-                            <i class="bi bi-sliders"></i> Manual Adjustments
-                        </h6>
-                        
-                        <div class="mb-3">
-                            <label class="form-label text-dark">Brightness: <span id="brightnessValue">1.15</span></label>
-                            <input type="range" class="form-range" id="brightness" min="0.1" max="2.0" step="0.1" value="1.15">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-dark">Contrast: <span id="contrastValue">1.3</span></label>
-                            <input type="range" class="form-range" id="contrast" min="0.1" max="3.0" step="0.1" value="1.3">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-dark">Color/Saturation: <span id="colorValue">1.2</span></label>
-                            <input type="range" class="form-range" id="color" min="0.0" max="2.0" step="0.1" value="1.2">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-dark">Sharpness: <span id="sharpnessValue">1.4</span></label>
-                            <input type="range" class="form-range" id="sharpness" min="0.1" max="2.5" step="0.1" value="1.4">
-                        </div>
-
-                        <button class="btn btn-enhance w-100 mb-2" onclick="applyManualEnhancement()">
-                            <i class="bi bi-sliders"></i> Apply Manual Adjustments
-                        </button>
-                    </div>
-
-                    <!-- Canvas Editor Tools -->
-                    <div class="tool-section">
-                        <h6 class="text-dark mb-3">
-                            <i class="bi bi-brush"></i> Canvas Editor
-                        </h6>
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-4">
-                                <button class="btn btn-outline-dark btn-sm w-100" onclick="setCanvasTool('pen')" title="Pen">
-                                    <i class="bi bi-pen"></i>
-                                </button>
-                            </div>
-                            <div class="col-4">
-                                <button class="btn btn-outline-dark btn-sm w-100" onclick="setCanvasTool('highlight')" title="Highlight">
-                                    <i class="bi bi-highlighter"></i>
-                                </button>
-                            </div>
-                            <div class="col-4">
-                                <button class="btn btn-outline-dark btn-sm w-100" onclick="setCanvasTool('text')" title="Text">
-                                    <i class="bi bi-fonts"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mb-2">
-                            <label class="form-label text-dark">Color</label>
-                            <input type="color" class="form-control form-control-color" id="canvasColor" value="#ff0000">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-dark">Line Width: <span id="lineWidthValue">3</span>px</label>
-                            <input type="range" class="form-range" id="lineWidth" min="1" max="20" value="3">
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-success" onclick="saveEnhanced()">
-                            <i class="bi bi-save"></i> Save Enhanced Version
-                        </button>
-                        <button class="btn btn-warning" onclick="resetImage()">
-                            <i class="bi bi-arrow-clockwise"></i> Reset to Original
-                        </button>
-                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-dark">
-                            <i class="bi bi-arrow-left"></i> Back to Dashboard
-                        </a>
-                    </div>
+        <div class="preview-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-image"></i> Image Preview</h5>
+                <div class="preview-tabs">
+                    <button class="tab-button active" data-view="original">Original</button>
+                    <button class="tab-button" data-view="enhanced">Enhanced</button>
+                    <button class="tab-button" data-view="sidebyside">Side by Side</button>
                 </div>
             </div>
 
-            <!-- Right Column: Image Preview -->
-            <div class="col-lg-8">
-                <div class="feature-card p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5><i class="bi bi-image"></i> Image Preview</h5>
-                        <div class="btn-group" role="group">
-                            <input type="radio" class="btn-check" name="viewMode" id="original" checked autocomplete="off">
-                            <label class="btn btn-outline-primary btn-sm" for="original">Original</label>
-
-                            <input type="radio" class="btn-check" name="viewMode" id="enhanced" autocomplete="off">
-                            <label class="btn btn-outline-primary btn-sm" for="enhanced">Enhanced</label>
-
-                            <input type="radio" class="btn-check" name="viewMode" id="sideBySide" autocomplete="off">
-                            <label class="btn btn-outline-primary btn-sm" for="sideBySide">Side by Side</label>
-                        </div>
-                    </div>
-
-                    <!-- Image Display Area -->
-                    <div id="imageDisplayArea">
-                        <!-- Single Image View -->
-                        <div id="singleImageView">
-                            <div class="text-center">
-                                <img id="mainImage" 
-                                     src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
-                                     class="enhancement-preview" 
-                                     alt="{{ photo.original_name }}">
-                                <canvas id="canvasEditor" class="canvas-editor" style="display: none;"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Side by Side View -->
-                        <div id="sideBySideView" style="display: none;">
-                            <div class="before-after-container">
-                                <div class="image-container">
-                                    <h6>Original</h6>
-                                    <img id="originalImage" 
-                                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
-                                         class="enhancement-preview" 
-                                         alt="Original">
-                                </div>
-                                <div class="image-container">
-                                    <h6>Enhanced</h6>
-                                    <img id="enhancedImage" 
-                                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) if photo.edited_filename else url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
-                                         class="enhancement-preview" 
-                                         alt="Enhanced">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Image Display Area -->
+            <div id="imageDisplayArea">
+                <!-- Original View (default) -->
+                <div id="originalView" class="single-image-view">
+                    <h6>Original</h6>
+                    <img id="originalImage" 
+                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
+                         class="preview-image" 
+                         alt="Original">
                 </div>
 
-                <!-- Feature Information -->
-                <div class="feature-card p-3 mt-3">
-                    <h6><i class="bi bi-info-circle"></i> Enhancement Features</h6>
-                    <div class="row text-center">
-                        <div class="col-md-3 col-6 mb-2">
-                            <div class="p-2">
-                                <i class="bi bi-eye" style="font-size: 1.5rem; color: #667eea;"></i>
-                                <br><small><strong>CLAHE</strong><br>Contrast Enhancement</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-2">
-                            <div class="p-2">
-                                <i class="bi bi-funnel" style="font-size: 1.5rem; color: #667eea;"></i>
-                                <br><small><strong>Bilateral</strong><br>Noise Reduction</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-2">
-                            <div class="p-2">
-                                <i class="bi bi-graph-up" style="font-size: 1.5rem; color: #667eea;"></i>
-                                <br><small><strong>Auto-Levels</strong><br>Histogram Stretch</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-2">
-                            <div class="p-2">
-                                <i class="bi bi-brush" style="font-size: 1.5rem; color: #667eea;"></i>
-                                <br><small><strong>Canvas</strong><br>Manual Editing</small>
-                            </div>
-                        </div>
+                <!-- Enhanced View -->
+                <div id="enhancedView" class="single-image-view" style="display: none;">
+                    <h6>Enhanced</h6>
+                    <img id="enhancedImage" 
+                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) if photo.edited_filename else url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
+                         class="preview-image" 
+                         alt="Enhanced">
+                </div>
+
+                <!-- Side by Side View -->
+                <div id="sideBySideView" class="image-preview-section" style="display: none;">
+                    <div class="image-column">
+                        <h6>Original</h6>
+                        <img src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
+                             class="preview-image" 
+                             alt="Original">
+                    </div>
+                    <div class="image-column">
+                        <h6>Enhanced</h6>
+                        <img id="enhancedImageSide" 
+                             src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) if photo.edited_filename else url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
+                             class="preview-image" 
+                             alt="Enhanced">
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Enhancement Features -->
+        <div class="features-card">
+            <div class="features-header">
+                <i class="bi bi-info-circle"></i>
+                <h5 class="mb-0">Enhancement Features</h5>
+            </div>
+
+            <div class="features-grid">
+                <!-- CLAHE -->
+                <div class="feature-item" data-feature="clahe">
+                    <div class="feature-icon">
+                        <i class="bi bi-eye"></i>
+                    </div>
+                    <h6>CLAHE</h6>
+                    <p>Contrast Enhancement</p>
+                </div>
+
+                <!-- Bilateral Filtering -->
+                <div class="feature-item" data-feature="bilateral">
+                    <div class="feature-icon">
+                        <i class="bi bi-funnel"></i>
+                    </div>
+                    <h6>Bilateral</h6>
+                    <p>Noise Reduction</p>
+                </div>
+
+                <!-- Auto-Levels -->
+                <div class="feature-item" data-feature="autolevels">
+                    <div class="feature-icon">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h6>Auto-Levels</h6>
+                    <p>Histogram Stretch</p>
+                </div>
+
+                <!-- Canvas Editor -->
+                <div class="feature-item" data-feature="canvas">
+                    <div class="feature-icon">
+                        <i class="bi bi-brush"></i>
+                    </div>
+                    <h6>Canvas</h6>
+                    <p>Manual Editing</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-enhance" onclick="applyEnhancement()">
+                    <i class="bi bi-magic"></i> Apply Enhancement
+                </button>
+                <button class="btn-enhance" onclick="saveEnhanced()">
+                    <i class="bi bi-save"></i> Save Enhanced
+                </button>
+                <button class="btn-reset" onclick="resetImage()">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+                <a href="{{ url_for('main.dashboard') }}" class="btn-reset" style="text-decoration: none; display: inline-block;">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
             </div>
         </div>
         {% endif %}
@@ -415,133 +444,107 @@ CALMIC SDN BHD - "Committed to Excellence"
 <!-- Processing Overlay -->
 <div id="processingOverlay" class="processing-overlay">
     <div class="processing-content">
-        <div class="spinner-border text-primary mb-3" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+        <div class="spinner"></div>
         <h5>Processing Image...</h5>
-        <p class="text-muted mb-0">Applying OpenCV enhancements. This may take a moment.</p>
+        <p class="text-muted mb-0">Applying enhancements. This may take a moment.</p>
     </div>
 </div>
-
-<!-- Hidden elements -->
-{% if photo %}
-<img id="sourceImage" src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}" style="display: none;">
-{% endif %}
 
 <script>
 // Global variables
 const photoId = {{ photo.id if photo else 'null' }};
-let currentTool = 'pen';
-let canvas, ctx;
-let originalImageData = null;
-let enhancedImageData = null;
+let selectedFeatures = {
+    clahe: true,
+    bilateral: true,
+    autolevels: true,
+    canvas: false
+};
 
-// Initialize the enhancement interface
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
     {% if photo %}
-    initializeCanvas();
-    setupEventListeners();
+    initializeEnhancement();
     {% endif %}
 });
 
-function initializeCanvas() {
-    canvas = document.getElementById('canvasEditor');
-    if (canvas) {
-        ctx = canvas.getContext('2d');
-        
-        const mainImage = document.getElementById('mainImage');
-        const sourceImage = document.getElementById('sourceImage');
-        
-        // Set canvas size to match image
-        sourceImage.onload = function() {
-            canvas.width = this.naturalWidth;
-            canvas.height = this.naturalHeight;
+function initializeEnhancement() {
+    // View mode toggle
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+            switchView(view);
             
-            // Draw original image to canvas
-            ctx.drawImage(this, 0, 0);
-            originalImageData = canvas.toDataURL();
-        };
-        
-        if (sourceImage.complete) {
-            sourceImage.onload();
-        }
-    }
-}
-
-function setupEventListeners() {
-    // View mode change
-    document.querySelectorAll('input[name="viewMode"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            toggleViewMode(this.id);
+            // Update active state
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
         });
     });
-    
-    // Range sliders
-    ['brightness', 'contrast', 'color', 'sharpness', 'lineWidth'].forEach(id => {
-        const slider = document.getElementById(id);
-        if (slider) {
-            slider.addEventListener('input', function() {
-                document.getElementById(id + 'Value').textContent = this.value;
-            });
+
+    // Feature selection toggle
+    document.querySelectorAll('.feature-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const feature = this.getAttribute('data-feature');
+            selectedFeatures[feature] = !selectedFeatures[feature];
+            
+            // Toggle visual state
+            if (selectedFeatures[feature]) {
+                this.style.background = 'rgba(102, 126, 234, 0.15)';
+                this.style.borderLeft = '4px solid #667eea';
+            } else {
+                this.style.background = '';
+                this.style.borderLeft = '';
+            }
+        });
+    });
+
+    // Set initial active features
+    document.querySelectorAll('.feature-item').forEach(item => {
+        const feature = item.getAttribute('data-feature');
+        if (selectedFeatures[feature]) {
+            item.style.background = 'rgba(102, 126, 234, 0.15)';
+            item.style.borderLeft = '4px solid #667eea';
         }
     });
-    
-    // Canvas drawing events
-    if (canvas) {
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-    }
 }
 
-function toggleViewMode(mode) {
-    const singleView = document.getElementById('singleImageView');
+function switchView(view) {
+    const originalView = document.getElementById('originalView');
+    const enhancedView = document.getElementById('enhancedView');
     const sideBySideView = document.getElementById('sideBySideView');
-    const canvasEditor = document.getElementById('canvasEditor');
-    const mainImage = document.getElementById('mainImage');
-    
-    switch(mode) {
-        case 'original':
-            singleView.style.display = 'block';
-            sideBySideView.style.display = 'none';
-            canvasEditor.style.display = 'none';
-            mainImage.style.display = 'block';
-            break;
-        case 'enhanced':
-            singleView.style.display = 'block';
-            sideBySideView.style.display = 'none';
-            canvasEditor.style.display = 'block';
-            mainImage.style.display = 'none';
-            break;
-        case 'sideBySide':
-            singleView.style.display = 'none';
-            sideBySideView.style.display = 'block';
-            break;
+
+    originalView.style.display = 'none';
+    enhancedView.style.display = 'none';
+    sideBySideView.style.display = 'none';
+
+    if (view === 'original') {
+        originalView.style.display = 'block';
+    } else if (view === 'enhanced') {
+        enhancedView.style.display = 'block';
+    } else if (view === 'sidebyside') {
+        sideBySideView.style.display = 'flex';
     }
 }
 
-function applyOpenCVEnhancement() {
+function applyEnhancement() {
     if (!photoId) {
         alert('No photo selected');
         return;
     }
-    
+
     const settings = {
-        clahe_enabled: document.getElementById('enableCLAHE').checked,
-        denoise: document.getElementById('enableDenoising').checked,
-        auto_levels: document.getElementById('enableAutoLevels').checked,
-        brightness: parseFloat(document.getElementById('brightness').value),
-        contrast: parseFloat(document.getElementById('contrast').value),
-        color: parseFloat(document.getElementById('color').value),
-        sharpness: parseFloat(document.getElementById('sharpness').value)
+        clahe_enabled: selectedFeatures.clahe,
+        denoise: selectedFeatures.bilateral,
+        auto_levels: selectedFeatures.autolevels,
+        brightness: 1.15,
+        contrast: 1.3,
+        color: 1.2,
+        sharpness: 1.4
     };
-    
+
     showProcessing();
-    
-    // Get CSRF token properly
+
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
+
     fetch(`/api/photos/${photoId}/enhance`, {
         method: 'POST',
         headers: {
@@ -554,215 +557,88 @@ function applyOpenCVEnhancement() {
     .then(data => {
         hideProcessing();
         if (data.success) {
-            // Update enhanced image
-            document.getElementById('enhancedImage').src = data.enhanced_url + '?t=' + Date.now();
+            // Update enhanced images
+            const timestamp = Date.now();
+            document.getElementById('enhancedImage').src = data.enhanced_url + '?t=' + timestamp;
+            document.getElementById('enhancedImageSide').src = data.enhanced_url + '?t=' + timestamp;
             
             // Switch to enhanced view
-            document.getElementById('enhanced').checked = true;
-            toggleViewMode('enhanced');
+            switchView('enhanced');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-view="enhanced"]').classList.add('active');
             
-            // Update canvas with enhanced image
-            const img = new Image();
-            img.onload = function() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-                enhancedImageData = canvas.toDataURL();
-            };
-            img.src = data.enhanced_url + '?t=' + Date.now();
-            
-            showAlert('Enhancement applied successfully!', 'success');
+            // Show success message
+            showMessage('Enhancement applied successfully!', 'success');
         } else {
-            showAlert('Enhancement failed: ' + data.error, 'danger');
+            showMessage('Enhancement failed: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         hideProcessing();
         console.error('Error:', error);
-        showAlert('Enhancement failed: ' + error.message, 'danger');
+        showMessage('Enhancement failed: ' + error.message, 'error');
     });
-}
-
-function applyManualEnhancement() {
-    // Apply manual adjustments using canvas filters
-    if (!originalImageData) return;
-    
-    const img = new Image();
-    img.onload = function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Apply CSS filters to the canvas context
-        const brightness = document.getElementById('brightness').value;
-        const contrast = document.getElementById('contrast').value;
-        const saturation = document.getElementById('color').value;
-        
-        ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
-        ctx.drawImage(img, 0, 0);
-        ctx.filter = 'none'; // Reset filter
-        
-        // Switch to enhanced view
-        document.getElementById('enhanced').checked = true;
-        toggleViewMode('enhanced');
-        
-        showAlert('Manual adjustments applied!', 'success');
-    };
-    img.src = originalImageData;
-}
-
-function setCanvasTool(tool) {
-    currentTool = tool;
-    
-    // Update button states
-    document.querySelectorAll('.btn-outline-light').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.closest('button').classList.add('active');
-}
-
-// Canvas drawing functions
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-
-function startDrawing(e) {
-    isDrawing = true;
-    [lastX, lastY] = getMousePos(e);
-}
-
-function draw(e) {
-    if (!isDrawing) return;
-    
-    const [x, y] = getMousePos(e);
-    const color = document.getElementById('canvasColor').value;
-    const lineWidth = document.getElementById('lineWidth').value;
-    
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    switch(currentTool) {
-        case 'pen':
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            break;
-        case 'highlight':
-            ctx.globalAlpha = 0.3;
-            ctx.lineWidth = lineWidth * 3;
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.globalAlpha = 1.0;
-            break;
-    }
-    
-    [lastX, lastY] = [x, y];
-}
-
-function stopDrawing() {
-    isDrawing = false;
-}
-
-function getMousePos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    return [
-        (e.clientX - rect.left) * scaleX,
-        (e.clientY - rect.top) * scaleY
-    ];
 }
 
 function saveEnhanced() {
-    if (!canvas) {
-        alert('No enhanced image to save');
+    if (!photoId) {
+        alert('No photo selected');
         return;
     }
-    
-    const imageData = canvas.toDataURL('image/jpeg', 0.9);
-    
+
     showProcessing();
-    
-    // Get CSRF token properly
+
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-    fetch(`/api/photos/${photoId}/annotate`, {
+
+    fetch(`/api/photos/${photoId}/save`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({ imageData: imageData })
+        }
     })
     .then(response => response.json())
     .then(data => {
         hideProcessing();
         if (data.success) {
-            showAlert('Enhanced image saved successfully!', 'success');
+            showMessage('Enhanced version saved successfully!', 'success');
         } else {
-            showAlert('Save failed: ' + data.error, 'danger');
+            showMessage('Save failed: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         hideProcessing();
-        showAlert('Save failed: ' + error.message, 'danger');
+        console.error('Error:', error);
+        showMessage('Save failed: ' + error.message, 'error');
     });
 }
 
 function resetImage() {
-    if (originalImageData) {
-        const img = new Image();
-        img.onload = function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-        };
-        img.src = originalImageData;
-        
-        // Reset all sliders
-        document.getElementById('brightness').value = 1.0;
-        document.getElementById('contrast').value = 1.0;
-        document.getElementById('color').value = 1.0;
-        document.getElementById('sharpness').value = 1.0;
-        
-        // Update display
-        ['brightnessValue', 'contrastValue', 'colorValue', 'sharpnessValue'].forEach(id => {
-            document.getElementById(id).textContent = '1.0';
-        });
-        
-        showAlert('Image reset to original', 'info');
+    if (confirm('Reset to original image? This will discard all enhancements.')) {
+        location.reload();
     }
 }
 
 function showProcessing() {
-    document.getElementById('processingOverlay').style.display = 'flex';
+    document.getElementById('processingOverlay').classList.add('active');
 }
 
 function hideProcessing() {
-    document.getElementById('processingOverlay').style.display = 'none';
+    document.getElementById('processingOverlay').classList.remove('active');
 }
 
-function showAlert(message, type) {
-    // Create bootstrap alert
+function showMessage(message, type) {
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.top = '20px';
-    alertDiv.style.right = '20px';
-    alertDiv.style.zIndex = '9999';
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
     alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
     document.body.appendChild(alertDiv);
     
-    // Auto-remove after 5 seconds
     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
+        alertDiv.remove();
     }, 5000);
 }
 </script>
