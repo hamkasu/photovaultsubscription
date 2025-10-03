@@ -55,14 +55,6 @@
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-check-circle-fill text-success"></i>
-                            {% if plan.max_photos %}
-                            Up to <strong>{{ plan.max_photos }}</strong> photos
-                            {% else %}
-                            <strong>Unlimited</strong> photos
-                            {% endif %}
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-check-circle-fill text-success"></i>
                             <strong>{{ plan.max_family_vaults }}</strong> family vault{% if plan.max_family_vaults != 1 %}s{% endif %}
                         </li>
                         <li class="mb-2">
