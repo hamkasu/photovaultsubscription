@@ -5,8 +5,9 @@ PhotoVault is a professional photo management platform built with Flask (Python 
 
 ## Project Status
 **Environment**: Replit Development
-**Last Updated**: October 3, 2025
+**Last Updated**: October 3, 2025 (Fresh GitHub import completed)
 **Status**: Running successfully on port 5000
+**Database**: PostgreSQL (Replit Neon) - Connected and initialized
 
 ## Technology Stack
 - **Backend**: Flask 3.0.3, Python 3.11
@@ -109,12 +110,20 @@ Use the Replit database pane or the execute_sql tool for ad-hoc queries.
 All plans include 6% SST (Service Tax) for Malaysian market.
 
 ## Setup History
-1. Installed Python 3.11 and dependencies
-2. Created Replit PostgreSQL database
-3. Fixed database schema (added missing columns)
-4. Seeded subscription plans
-5. Configured development workflow on port 5000
-6. Configured autoscale deployment with Gunicorn
+
+### Fresh GitHub Import (October 3, 2025)
+1. Installed Python 3.11 dependencies from requirements.txt
+2. Created Replit PostgreSQL database with DATABASE_URL
+3. Initialized database schema using SQLAlchemy create_all()
+4. Seeded subscription plans (5 plans created)
+5. Verified development workflow on port 5000 with 0.0.0.0 binding
+6. Configured autoscale deployment with Gunicorn (4 workers)
+7. Application successfully running and serving requests
+
+### Previous Setup
+1. Fixed database schema (added missing columns)
+2. Resolved SQLAlchemy mapper cache issues
+3. Configured Replit-compatible session cookies
 
 ## Known Issues & Fixes Applied
 - **SQLAlchemy mapper cache**: Fixed by manually adding missing `social_media_integration` column
