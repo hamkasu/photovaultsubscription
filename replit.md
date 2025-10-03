@@ -1,137 +1,131 @@
 # PhotoVault - Professional Photo Management Platform
 
 ## Overview
-PhotoVault is a professional photo management application designed for digitizing legacy photos. It offers advanced camera features, AI-powered enhancement, and family vault sharing capabilities.
+PhotoVault is a professional photo management platform built with Flask (Python 3.11) and PostgreSQL. It provides advanced camera features, photo enhancement, face detection, family vault sharing, and secure cloud storage.
 
-**Created**: October 3, 2025  
-**Status**: Production-ready Flask application running on Replit
+## Project Status
+**Environment**: Replit Development
+**Last Updated**: October 3, 2025
+**Status**: Running successfully on port 5000
 
 ## Technology Stack
-
-### Backend
-- **Framework**: Flask 3.0.3 with Python 3.11
-- **Database**: PostgreSQL (Replit-managed)
-- **ORM**: SQLAlchemy 2.0.25 with Flask-SQLAlchemy
-- **Migrations**: Alembic/Flask-Migrate
-- **Production Server**: Gunicorn 21.2.0
-
-### Image Processing
-- OpenCV (headless)
-- Pillow 11.0.0
-- scikit-image
-- Face detection and recognition
-
-### Storage & Services
-- Replit Object Storage
-- SendGrid (email)
-- Stripe (payments)
+- **Backend**: Flask 3.0.3, Python 3.11
+- **Database**: PostgreSQL (Replit/Neon)
+- **ORM**: SQLAlchemy 2.0.25 with Flask-Migrate/Alembic
+- **Image Processing**: Pillow, OpenCV, scikit-image
+- **Authentication**: Flask-Login
+- **Forms**: Flask-WTF, WTForms
+- **Storage**: Replit Object Storage
+- **Email**: SendGrid
+- **Payment**: Stripe
+- **Production Server**: Gunicorn
 
 ## Project Structure
-
 ```
 photovault/
 ├── photovault/          # Main application package
-│   ├── routes/         # Blueprint routes (auth, gallery, family, etc.)
-│   ├── services/       # Business logic services
-│   ├── utils/          # Utilities (face detection, image processing)
-│   ├── templates/      # Jinja2 HTML templates
-│   ├── static/         # CSS, JS, images
-│   ├── models.py       # Database models
-│   └── config.py       # Configuration classes
-├── migrations/         # Alembic database migrations
-├── dev.py             # Development server entry point
-├── main.py            # Main application entry point
-├── wsgi.py            # Production WSGI entry point
-└── requirements.txt   # Python dependencies
+│   ├── routes/          # Blueprint routes (auth, upload, photo, admin, etc.)
+│   ├── services/        # Business logic services
+│   ├── models.py        # SQLAlchemy database models
+│   ├── config.py        # Configuration classes
+│   ├── extensions.py    # Flask extensions
+│   ├── templates/       # Jinja2 HTML templates
+│   └── static/          # CSS, JS, images
+├── migrations/          # Alembic database migrations
+├── main.py             # Development entry point
+├── wsgi.py             # Production WSGI entry point
+├── requirements.txt    # Python dependencies
+└── replit.md          # This file
 ```
+
+## Database Schema
+The application uses PostgreSQL with the following main models:
+- **User**: User accounts with admin/superuser flags
+- **Photo**: Photo metadata with EXIF data, GPS, enhancements
+- **Person**: People for photo tagging
+- **PhotoTag**: Photo-to-person relationships
+- **VoiceMemo**: Audio recordings attached to photos
+- **SubscriptionPlan**: Billing plans with SST tax (Malaysian market)
+- **UserSubscription**: User subscription tracking
+- **Invoice**: Billing records
+- **FamilyVault**: Shared family photo collections
+- **VaultInvitation**: Family vault invitations
+- **SocialMediaAccount**: Social media integrations
 
 ## Environment Configuration
 
-### Development (Current Setup)
-- **Port**: 5000
-- **Host**: 0.0.0.0 (required for Replit proxy)
-- **Debug**: Enabled
-- **Database**: PostgreSQL (DATABASE_URL auto-configured)
-- **Entry Point**: `python dev.py`
+### Development
+- `FLASK_CONFIG=development`
+- `FLASK_ENV=development`
+- `DATABASE_URL`: Automatically configured by Replit PostgreSQL
+- Server runs on `0.0.0.0:5000`
 
 ### Production Deployment
-- **Type**: Autoscale deployment
-- **Server**: Gunicorn with 4 workers
-- **Database**: Uses same PostgreSQL database
-- **Required Env Vars**: 
-  - `SECRET_KEY` (for session security)
-  - `DATABASE_URL` (auto-configured)
-
-## Key Features
-
-1. **Full Screen Camera**: Professional camera with landscape mode and tap-to-capture
-2. **Auto Upload**: Automatic photo upload and organization
-3. **Secure Storage**: Professional-grade security with Replit Object Storage
-4. **Face Detection**: AI-powered face detection and recognition
-5. **Photo Enhancement**: Advanced image processing capabilities
-6. **Family Vaults**: Collaborative photo sharing with family members
-7. **Smart Tagging**: AI-powered photo organization
-8. **Subscription Plans**: Multiple tiers (Free, Standard, Basic, Pro, Premium)
-
-## Database Schema
-
-The application uses Alembic migrations for database versioning. Main tables include:
-- `user` - User accounts and authentication
-- `photo` - Photo metadata and storage references
-- `album` - Photo albums and collections
-- `person` - Face recognition data
-- `family_vault` - Shared family vaults
-- `subscription_plan` - Subscription tiers
-- `user_subscription` - User subscriptions
+- Uses Gunicorn WSGI server with 4 workers
+- Autoscale deployment type (stateless)
+- Requires:
+  - `DATABASE_URL`: PostgreSQL connection string
+  - `SECRET_KEY`: Flask secret key for sessions
+  - Mail settings: `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`
+  - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`
+  - SendGrid: `SENDGRID_API_KEY`
 
 ## Running the Application
 
 ### Development
-The workflow "PhotoVault Server" is configured to run:
+The workflow "PhotoVault Server" runs automatically:
 ```bash
-python dev.py
+python main.py
 ```
 
-This starts the Flask development server on 0.0.0.0:5000 with debug mode enabled.
-
-### Database Management
+### Database Migrations
 ```bash
-# Run migrations
-flask db upgrade
-
-# Create new migration
-flask db migrate -m "description"
-
-# Stamp database with current revision
-flask db stamp head
+export FLASK_APP=main.py
+flask db upgrade          # Apply migrations
+flask db stamp head       # Mark database as current
 ```
 
-### Production Deployment
-Click the "Deploy" button in Replit. The deployment is configured to use Gunicorn with autoscaling.
+### Manual Database Operations
+Use the Replit database pane or the execute_sql tool for ad-hoc queries.
 
-## Security Considerations
+## Features
+1. **Photo Upload & Management**: File upload, camera capture, EXIF metadata extraction
+2. **Photo Enhancement**: Auto-enhancement, editing tools, filters
+3. **Face Detection**: AI-powered face recognition and tagging
+4. **Smart Tagging**: Automatic photo categorization
+5. **Family Vaults**: Shared photo collections with invitations
+6. **Social Media Integration**: Connect and share to social platforms
+7. **Voice Memos**: Audio notes attached to photos
+8. **Billing System**: Subscription plans with Malaysian SST tax
+9. **Admin Dashboard**: User management, statistics, system monitoring
 
-- Session cookies configured for Replit environment
-- CSRF protection enabled
-- SSL/TLS required in production
-- File upload validation and security
-- PostgreSQL with connection pooling
-- Cache-Control headers to prevent stale content in Replit proxy
+## Subscription Plans
+- **Free**: 0.1 GB, 50 photos, basic features
+- **Basic**: RM 9.00/mo, 1 GB, 1000 photos, face detection
+- **Standard**: RM 19.90/mo, 10 GB, 500 photos
+- **Pro**: RM 39.90/mo, 50 GB, 5000 photos, all features (Featured)
+- **Premium**: RM 79.90/mo, 500 GB, unlimited photos, API access
 
-## Recent Setup (October 3, 2025)
+All plans include 6% SST (Service Tax) for Malaysian market.
 
-1. ✅ Installed Python 3.11 environment
-2. ✅ Installed all Python dependencies
-3. ✅ Created PostgreSQL database
-4. ✅ Ran database migrations and seeded subscription plans
-5. ✅ Configured development workflow on port 5000
-6. ✅ Configured production deployment (autoscale with Gunicorn)
-7. ✅ Verified application runs correctly
+## Setup History
+1. Installed Python 3.11 and dependencies
+2. Created Replit PostgreSQL database
+3. Fixed database schema (added missing columns)
+4. Seeded subscription plans
+5. Configured development workflow on port 5000
+6. Configured autoscale deployment with Gunicorn
 
-## Notes
+## Known Issues & Fixes Applied
+- **SQLAlchemy mapper cache**: Fixed by manually adding missing `social_media_integration` column
+- **Subscription plan seeding**: Initially failed due to mapper cache, resolved by direct SQL insert
+- **Database schema sync**: Stamped migrations to match existing database state
 
-- The application automatically creates default subscription plans on startup
-- Development mode uses db.create_all() for convenience
-- Production mode relies on migrations
-- The .gitignore excludes Python artifacts, databases, logs, but preserves Replit configs
-- Mobile apps (iOS/Android) are included in the repository but not actively deployed
+## Development Notes
+- Cache control headers are set to prevent caching issues in Replit proxy
+- Session cookies configured for Replit environment (Lax SameSite, no Secure in dev)
+- Health check logs are filtered to reduce noise
+- Database connection pool configured for Replit environment
+
+## Copyright
+Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
