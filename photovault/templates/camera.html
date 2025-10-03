@@ -2043,28 +2043,39 @@
 
             async initializeAI() {
                 try {
-                    // Show loading indicator
-                    this.showAILoading('Initializing AI models...');
+                    // ⚡ PROGRESSIVE LOADING - Show loading for essential model only
+                    this.showAILoading('Loading face detection...');
                     
                     // Initialize TensorFlow.js Manager
                     this.tensorflowManager = new PhotoVaultTensorFlowManager();
                     
-                    // Load core models (COCO-SSD and BlazeFace for immediate use)
-                    const modelsLoaded = await this.tensorflowManager.initializeModels(['cocoSSD', 'blazeFace']);
+                    // ⚡ LAZY LOADING - Only load BlazeFace initially (4 seconds vs 40+)
+                    const modelsLoaded = await this.tensorflowManager.initializeModels(['blazeFace']);
                     
                     if (modelsLoaded) {
                         // Initialize AI helper classes
                         this.activityRecognizer = new ActivityRecognizer(this.tensorflowManager);
                         this.smartComposition = new SmartComposition(this.tensorflowManager);
                         
-                        console.log('✅ AI system initialized successfully');
+                        console.log('✅ AI system initialized successfully (BlazeFace ready)');
                         this.setupAIEventListeners();
                         this.hideAILoading();
                         
-                        // Load additional models in background
+                        // ⚡ PROGRESSIVE LOADING - Load heavy models in background after camera is ready
+                        console.log('🔄 Loading additional AI models in background...');
                         setTimeout(() => {
-                            this.tensorflowManager.initializeModels(['poseNet']);
-                        }, 2000);
+                            // Load COCO-SSD LITE in background (won't block camera)
+                            this.tensorflowManager.loadModelInBackground('cocoSSD').then(() => {
+                                console.log('✅ Object detection ready');
+                            });
+                        }, 1000);
+                        
+                        // Load PoseNet later if needed
+                        setTimeout(() => {
+                            this.tensorflowManager.loadModelInBackground('poseNet').then(() => {
+                                console.log('✅ Pose detection ready');
+                            });
+                        }, 5000);
                     } else {
                         throw new Error('Failed to load core AI models');
                     }

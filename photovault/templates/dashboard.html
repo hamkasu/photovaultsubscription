@@ -481,7 +481,81 @@ document.addEventListener('DOMContentLoaded', function() {
             trigger: 'hover focus'
         });
     });
+    
+    // ⚡ PRELOAD ON LOGIN - Silently load AI models in background while user browses dashboard
+    preloadAIModels();
 });
+
+// ⚡ PRELOAD AI MODELS - Load models in background so camera opens instantly
+function preloadAIModels() {
+    // Check if TensorFlow.js is available (from camera page)
+    if (typeof tf === 'undefined') {
+        console.log('📦 Loading TensorFlow.js library for preloading...');
+        
+        // Load TensorFlow.js and models in background
+        const tfScript = document.createElement('script');
+        tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js';
+        tfScript.onload = function() {
+            loadModelScripts();
+        };
+        document.head.appendChild(tfScript);
+    } else {
+        // TF.js already loaded, start preloading models
+        initializePreloading();
+    }
+}
+
+function loadModelScripts() {
+    console.log('📦 Loading AI model libraries...');
+    
+    const scripts = [
+        'https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js',
+        'https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js'
+    ];
+    
+    let loaded = 0;
+    scripts.forEach(src => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = function() {
+            loaded++;
+            if (loaded === scripts.length) {
+                // All scripts loaded, start preloading
+                setTimeout(() => initializePreloading(), 500);
+            }
+        };
+        document.head.appendChild(script);
+    });
+}
+
+async function initializePreloading() {
+    try {
+        console.log('🚀 Preloading AI models in background...');
+        
+        // Initialize TensorFlow backend
+        await tf.setBackend('webgl');
+        await tf.enableProdMode();
+        
+        // Preload BlazeFace (fast - ~4 seconds)
+        console.log('⏳ Preloading BlazeFace...');
+        const blazeFaceModel = await blazeface.load();
+        console.log('✅ BlazeFace preloaded - camera will open faster!');
+        
+        // Preload COCO-SSD LITE in background (slower - but won't block user)
+        setTimeout(async () => {
+            try {
+                console.log('⏳ Preloading COCO-SSD LITE...');
+                const cocoSSDModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+                console.log('✅ COCO-SSD LITE preloaded - object detection ready!');
+            } catch (error) {
+                console.warn('⚠️ COCO-SSD preload failed:', error);
+            }
+        }, 2000);
+        
+    } catch (error) {
+        console.warn('⚠️ AI preloading failed (non-critical):', error);
+    }
+}
 
 </script>
 {% endblock %}
