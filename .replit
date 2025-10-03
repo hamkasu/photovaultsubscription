@@ -85,5 +85,5 @@ args = "python3 dev.py"
 waitForPort = 5000
 
 [deployment]
-deploymentTarget = "autoscale"
-run = ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:5000", "--workers", "2", "--worker-class", "sync", "--timeout", "120", "--log-level", "info", "--access-logfile", "-", "--error-logfile"]
+deploymentTarget = "vm"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--workers=2", "--timeout=120", "wsgi:app"]
