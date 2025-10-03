@@ -195,7 +195,7 @@ class SubscriptionPlan(db.Model):
     sst_rate = db.Column(db.Numeric(5, 2), default=6.00)  # 6% Service Tax (SST)
     
     # Features and limits
-    storage_gb = db.Column(db.Integer, nullable=False)  # Storage limit in GB
+    storage_gb = db.Column(db.Numeric(10, 2), nullable=False)  # Storage limit in GB (supports decimals)
     max_photos = db.Column(db.Integer)  # Max photos (null = unlimited)
     max_family_vaults = db.Column(db.Integer, default=0)  # Number of family vaults allowed
     
@@ -203,6 +203,7 @@ class SubscriptionPlan(db.Model):
     face_detection = db.Column(db.Boolean, default=False)
     photo_enhancement = db.Column(db.Boolean, default=False)
     smart_tagging = db.Column(db.Boolean, default=False)
+    social_media_integration = db.Column(db.Boolean, default=False)
     api_access = db.Column(db.Boolean, default=False)
     priority_support = db.Column(db.Boolean, default=False)
     
