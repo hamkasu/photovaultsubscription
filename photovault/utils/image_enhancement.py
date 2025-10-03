@@ -27,10 +27,10 @@ class ImageEnhancer:
     
     def __init__(self):
         self.default_settings = {
-            'brightness': 1.1,      # Slightly brighter for better visibility
-            'contrast': 1.2,        # Enhanced contrast for more punch
-            'sharpness': 1.3,       # Sharper for crisper details
-            'color': 1.15,          # Slightly more saturated colors
+            'brightness': 1.15,     # 15% brighter for better visibility
+            'contrast': 1.3,        # 30% more contrast for more punch
+            'sharpness': 1.4,       # 40% sharper for crisper details
+            'color': 1.2,           # 20% more saturated colors
             'denoise': True,        # Noise reduction enabled
             'clahe_enabled': True,  # Adaptive contrast enhancement
             'auto_levels': True     # Auto histogram stretching
