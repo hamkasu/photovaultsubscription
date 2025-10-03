@@ -150,10 +150,10 @@ CALMIC SDN BHD - "Committed to Excellence"
                             <div class="image-label">
                                 <i class="bi bi-image"></i> Original
                             </div>
-                            <img src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}" 
+                            <img src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}?v={{ photo.created_at.timestamp() }}" 
                                  alt="{{ photo.original_name }} - Original"
                                  class="comparison-image"
-                                 onclick="viewFullSize('{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}', '{{ photo.original_name }} - Original')")
+                                 onclick="viewFullSize('{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}?v={{ photo.created_at.timestamp() }}', '{{ photo.original_name }} - Original')")
                         </div>
                         
                         <div class="image-side edited">
@@ -161,10 +161,10 @@ CALMIC SDN BHD - "Committed to Excellence"
                                 <i class="bi bi-magic"></i> Edited
                             </div>
                             {% if photo.edited_filename %}
-                                <img src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) }}" 
+                                <img src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) }}?v={{ photo.updated_at.timestamp() if photo.updated_at else photo.created_at.timestamp() }}" 
                                      alt="{{ photo.original_name }} - Edited"
                                      class="comparison-image"
-                                     onclick="viewFullSize('{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) }}', '{{ photo.original_name }} - Edited')">
+                                     onclick="viewFullSize('{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) }}?v={{ photo.updated_at.timestamp() if photo.updated_at else photo.created_at.timestamp() }}', '{{ photo.original_name }} - Edited')">
                             {% else %}
                                 <div class="comparison-image d-flex align-items-center justify-content-center bg-light">
                                     <div class="text-center text-muted">
