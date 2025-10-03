@@ -1,112 +1,154 @@
-# PhotoVault - Professional Photo Management Platform
+# PhotoVault - Photo Management Platform
 
 ## Overview
-PhotoVault is a comprehensive photo management platform built with Flask and Python 3.11. It specializes in digitizing legacy photos with advanced camera features, AI-powered enhancement, and secure cloud storage.
+PhotoVault is a professional photo management platform designed for digitizing legacy photos. It offers advanced camera features, AI-powered enhancement, and secure cloud storage.
 
-## Project Information
-- **Company**: Calmic Sdn Bhd
-- **Platform**: Flask Web Application
-- **Database**: PostgreSQL (Replit managed)
-- **Python Version**: 3.11
+**Status**: Fully configured and running in Replit environment
 
-## Architecture
+## Technology Stack
 
 ### Backend
-- **Framework**: Flask 3.0.3
-- **Database ORM**: SQLAlchemy 2.0.25
-- **Migrations**: Alembic/Flask-Migrate
-- **Authentication**: Flask-Login with JWT
-- **Forms**: Flask-WTF with CSRF protection
-- **Production Server**: Gunicorn
+- **Framework**: Flask 3.0.3 (Python 3.11)
+- **Database**: PostgreSQL (Replit Neon-backed)
+- **ORM**: SQLAlchemy 2.0.25 with Flask-Migrate for migrations
+- **Server**: 
+  - Development: Flask dev server (port 5000)
+  - Production: Gunicorn WSGI server
 
 ### Image Processing
-- **Libraries**: Pillow, OpenCV (headless), scikit-image
-- **Features**: 
-  - Auto-enhancement with CLAHE
-  - Face detection and recognition
-  - Perspective correction
-  - Color restoration
-  - Noise reduction
-  - Smart tagging
+- **Libraries**: OpenCV (headless), Pillow, scikit-image
+- **Features**: Edge detection, perspective correction, denoising, color restoration
+- **AI Integration**: OpenAI GPT-5 for image analysis and colorization
 
-### Key Features
-1. **Advanced Camera Mode**: High-resolution capture, auto-detection, batch mode
-2. **AI Enhancement**: Brightness/contrast adjustment, denoising, sharpening
-3. **Family Vaults**: Secure photo sharing within families
-4. **Subscription Plans**: Multiple tiers (Free, Basic, Standard, Pro, Premium)
-5. **Social Media Integration**: Share photos to social platforms
-6. **Email Services**: SendGrid integration for notifications
+### Frontend
+- HTML/CSS/JavaScript (Jinja2 templates)
+- TensorFlow.js for client-side detection
+- Responsive design with modern UI
+
+### Mobile Apps
+- iOS: React Native/Expo
+- Android: Kotlin
 
 ## Project Structure
-```
-photovault/
-├── routes/          # Flask blueprints (auth, gallery, family, etc.)
-├── models/          # SQLAlchemy models
-├── services/        # Business logic services
-├── utils/           # Image processing utilities
-├── static/          # CSS, JS, images
-└── templates/       # Jinja2 templates
 
-migrations/          # Alembic database migrations
-api/                 # API entry point for serverless
-photovault-android/  # Android app (separate)
-PhotoVault-iOS/      # iOS app (React Native/Expo)
+```
+.
+├── photovault/          # Main application package
+│   ├── models.py        # Database models
+│   ├── routes/          # Route blueprints
+│   ├── services/        # Business logic (AI, storage, etc.)
+│   ├── static/          # CSS, JS, images
+│   ├── templates/       # Jinja2 HTML templates
+│   └── utils/           # Utilities (image enhancement, face detection)
+├── migrations/          # Alembic database migrations
+├── main.py             # Development entry point
+├── dev.py              # Replit development server
+├── wsgi.py             # Production WSGI entry point
+└── requirements.txt    # Python dependencies
 ```
 
-## Development Setup
+## Configuration
 
 ### Environment Variables
-- `DATABASE_URL`: PostgreSQL connection (automatically set by Replit)
-- `FLASK_CONFIG`: Set to 'development' for dev mode
-- `SECRET_KEY`: Flask secret key (optional in dev, required in prod)
-- `MAIL_SERVER`, `MAIL_USERNAME`, `MAIL_PASSWORD`: Email configuration
+- `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
+- `SECRET_KEY`: Flask secret key for sessions (optional, has fallback)
+- `FLASK_CONFIG`: Environment mode (development/production/testing)
+- `OPENAI_API_KEY`: For AI features (optional)
+- `SENDGRID_API_KEY`: For email functionality (optional)
 
-### Running Locally
-1. Dependencies are automatically installed from `requirements.txt`
-2. Database is automatically configured via Replit PostgreSQL
-3. Run with: `python3 dev.py` (development server on port 5000)
-4. Access at: `http://0.0.0.0:5000`
+### Database
+- **Type**: PostgreSQL (Neon)
+- **Status**: ✅ Configured and tables created
+- **Migrations**: Managed via Flask-Migrate/Alembic
 
-### Database Migrations
-```bash
-# Stamp current schema (first time)
-flask db stamp head
+## Running the Application
 
-# Create new migration
-flask db migrate -m "description"
+### Development
+The Flask development server runs automatically via the configured workflow:
+- **Command**: `python3 dev.py`
+- **Port**: 5000
+- **Host**: 0.0.0.0 (accessible via Replit webview)
+- **Debug**: Enabled
 
-# Apply migrations
-flask db upgrade
-```
+### Production Deployment
+Configured for Replit Autoscale deployment:
+- **Type**: autoscale (stateless web app)
+- **Command**: `gunicorn wsgi:app --bind 0.0.0.0:5000 --workers 2`
+- **Port**: 5000
 
-## Production Deployment
+## Database Schema
 
-### Configuration
-- **Target**: Autoscale deployment
-- **Server**: Gunicorn with 2 workers
-- **Port**: 5000 (frontend)
-- **Environment**: Production mode uses `wsgi.py` entry point
+The application includes these main models:
+- **User**: User accounts with authentication
+- **Photo**: Photo metadata and storage paths
+- **FamilyVault**: Family photo sharing
+- **SubscriptionPlan**: Billing and subscription management
+- **Person**: Face detection and tagging
+- **Story**: Photo storytelling features
+- **VoiceMemo**: Audio annotations
 
-### Deployment Command
-```bash
-gunicorn wsgi:app --bind 0.0.0.0:5000 --workers 2 --worker-class sync --timeout 120
-```
+## Features
 
-## Recent Changes (2025-10-03)
-- Installed all Python dependencies from requirements.txt
-- Created and configured PostgreSQL database
-- Stamped database migrations to current version
-- Configured Flask development workflow on port 5000
-- Set up deployment configuration for production (autoscale)
-- Verified application is working correctly (homepage, login, register pages)
+### Core Features
+- User authentication and authorization
+- Photo upload and management
+- Advanced camera with landscape mode
+- Auto-enhancement and restoration
+- Face detection and tagging
+- Family vault sharing
+- Smart tagging and organization
+
+### AI Features
+- Image colorization (OpenAI GPT-5)
+- Smart tagging and categorization
+- Face detection and recognition
+- Object detection (TensorFlow.js)
+
+### Premium Features
+- Social media integration
+- Advanced photo enhancement
+- Unlimited storage (Premium plan)
+- API access
+
+## Recent Setup (GitHub Import - Oct 3, 2025)
+1. ✅ Installed Python 3.11 and all dependencies
+2. ✅ Configured PostgreSQL database (Replit Neon)
+3. ✅ Set up environment variables
+4. ✅ Initialized database schema (tables created)
+5. ✅ Configured workflow for development server (port 5000)
+6. ✅ Verified .gitignore for Python/Replit
+7. ✅ Tested application - running successfully
+8. ✅ Configured deployment for Replit Autoscale
+
+## Development Notes
+
+### Port Configuration
+- Frontend server: Port 5000 (bound to 0.0.0.0)
+- Development uses Flask dev server
+- Production uses Gunicorn WSGI server
+
+### Security
+- CSRF protection enabled (Flask-WTF)
+- Secure password hashing (Werkzeug)
+- Session management with secure cookies
+- SQL injection protection (SQLAlchemy ORM)
+
+### Storage
+- Photos stored in `photovault/uploads/`
+- Thumbnails generated automatically
+- Secure file serving via authenticated routes
+
+## Integrations
+- Replit PostgreSQL Database
+- Replit Mail (email service)
+- SendGrid (email alternative)
+- Replit Object Storage
 
 ## User Preferences
-- None documented yet
+- None specified yet
 
-## Important Notes
-1. **Cache Control**: Development mode includes cache-busting headers for Replit proxy
-2. **Host Configuration**: Development server binds to 0.0.0.0 to work with Replit's proxy
-3. **CSRF Protection**: Enabled via Flask-WTF
-4. **Database**: Uses Replit PostgreSQL in development, configurable for production
-5. **Subscription Enforcement**: Middleware ensures users select a plan before accessing features
-6. **Mobile Apps**: Separate iOS (React Native/Expo) and Android (Kotlin) implementations available
+## Next Steps for Users
+1. Set up OPENAI_API_KEY in Replit Secrets for AI features
+2. Configure SENDGRID_API_KEY for email notifications
+3. Set up Stripe API keys for payment processing
+4. Deploy to production using the "Deploy" button
