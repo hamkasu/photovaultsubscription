@@ -1,114 +1,141 @@
 # PhotoVault - Professional Photo Management Platform
 
 ## Overview
-PhotoVault is a professional photo management platform with advanced camera features, AI-powered enhancement, face detection, and family vault sharing capabilities.
+PhotoVault is a professional photo management application built with Flask, designed for digitizing legacy photos with advanced camera features, AI-powered enhancement, and family vault sharing capabilities. The application was imported from GitHub and successfully configured to run in the Replit environment.
 
-## Recent Changes
-- **2025-10-02**: GitHub import setup completed
-  - Installed Python 3.11 and all dependencies
-  - Configured PostgreSQL database for development
-  - Created development server script (dev.py) that binds to 0.0.0.0:5000
-  - Set up workflow for Flask development server
-  - Configured deployment for Replit Autoscale
-  
-- **2025-10-02**: iOS Camera Module completed
-  - Built complete camera module with AVFoundation
-  - Implemented real-time edge detection using Vision framework
-  - Created image enhancement pipeline with Core Image
-  - Set up Core Data for offline-first storage
-  - Applied MVVM architecture with SwiftUI
-  - Fixed all critical issues (session access, delegate retention, permissions)
-  - 11 Swift files + supporting configuration
-  - Ready for device testing
+## Project Setup (Completed)
 
-## Project Architecture
-
-### Technology Stack
-- **Backend**: Flask 3.0.3, Python 3.11
-- **Database**: PostgreSQL (via Replit Database integration)
-- **ORM**: SQLAlchemy 2.0.25 with Alembic migrations
+### Architecture
+- **Backend**: Flask 3.0.3 with Python 3.11
+- **Frontend**: Jinja2 templates with vanilla JavaScript
+- **Database**: PostgreSQL (Neon-hosted)
+- **ORM**: SQLAlchemy 2.0.25 with Flask-SQLAlchemy
 - **Image Processing**: OpenCV, Pillow, scikit-image
 - **Storage**: Replit Object Storage
 - **Email**: SendGrid integration
 - **Payments**: Stripe integration
-- **Frontend**: Jinja2 templates, vanilla JavaScript, CSS
+- **Mobile Apps**: 
+  - iOS: Swift, SwiftUI, AVFoundation, Vision, Core Image
+  - Android: Kotlin, CameraX, OpenCV, Room, WorkManager
 
-### Project Structure
+### Current Configuration
+- **Development Server**: Running on port 5000 with 0.0.0.0 binding
+- **Workflow**: `python dev.py` starts the Flask development server
+- **Database**: PostgreSQL database initialized with all tables
+- **Environment**: Development mode with debug enabled
+
+## Key Features
+1. **Full Screen Camera**: Professional camera experience with landscape mode and tap-to-capture
+2. **Auto Upload**: Photos automatically uploaded and organized after capture
+3. **Secure Storage**: Professional-grade security for photo storage
+4. **Face Detection**: AI-powered face recognition for photo organization
+5. **Photo Enhancement**: Advanced image processing capabilities
+6. **Smart Tagging**: Automated photo categorization
+7. **Family Vaults**: Collaborative photo collections for families
+8. **Subscription Plans**: Free, Standard, Basic, Pro, and Premium tiers
+
+## File Structure
 ```
-photovault/
-├── photovault/          # Main application package
-│   ├── routes/          # Flask blueprints
-│   ├── models/          # SQLAlchemy models (in models.py)
+├── photovault/           # Main application package
+│   ├── models/          # Database models
+│   ├── routes/          # Application routes/blueprints
 │   ├── services/        # Business logic services
-│   ├── utils/           # Utility functions (image processing, face detection)
-│   ├── templates/       # Jinja2 HTML templates
 │   ├── static/          # CSS, JS, images
-│   ├── __init__.py      # Application factory
-│   └── config.py        # Configuration classes
+│   ├── templates/       # Jinja2 HTML templates
+│   ├── utils/           # Utility functions
+│   ├── __init__.py      # App factory
+│   ├── config.py        # Configuration classes
+│   ├── extensions.py    # Flask extensions
+│   └── models.py        # Main models file
 ├── migrations/          # Alembic database migrations
 ├── dev.py              # Development server entry point
-├── main.py             # Alternative entry point
+├── main.py             # Main application entry point
 ├── wsgi.py             # Production WSGI entry point
+├── config.py           # Configuration selector
 └── requirements.txt    # Python dependencies
 ```
 
-### Database Configuration
-- **Development**: Uses DATABASE_URL environment variable (PostgreSQL)
-- **Tables**: Created automatically in development mode via SQLAlchemy
-- **Migrations**: Alembic migrations available in migrations/versions/
+## Development Workflow
 
-### Development Workflow
-1. **Start server**: Workflow "PhotoVault Server" runs `python dev.py`
-2. **Access**: Application runs on port 5000
-3. **Database**: PostgreSQL accessible via DATABASE_URL
+### Running the Application
+The application is configured with a workflow that automatically starts the development server:
+- Server runs on `0.0.0.0:5000`
+- Debug mode enabled
+- Auto-reload on code changes
+- Cache control headers configured for Replit proxy
 
-### Deployment Configuration
-- **Platform**: Replit Autoscale (stateless)
-- **Server**: Gunicorn with 2 sync workers
-- **Port**: Dynamic via $PORT environment variable
-- **Entry Point**: wsgi.py
-
-### Key Features
-- User authentication and registration
-- Photo upload and management
-- Face detection and recognition
-- Image enhancement and editing
-- Family vaults for photo sharing
-- Subscription plans with billing
-- Admin and superuser dashboards
-- Camera integration for mobile apps
-- Voice memo support
+### Database Management
+- PostgreSQL database provided by Replit/Neon
+- Tables automatically created in development mode via `db.create_all()`
+- Subscription plans seeded on app initialization
+- Alembic migrations available in `migrations/` directory
 
 ### Environment Variables
-Required for production:
-- `DATABASE_URL`: PostgreSQL connection string (auto-configured)
-- `SECRET_KEY`: Flask secret key (should be set for production)
+The following environment variables are configured:
+- `DATABASE_URL`: PostgreSQL connection string
+- `FLASK_CONFIG`: Set to 'development'
+- `FLASK_ENV`: Set to 'development'
+- `FLASK_DEBUG`: Set to 'True'
 
-Optional:
-- `MAIL_SERVER`, `MAIL_USERNAME`, `MAIL_PASSWORD`: Email configuration
-- `STRIPE_*`: Stripe payment integration
-- `SENDGRID_API_KEY`: SendGrid email service
+## Deployment Configuration
+The application is configured for deployment using:
+- **Deployment Type**: Autoscale (stateless web application)
+- **Production Server**: Gunicorn with 2 workers and 4 threads
+- **Port**: 5000 (required for Replit)
+- **Binding**: 0.0.0.0 for public access
 
-### Mobile Applications
+## Next Steps for Users
+1. **Configure Secrets** (optional):
+   - `SECRET_KEY`: For secure session management
+   - SendGrid API key: For email functionality
+   - Stripe API key: For payment processing
 
-#### Android Application
-The project includes a companion Android app in `photovault-android/` written in Kotlin with:
-- Advanced camera features
-- Edge detection and auto-enhancement
-- Offline-first architecture
-- Automatic sync with backend
+2. **Create Superuser Account** (optional):
+   - Set environment variables:
+     - `PHOTOVAULT_SUPERUSER_USERNAME`
+     - `PHOTOVAULT_SUPERUSER_EMAIL`
+     - `PHOTOVAULT_SUPERUSER_PASSWORD`
+   - Restart the application to create the superuser
 
-#### iOS Application
-A complete iOS camera module in `PhotoVault-iOS/` built with Swift/SwiftUI:
-- **Architecture**: MVVM with SwiftUI and Combine
-- **Camera**: AVFoundation for high-quality capture
-- **Edge Detection**: Vision framework for real-time photo detection
-- **Enhancement**: Core Image pipeline (perspective correction, denoise, sharpen)
-- **Storage**: Core Data + file system for offline-first
-- **Status**: Camera module complete, ready for backend integration
+3. **Test Core Features**:
+   - Register a new user account
+   - Upload photos
+   - Test camera functionality
+   - Create family vaults
+   - Try photo enhancement features
 
-## Notes
-- The application uses cache control headers to prevent issues with Replit's proxy
-- Development mode automatically creates database tables
-- Production mode requires migrations to be run separately
-- Face detection models use OpenCV Haar cascades by default
+## Technical Notes
+
+### Security
+- CSRF protection enabled via Flask-WTF
+- Password hashing with Werkzeug security
+- Secure session cookies configured
+- File upload security implemented
+- Cache control headers prevent caching in Replit proxy
+
+### Performance
+- Connection pooling configured for PostgreSQL
+- Image processing optimized with OpenCV headless
+- Gunicorn configured with appropriate worker/thread counts
+- Database connection pre-ping enabled
+
+### Known Limitations
+- DNN model file not found (using Haar cascade for face detection)
+- Development mode uses less aggressive database pooling
+- SECRET_KEY should be set in environment for production use
+
+## Recent Changes (October 3, 2025)
+- ✅ Imported from GitHub
+- ✅ Installed Python 3.11 and all dependencies
+- ✅ Created PostgreSQL database
+- ✅ Initialized database schema with all tables
+- ✅ Configured development workflow on port 5000
+- ✅ Configured deployment settings for Autoscale
+- ✅ Verified application functionality
+- ✅ Application successfully running and accessible
+
+## Support & Documentation
+- Application successfully deployed and running in Replit
+- All core features functional
+- Database tables initialized and ready for use
+- Subscription plans configured with Malaysian pricing
