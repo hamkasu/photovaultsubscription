@@ -202,7 +202,9 @@ class PhotoColorizer:
             
             max_diff = max(diff_bg.max(), diff_br.max(), diff_gr.max())
             
-            return max_diff < 10
+            # Use a more realistic threshold to account for compression artifacts
+            # and scanning imperfections in black and white photos
+            return max_diff < 30
             
         except (FileNotFoundError, RuntimeError):
             raise
