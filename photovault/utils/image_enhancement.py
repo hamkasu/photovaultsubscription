@@ -27,13 +27,13 @@ class ImageEnhancer:
     
     def __init__(self):
         self.default_settings = {
-            'brightness': 1.0,
-            'contrast': 1.0,
-            'sharpness': 1.0,
-            'color': 1.0,
-            'denoise': True,
-            'clahe_enabled': True,
-            'auto_levels': True
+            'brightness': 1.1,      # Slightly brighter for better visibility
+            'contrast': 1.2,        # Enhanced contrast for more punch
+            'sharpness': 1.3,       # Sharper for crisper details
+            'color': 1.15,          # Slightly more saturated colors
+            'denoise': True,        # Noise reduction enabled
+            'clahe_enabled': True,  # Adaptive contrast enhancement
+            'auto_levels': True     # Auto histogram stretching
         }
     
     def auto_enhance_photo(self, image_path: str, output_path: str = None, 

@@ -367,7 +367,7 @@ CALMIC SDN BHD - "Committed to Excellence"
                                 <div class="image-container">
                                     <h6>Enhanced</h6>
                                     <img id="enhancedImage" 
-                                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
+                                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) if photo.edited_filename else url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
                                          class="enhancement-preview" 
                                          alt="Enhanced">
                                 </div>
