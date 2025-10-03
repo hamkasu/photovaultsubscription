@@ -121,17 +121,20 @@ CALMIC SDN BHD - "Committed to Excellence"
                     <!-- Colorization Section -->
                     <input type="hidden" id="current-photo-id" value="{{ photo.id }}">
                     
-                    <div id="colorization-options" style="display: none;" class="mb-3">
+                    <div id="colorization-options" class="mb-3">
                         <h6 class="mb-3"><i class="bi bi-palette"></i> Colorization Options</h6>
-                        <button id="colorize-btn" class="btn btn-info w-100 mb-2">
+                        <button id="colorize-btn" class="btn btn-info w-100 mb-2" disabled>
                             <i class="bi bi-palette"></i> Colorize (Traditional)
                         </button>
-                        <button id="colorize-ai-btn" class="btn btn-primary w-100 mb-2">
+                        <button id="colorize-ai-btn" class="btn btn-primary w-100 mb-2" disabled>
                             <i class="bi bi-stars"></i> Colorize with AI
                         </button>
-                        <button id="analyze-enhancement-btn" class="btn btn-outline-info w-100 mb-2">
+                        <button id="analyze-enhancement-btn" class="btn btn-outline-info w-100 mb-2" disabled>
                             <i class="bi bi-graph-up-arrow"></i> AI Enhancement Analysis
                         </button>
+                        <small class="colorization-hint text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i> Colorization is only available for black & white photos
+                        </small>
                         <hr>
                     </div>
 

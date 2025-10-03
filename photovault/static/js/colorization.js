@@ -75,21 +75,52 @@ class ColorizationManager {
             const data = await response.json();
             
             if (data.success && data.is_grayscale) {
-                this.showColorizationOptions();
+                this.enableColorizationOptions();
+            } else {
+                this.disableColorizationOptions();
             }
         } catch (error) {
             console.error('Error checking grayscale:', error);
+            this.disableColorizationOptions();
         }
     }
 
     /**
-     * Show colorization options in the UI
+     * Enable colorization options in the UI
      */
-    showColorizationOptions() {
-        const container = document.getElementById('colorization-options');
-        if (container) {
-            container.style.display = 'block';
-        }
+    enableColorizationOptions() {
+        const colorizeBtn = document.getElementById('colorize-btn');
+        const colorizeAiBtn = document.getElementById('colorize-ai-btn');
+        const analyzeBtn = document.getElementById('analyze-enhancement-btn');
+        const hints = document.querySelectorAll('.colorization-hint');
+        
+        if (colorizeBtn) colorizeBtn.disabled = false;
+        if (colorizeAiBtn) colorizeAiBtn.disabled = false;
+        if (analyzeBtn) analyzeBtn.disabled = false;
+        
+        hints.forEach(hint => {
+            hint.innerHTML = '<i class="bi bi-check-circle"></i> Black & white photo detected - colorization enabled';
+            hint.style.color = '#28a745';
+        });
+    }
+
+    /**
+     * Disable colorization options in the UI
+     */
+    disableColorizationOptions() {
+        const colorizeBtn = document.getElementById('colorize-btn');
+        const colorizeAiBtn = document.getElementById('colorize-ai-btn');
+        const analyzeBtn = document.getElementById('analyze-enhancement-btn');
+        const hints = document.querySelectorAll('.colorization-hint');
+        
+        if (colorizeBtn) colorizeBtn.disabled = true;
+        if (colorizeAiBtn) colorizeAiBtn.disabled = true;
+        if (analyzeBtn) analyzeBtn.disabled = true;
+        
+        hints.forEach(hint => {
+            hint.innerHTML = '<i class="bi bi-info-circle"></i> Colorization is only available for black & white photos';
+            hint.style.color = '#6c757d';
+        });
     }
 
     /**
