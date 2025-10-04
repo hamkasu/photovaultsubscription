@@ -81,16 +81,10 @@ def upload_image():
                 # Import your models - adjust path as needed
                 from photovault.models import Photo, db
                 
-                # Prepare photo metadata
-                original_name = f"{current_user.username}_{file.filename}" if file.filename else f'{current_user.username}_camera-capture.jpg'
-                if quadrant:
-                    original_name = f"{current_user.username}_quad_{quadrant}_capture.jpg"
-                elif sequence_number:
-                    original_name = f"{current_user.username}_sequential_{sequence_number}_capture.jpg"
-                
+                # Use the new filename format for display
                 photo = Photo(
                     filename=filename,
-                    original_name=original_name,
+                    original_name=filename,  # Use the new format for display
                     user_id=current_user.id,
                     file_path=file_path,
                     created_at=datetime.utcnow(),

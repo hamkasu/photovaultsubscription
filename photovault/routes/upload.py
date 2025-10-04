@@ -134,7 +134,7 @@ def upload_photos():
                     photo = Photo(
                         user_id=current_user.id,
                         filename=unique_filename,
-                        original_name=f"{current_user.username}_{file.filename}" if file.filename else f'{current_user.username}_capture_{datetime.now().strftime("%Y%m%d_%H%M%S")}.jpg',
+                        original_name=unique_filename,  # Use the new format for display
                         file_path=file_path,
                         thumbnail_path=thumbnail_path,
                         file_size=image_info['size_bytes'],

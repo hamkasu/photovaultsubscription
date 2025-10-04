@@ -95,15 +95,17 @@ def create_thumbnail_local(original_path, thumbnail_path):
 def process_uploaded_file(file, upload_source='file'):
     """Process and save uploaded file"""
     try:
-        # Generate unique filename
-        file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
-        unique_id = str(uuid.uuid4())
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        
-        # Create secure filename with username
+        # Generate unique filename in new format: username.date.random6digits.ext
+        import random
         from flask_login import current_user
-        original_name = f"{current_user.username}_{secure_filename(file.filename)}" if file.filename else f"{current_user.username}_capture_{timestamp}"
-        safe_filename = f"{current_user.username}_{unique_id}_{timestamp}.{file_extension}"
+        
+        file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+        date = datetime.now().strftime('%Y%m%d')
+        random_number = random.randint(100000, 999999)  # 6-digit random number
+        safe_username = secure_filename(current_user.username)
+        
+        safe_filename = f"{safe_username}.{date}.{random_number}.{file_extension}"
+        original_name = safe_filename  # Use the new format for display
         thumbnail_filename = f"{current_user.username}_thumb_{safe_filename}"
         
         # Create upload directories if they don't exist
