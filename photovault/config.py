@@ -36,6 +36,8 @@ class Config:
         return base_options
     
     # File upload settings
+    # For Railway: Use mounted volume path if available (Railway Volumes)
+    # Example: Set UPLOAD_FOLDER=/data/uploads in Railway environment
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
@@ -117,13 +119,11 @@ class ProductionConfig(Config):
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     
-    # Require explicit confirmation for SQLite in production
+    # CRITICAL: Do NOT use SQLite in production - it loses data on restart
+    # If you see this error, add PostgreSQL database to Railway project
     if not database_url:
-        if os.environ.get('ALLOW_SQLITE_IN_PROD') == '1':
-            database_url = 'sqlite:///photovault_production.db'
-        else:
-            # Set to None to trigger fail-fast in init_app
-            database_url = None
+        # Set to None to trigger fail-fast error message in init_app
+        database_url = None
     
     SQLALCHEMY_DATABASE_URI = database_url
     
@@ -151,16 +151,36 @@ class ProductionConfig(Config):
             is_railway = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PROJECT_ID'))
             
             if is_railway:
-                app.logger.critical('DATABASE_URL not found for Railway deployment. '
-                                  'Please set DATABASE_URL or POSTGRES_URL in Railway environment. '
-                                  'Alternative: Set ALLOW_SQLITE_IN_PROD=1 for SQLite (data loss risk).')
+                app.logger.critical(
+                    '🔴 CRITICAL: No PostgreSQL database configured! '
+                    'Your data will be LOST on every restart without a database. '
+                    '\n'
+                    'TO FIX: Add PostgreSQL to Railway project:\n'
+                    '  1. Go to Railway dashboard → Your project\n'
+                    '  2. Click "+ New" → Database → PostgreSQL\n'
+                    '  3. Railway will auto-set DATABASE_URL\n'
+                    '  4. Redeploy your app\n'
+                )
             else:
-                app.logger.critical('DATABASE_URL environment variable must be set for production. '
-                                  'Set DATABASE_URL or ALLOW_SQLITE_IN_PROD=1 to use SQLite (data loss risk).')
+                app.logger.critical(
+                    '🔴 CRITICAL: DATABASE_URL environment variable not set! '
+                    'Add PostgreSQL database to your deployment platform.'
+                )
             raise RuntimeError('DATABASE_URL environment variable must be set for production')
         
-        if 'sqlite' in app.config.get('SQLALCHEMY_DATABASE_URI', ''):
-            app.logger.warning('SQLite enabled in production via ALLOW_SQLITE_IN_PROD=1 - data may be lost on restarts')
+        # Warn about ephemeral file storage on Railway
+        upload_folder = app.config.get('UPLOAD_FOLDER', '')
+        if is_railway and upload_folder and not upload_folder.startswith('/data'):
+            app.logger.warning(
+                '⚠️  WARNING: Uploaded files are stored in ephemeral directory! '
+                'Files will be LOST on Railway restart. '
+                '\n'
+                'TO FIX: Mount a Railway Volume:\n'
+                '  1. Go to Railway → Your service → Settings → Volumes\n'
+                '  2. Click "New Volume" → Mount path: /data\n'
+                '  3. Set environment variable: UPLOAD_FOLDER=/data/uploads\n'
+                '  4. Redeploy your app\n'
+            )
         
         # Log configuration for debugging (without exposing credentials)
         db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')

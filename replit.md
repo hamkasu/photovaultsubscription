@@ -178,7 +178,18 @@ Before deploying:
 - Configured production deployment: Gunicorn with autoscale on port 5000, 2 workers, 4 threads
 - Verified application runs correctly - homepage displays properly with all features
 - All core functionality operational: authentication, photo management, family vaults, billing
-- Ready for development and deployment
+
+### Railway Data Persistence Improvements
+- **Fixed critical data loss issues** for Railway deployments
+- Removed SQLite fallback that caused database data loss on restart
+- Added comprehensive error messages for missing PostgreSQL configuration
+- Added warnings for ephemeral file storage (local uploads directory)
+- Updated config to support Railway Volumes for persistent file storage
+- Created `verify_railway_config.py` script to validate deployment configuration
+- Created `RAILWAY_DEPLOYMENT.md` with complete setup guide
+- App now fails safely with clear instructions if persistence isn't configured
+- Database: Must use PostgreSQL (Railway database addon)
+- File Storage: Must use Railway Volumes mounted at `/data` or external object storage
 
 ## Architecture Notes
 
