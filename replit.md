@@ -204,6 +204,19 @@ Before deploying:
   - AI colorization (colorization.py)
 - Ensures consistent, organized naming across all enhanced photos
 
+### Image Persistence with App Storage (October 4, 2025)
+- **Fixed critical issue**: Images now persist across deployments
+- Integrated Replit Object Storage (App Storage) for all edited photos
+- Updated all photo editing routes to use persistent storage:
+  - Photo annotations and edits → App Storage
+  - Auto-enhancements → App Storage
+  - Colorization → App Storage
+  - AI colorization → App Storage
+- Smart fallback: Uses local storage if App Storage unavailable
+- Automatic cleanup: Removes temporary local files after App Storage upload
+- **Production ready**: Images persist on Railway and other ephemeral environments
+- Storage path format: `users/{user_id}/{filename}` for organized file management
+
 ### Railway Data Persistence Improvements
 - **Fixed critical data loss issues** for Railway deployments
 - Removed SQLite fallback that caused database data loss on restart

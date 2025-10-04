@@ -393,6 +393,7 @@ def annotate_photo(photo_id):
     try:
         import base64
         import io
+        from photovault.services.app_storage_service import app_storage
         
         # Get the photo and verify ownership
         photo = Photo.query.get_or_404(photo_id)
@@ -421,24 +422,51 @@ def annotate_photo(photo_id):
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
         
-        # Create user upload directory
-        user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
-        os.makedirs(user_upload_dir, exist_ok=True)
+        # Convert image to bytes for storage
+        img_io = io.BytesIO()
+        img.convert('RGB').save(img_io, 'JPEG', quality=90)
+        img_io.seek(0)
         
-        # Save the edited image
-        edited_filepath = os.path.join(user_upload_dir, edited_filename)
-        img.convert('RGB').save(edited_filepath, 'JPEG', quality=90)
-        
-        # Create thumbnail for edited version
-        thumbnail_filename = f"{safe_username}.enhanced.{date}.{random_number}_thumb.jpg"
-        thumbnail_path = os.path.join(user_upload_dir, thumbnail_filename)
-        success, result = create_thumbnail(edited_filepath)
-        if not success:
-            logger.error(f"Failed to create thumbnail: {result}")
-            # Continue without thumbnail, just log the error
-            thumbnail_path = None
+        # Save to App Storage (persistent) or fallback to local
+        if app_storage.is_available():
+            success, storage_path = app_storage.upload_file(img_io, edited_filename, str(current_user.id))
+            if success:
+                edited_filepath = storage_path
+                logger.info(f"Annotated photo saved to App Storage: {storage_path}")
+            else:
+                logger.warning(f"App Storage failed, using local storage: {storage_path}")
+                # Fallback to local storage
+                user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+                os.makedirs(user_upload_dir, exist_ok=True)
+                edited_filepath = os.path.join(user_upload_dir, edited_filename)
+                img_io.seek(0)
+                with open(edited_filepath, 'wb') as f:
+                    f.write(img_io.read())
         else:
-            thumbnail_path = result
+            # Fallback to local storage
+            user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+            os.makedirs(user_upload_dir, exist_ok=True)
+            edited_filepath = os.path.join(user_upload_dir, edited_filename)
+            img_io.seek(0)
+            with open(edited_filepath, 'wb') as f:
+                f.write(img_io.read())
+        
+        # Create thumbnail
+        thumbnail_filename = f"{safe_username}.enhanced.{date}.{random_number}_thumb.jpg"
+        if app_storage.is_available() and edited_filepath.startswith('users/'):
+            # Create thumbnail in App Storage
+            success, thumbnail_path = app_storage.create_thumbnail(edited_filepath)
+            if not success:
+                logger.error(f"Failed to create thumbnail in App Storage: {thumbnail_path}")
+                thumbnail_path = None
+        else:
+            # Create thumbnail locally
+            success, result = create_thumbnail(edited_filepath)
+            if not success:
+                logger.error(f"Failed to create thumbnail: {result}")
+                thumbnail_path = None
+            else:
+                thumbnail_path = result
         
         # Update photo record with edited version info
         photo.edited_filename = edited_filename
@@ -1298,33 +1326,60 @@ def enhance_photo_api(photo_id):
         
         # Generate filename for enhanced version using username.enhanced.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
+        from photovault.services.app_storage_service import app_storage
+        import io
+        
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         enhanced_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
         
-        # Create user upload directory
+        # Create user upload directory for temp storage
         os.makedirs(user_upload_dir, exist_ok=True)
         
-        # Enhanced image path
-        enhanced_filepath = os.path.join(user_upload_dir, enhanced_filename)
+        # Enhanced image path (temp local path)
+        temp_enhanced_filepath = os.path.join(user_upload_dir, enhanced_filename)
         
-        # Apply enhancements using the backend OpenCV system
+        # Apply enhancements using the backend OpenCV system (saves to temp local)
         output_path, applied_settings = enhancer.auto_enhance_photo(
             full_file_path, 
-            enhanced_filepath, 
+            temp_enhanced_filepath, 
             enhancement_settings
         )
         
+        # Upload to App Storage for persistence
+        enhanced_filepath = temp_enhanced_filepath  # Default to local
+        if app_storage.is_available():
+            with open(temp_enhanced_filepath, 'rb') as f:
+                img_bytes = io.BytesIO(f.read())
+                success, storage_path = app_storage.upload_file(img_bytes, enhanced_filename, str(current_user.id))
+                if success:
+                    enhanced_filepath = storage_path
+                    logger.info(f"Enhanced photo uploaded to App Storage: {storage_path}")
+                    # Clean up temp file
+                    try:
+                        os.remove(temp_enhanced_filepath)
+                    except:
+                        pass
+                else:
+                    logger.warning(f"App Storage upload failed, keeping local: {storage_path}")
+        
         # Create thumbnail for enhanced version
         thumbnail_filename = f"{safe_username}.enhanced.{date}.{random_number}_thumb.jpg"
-        thumbnail_path = os.path.join(user_upload_dir, thumbnail_filename)
-        success, result = create_thumbnail(enhanced_filepath)
-        if not success:
-            logger.error(f"Failed to create thumbnail: {result}")
-            thumbnail_path = None
+        if app_storage.is_available() and enhanced_filepath.startswith('users/'):
+            # Create thumbnail in App Storage
+            success, thumbnail_path = app_storage.create_thumbnail(enhanced_filepath)
+            if not success:
+                logger.error(f"Failed to create thumbnail in App Storage: {thumbnail_path}")
+                thumbnail_path = None
         else:
-            thumbnail_path = result
+            # Create thumbnail locally
+            success, result = create_thumbnail(temp_enhanced_filepath if os.path.exists(temp_enhanced_filepath) else enhanced_filepath)
+            if not success:
+                logger.error(f"Failed to create thumbnail: {result}")
+                thumbnail_path = None
+            else:
+                thumbnail_path = result
         
         # Update photo record with enhanced version info
         photo.edited_filename = enhanced_filename

@@ -77,23 +77,43 @@ def colorize_photo():
         # Generate edited filename using username.enhanced.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
         from datetime import datetime
+        from photovault.services.app_storage_service import app_storage
         import random
+        import io
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
-        edited_path = os.path.join(upload_folder, edited_filename)
+        temp_edited_path = os.path.join(upload_folder, edited_filename)
         
-        # Perform colorization
+        # Perform colorization (saves to temp local)
         colorizer = get_colorizer()
         result_path, method_used = colorizer.colorize_image(
             original_path,
-            edited_path,
+            temp_edited_path,
             method=method
         )
         
+        # Upload to App Storage for persistence
+        edited_path = temp_edited_path  # Default to local
+        if app_storage.is_available():
+            with open(temp_edited_path, 'rb') as f:
+                img_bytes = io.BytesIO(f.read())
+                success, storage_path = app_storage.upload_file(img_bytes, edited_filename, str(current_user.id))
+                if success:
+                    edited_path = storage_path
+                    logger.info(f"Colorized photo uploaded to App Storage: {storage_path}")
+                    # Clean up temp file
+                    try:
+                        os.remove(temp_edited_path)
+                    except:
+                        pass
+                else:
+                    logger.warning(f"App Storage upload failed, keeping local: {storage_path}")
+        
         # Update database with edited version
         photo.edited_filename = edited_filename
+        photo.edited_path = edited_path
         photo.enhancement_metadata = {
             'colorization': {
                 'method': method_used,
@@ -183,21 +203,41 @@ def colorize_photo_ai():
         # Generate edited filename using username.enhanced.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
         from datetime import datetime
+        from photovault.services.app_storage_service import app_storage
         import random
+        import io
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
-        edited_path = os.path.join(upload_folder, edited_filename)
+        temp_edited_path = os.path.join(upload_folder, edited_filename)
         
-        # Perform AI colorization
+        # Perform AI colorization (saves to temp local)
         result_path, metadata = ai_service.colorize_image_ai(
             original_path,
-            edited_path
+            temp_edited_path
         )
+        
+        # Upload to App Storage for persistence
+        edited_path = temp_edited_path  # Default to local
+        if app_storage.is_available():
+            with open(temp_edited_path, 'rb') as f:
+                img_bytes = io.BytesIO(f.read())
+                success, storage_path = app_storage.upload_file(img_bytes, edited_filename, str(current_user.id))
+                if success:
+                    edited_path = storage_path
+                    logger.info(f"AI colorized photo uploaded to App Storage: {storage_path}")
+                    # Clean up temp file
+                    try:
+                        os.remove(temp_edited_path)
+                    except:
+                        pass
+                else:
+                    logger.warning(f"App Storage upload failed, keeping local: {storage_path}")
         
         # Update database with edited version
         photo.edited_filename = edited_filename
+        photo.edited_path = edited_path
         photo.enhancement_metadata = {
             'colorization': {
                 'method': metadata['method'],
