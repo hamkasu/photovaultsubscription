@@ -18,19 +18,40 @@ depends_on = None
 
 def upgrade():
     # Add social_media_integration column and change storage_gb to NUMERIC
-    with op.batch_alter_table('subscription_plan', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('social_media_integration', sa.BOOLEAN(), server_default=sa.text('false'), nullable=True))
-        batch_op.alter_column('storage_gb',
-               existing_type=sa.Integer(),
-               type_=sa.NUMERIC(precision=10, scale=2),
-               existing_nullable=False)
+    # Use direct PostgreSQL-compatible commands instead of batch_alter_table
+    
+    # Add social_media_integration column if it doesn't exist
+    connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    columns = [col['name'] for col in inspector.get_columns('subscription_plan')]
+    
+    if 'social_media_integration' not in columns:
+        op.add_column('subscription_plan', sa.Column('social_media_integration', sa.BOOLEAN(), server_default=sa.text('false'), nullable=True))
+    
+    # Change storage_gb type to NUMERIC for PostgreSQL
+    # This allows decimal storage sizes like 0.1 GB
+    if 'storage_gb' in columns:
+        op.alter_column('subscription_plan', 'storage_gb',
+                       existing_type=sa.Integer(),
+                       type_=sa.NUMERIC(precision=10, scale=2),
+                       existing_nullable=False,
+                       postgresql_using='storage_gb::numeric')
 
 
 def downgrade():
     # Remove social_media_integration column and change storage_gb back to Integer
-    with op.batch_alter_table('subscription_plan', schema=None) as batch_op:
-        batch_op.alter_column('storage_gb',
-               existing_type=sa.NUMERIC(precision=10, scale=2),
-               type_=sa.Integer(),
-               existing_nullable=False)
-        batch_op.drop_column('social_media_integration')
+    # Use direct PostgreSQL-compatible commands
+    
+    connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    columns = [col['name'] for col in inspector.get_columns('subscription_plan')]
+    
+    if 'storage_gb' in columns:
+        op.alter_column('subscription_plan', 'storage_gb',
+                       existing_type=sa.NUMERIC(precision=10, scale=2),
+                       type_=sa.Integer(),
+                       existing_nullable=False,
+                       postgresql_using='storage_gb::integer')
+    
+    if 'social_media_integration' in columns:
+        op.drop_column('subscription_plan', 'social_media_integration')
