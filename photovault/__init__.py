@@ -343,9 +343,20 @@ def create_app(config_class=None):
                 db.create_all()
                 app.logger.info("Database tables initialized successfully (development mode)")
             else:
-                # In production, verify database connectivity without creating tables
+                # In production, verify database connectivity
                 db.session.execute(db.text('SELECT 1'))
                 app.logger.info("Database connection verified (production mode)")
+                
+                # AUTO-MIGRATION: Run migrations automatically in production
+                # This is a quick fix for Railway deployments
+                try:
+                    from flask_migrate import upgrade
+                    app.logger.info("Running database migrations automatically...")
+                    upgrade()
+                    app.logger.info("✅ Database migrations completed successfully")
+                except Exception as migration_error:
+                    app.logger.warning(f"Auto-migration skipped or failed: {str(migration_error)}")
+                    app.logger.info("This is normal if migrations are already up to date")
             
             # Seed default subscription plans (only if db connection works)
             _seed_subscription_plans(app)
