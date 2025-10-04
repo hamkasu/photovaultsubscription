@@ -20,7 +20,8 @@ stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 @billing_bp.route('/plans')
 def plans():
     """Display available subscription plans"""
-    from sqlalchemy.exc import OperationalError
+    from sqlalchemy.exc import OperationalError, DatabaseError
+    import time
     
     # Retry logic for database connection issues
     max_retries = 3
@@ -29,6 +30,17 @@ def plans():
     while retry_count < max_retries:
         try:
             plans = SubscriptionPlan.query.filter_by(is_active=True).order_by(SubscriptionPlan.sort_order).all()
+            
+            # Check if any plans exist - if not, seed them
+            if not plans:
+                current_app.logger.warning("No subscription plans found in database, attempting to seed...")
+                try:
+                    from photovault import _seed_subscription_plans
+                    _seed_subscription_plans(current_app._get_current_object())
+                    # Try to fetch plans again after seeding
+                    plans = SubscriptionPlan.query.filter_by(is_active=True).order_by(SubscriptionPlan.sort_order).all()
+                except Exception as seed_error:
+                    current_app.logger.error(f"Failed to seed subscription plans: {str(seed_error)}")
             
             # Get user's current subscription if logged in
             current_subscription = None
@@ -41,17 +53,30 @@ def plans():
             return render_template('billing/plans.html', 
                                  plans=plans, 
                                  current_subscription=current_subscription)
-        except OperationalError as e:
+        except (OperationalError, DatabaseError) as e:
             retry_count += 1
-            current_app.logger.warning(f"Database connection error (attempt {retry_count}/{max_retries}): {str(e)}")
+            current_app.logger.warning(f"Database error (attempt {retry_count}/{max_retries}): {str(e)}")
             
             # Close and remove the session to force a new connection
             db.session.remove()
             
-            if retry_count >= max_retries:
-                current_app.logger.error(f"Failed to connect to database after {max_retries} attempts")
-                flash('Unable to load pricing information. Please try again later.', 'danger')
+            # Wait a bit before retrying (exponential backoff)
+            if retry_count < max_retries:
+                time.sleep(0.5 * retry_count)
+            else:
+                current_app.logger.error(f"Failed to connect to database after {max_retries} attempts: {str(e)}")
+                # Provide helpful error message for Railway deployment
+                error_msg = 'Unable to load pricing information. '
+                if 'could not connect' in str(e).lower() or 'connection' in str(e).lower():
+                    error_msg += 'Database connection failed. Please ensure DATABASE_URL is configured on Railway.'
+                else:
+                    error_msg += 'Please try again later.'
+                flash(error_msg, 'danger')
                 return render_template('errors/500.html'), 500
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error loading plans: {str(e)}")
+            flash('An unexpected error occurred. Please contact support.', 'danger')
+            return render_template('errors/500.html'), 500
 
 
 @billing_bp.route('/subscribe/<int:plan_id>', methods=['POST'])
