@@ -145,11 +145,11 @@ class ProductionConfig(Config):
                               'User sessions WILL NOT persist across Railway restarts. '
                               'Set SECRET_KEY environment variable in Railway dashboard immediately!')
         
+        # Check if we're running on Railway by looking for Railway-specific env vars
+        is_railway = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PROJECT_ID'))
+        
         # Fail-fast if no database configured in production
         if not app.config.get('SQLALCHEMY_DATABASE_URI'):
-            # Check if we're running on Railway by looking for Railway-specific env vars
-            is_railway = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PROJECT_ID'))
-            
             if is_railway:
                 app.logger.critical(
                     '🔴 CRITICAL: No PostgreSQL database configured! '
