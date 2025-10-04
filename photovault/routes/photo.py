@@ -5,6 +5,7 @@ Handles file uploads from both traditional file selection and camera capture
 import os
 import uuid
 import mimetypes
+import random
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -414,10 +415,11 @@ def annotate_photo(photo_id):
         img = Image.open(io.BytesIO(img_bytes))
         
         # Generate filename for edited version
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_id = str(uuid.uuid4())[:8]
-        base_name = os.path.splitext(photo.filename)[0]
-        edited_filename = f"{base_name}_edited_{timestamp}_{unique_id}.jpg"
+        from werkzeug.utils import secure_filename as sanitize_name
+        date = datetime.now().strftime('%Y%m%d')
+        random_number = random.randint(100000, 999999)  # 6-digit random number
+        safe_username = sanitize_name(current_user.username)
+        edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
         
         # Create user upload directory
         user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
@@ -428,7 +430,7 @@ def annotate_photo(photo_id):
         img.convert('RGB').save(edited_filepath, 'JPEG', quality=90)
         
         # Create thumbnail for edited version
-        thumbnail_filename = f"{base_name}_edited_{timestamp}_{unique_id}_thumb.jpg"
+        thumbnail_filename = f"{safe_username}.enhanced.{date}.{random_number}_thumb.jpg"
         thumbnail_path = os.path.join(user_upload_dir, thumbnail_filename)
         success, result = create_thumbnail(edited_filepath)
         if not success:

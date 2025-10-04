@@ -193,6 +193,17 @@ Before deploying:
   - Authentication routes ready (Login, Register)
   - Full feature set operational: camera, upload, gallery, family vaults, billing
 
+### Edited Photo Filename Format Update (October 4, 2025)
+- Updated all edited/enhanced photo filename formats to consistent pattern
+- New format: `<username>.enhanced.<date>.<random_number>.jpg`
+  - Example: `hamkasu.enhanced.20251004.554365.jpg`
+- Applied to all photo editing features:
+  - Photo annotation/editing (photo.py)
+  - Auto-enhancement (photo.py) 
+  - Colorization (colorization.py)
+  - AI colorization (colorization.py)
+- Ensures consistent, organized naming across all enhanced photos
+
 ### Railway Data Persistence Improvements
 - **Fixed critical data loss issues** for Railway deployments
 - Removed SQLite fallback that caused database data loss on restart
