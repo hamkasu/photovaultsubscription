@@ -319,54 +319,73 @@ def uploaded_file(user_id, filename):
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
         uploads_dir = os.path.join(upload_folder, str(user_id))
         
-        # Determine the actual file path to serve
-        if photo.file_path:
-            file_path = photo.file_path
+        # IMPORTANT: Serve the exact filename requested
+        # Original files should always be in the canonical location: uploads_dir/filename
+        # Edited files use edited_path
+        
+        file_to_serve = None
+        
+        if photo.filename == filename:
+            # User requested the original - construct canonical path
+            file_to_serve = os.path.join(uploads_dir, filename)
             
-            if os.path.isabs(file_path):
-                # Use absolute path directly
-                file_to_serve = file_path
-            elif file_path.startswith(upload_folder + '/'):
-                # Path already includes the upload folder root (e.g., "photovault/uploads/1/file.jpg")
-                file_to_serve = file_path
-            elif file_path.startswith('uploads/') or file_path.startswith('users/'):
-                # App Storage style path - strip the storage prefix and use with upload folder
-                # e.g., "uploads/123/file.jpg" -> "photovault/uploads/123/file.jpg"
-                # or "users/123/file.jpg" -> "photovault/uploads/123/file.jpg"
-                path_parts = file_path.split('/', 1)
-                if len(path_parts) > 1:
-                    relative_part = path_parts[1]  # "123/file.jpg"
-                    file_to_serve = os.path.join(upload_folder, relative_part)
+            # If not found in canonical location, try fallback locations for legacy data
+            # BUT reject any fallback that points to the edited file
+            if not os.path.exists(file_to_serve) and photo.file_path:
+                file_path = photo.file_path
+                fallback_path = None
+                
+                if os.path.isabs(file_path):
+                    fallback_path = file_path
+                elif file_path.startswith(upload_folder + '/'):
+                    fallback_path = file_path
+                elif file_path.startswith('uploads/') or file_path.startswith('users/'):
+                    path_parts = file_path.split('/', 1)
+                    if len(path_parts) > 1:
+                        fallback_path = os.path.join(upload_folder, path_parts[1])
+                elif '/' in file_path and file_path.split('/')[0].isdigit():
+                    fallback_path = os.path.join(upload_folder, file_path)
                 else:
-                    file_to_serve = os.path.join(uploads_dir, file_path)
-            elif '/' in file_path and file_path.split('/')[0].isdigit():
-                # Bare user-relative path like "123/file.jpg" - map to upload folder
-                file_to_serve = os.path.join(upload_folder, file_path)
-            else:
-                # Relative path within user directory (e.g., "extracted_photos/file.jpg")
-                file_to_serve = os.path.join(uploads_dir, file_path)
+                    # Relative path within user directory
+                    fallback_path = os.path.join(uploads_dir, file_path)
+                
+                # Only use fallback if it exists AND doesn't match the edited filename
+                if fallback_path and os.path.exists(fallback_path):
+                    # Reject if this path points to the edited file
+                    fallback_basename = os.path.basename(fallback_path)
+                    if not (photo.edited_filename and fallback_basename == photo.edited_filename):
+                        file_to_serve = fallback_path
+                            
+        elif photo.edited_filename == filename:
+            # User requested the edited version
+            file_to_serve = os.path.join(uploads_dir, filename)
             
-            if os.path.exists(file_to_serve):
-                return send_file(file_to_serve)
-            else:
-                current_app.logger.error(f"File not found: {file_to_serve} (from photo.file_path: {file_path})")
-                # If it's a thumbnail request, serve placeholder instead of 404
-                if is_thumbnail_request:
-                    current_app.logger.warning(f"Serving placeholder for missing thumbnail file: {file_to_serve}")
-                    return redirect(url_for('static', filename='img/placeholder.png'))
-                abort(404)
+            # If not found, try edited_path if available
+            if not os.path.exists(file_to_serve) and hasattr(photo, 'edited_path') and photo.edited_path:
+                edited_path = photo.edited_path
+                if os.path.isabs(edited_path):
+                    file_to_serve = edited_path
+                elif edited_path.startswith('uploads/') or edited_path.startswith('users/'):
+                    path_parts = edited_path.split('/', 1)
+                    if len(path_parts) > 1:
+                        file_to_serve = os.path.join(upload_folder, path_parts[1])
+                    else:
+                        file_to_serve = os.path.join(uploads_dir, edited_path)
+                else:
+                    file_to_serve = os.path.join(uploads_dir, edited_path)
         else:
-            # No stored file_path, use filename from URL
-            file_path = os.path.join(uploads_dir, filename)
-            if os.path.exists(file_path):
-                return send_from_directory(uploads_dir, filename)
-            else:
-                current_app.logger.error(f"File not found in uploads directory: {file_path}")
-                # If it's a thumbnail request, serve placeholder instead of 404
-                if is_thumbnail_request:
-                    current_app.logger.warning(f"Serving placeholder for missing thumbnail: {filename}")
-                    return redirect(url_for('static', filename='img/placeholder.png'))
-                abort(404)
+            # Unknown filename - try uploads directory
+            file_to_serve = os.path.join(uploads_dir, filename)
+        
+        if file_to_serve and os.path.exists(file_to_serve):
+            return send_file(file_to_serve)
+        else:
+            current_app.logger.error(f"File not found: {file_to_serve} (requested filename: {filename})")
+            # If it's a thumbnail request, serve placeholder instead of 404
+            if is_thumbnail_request:
+                current_app.logger.warning(f"Serving placeholder for missing thumbnail file: {file_to_serve}")
+                return redirect(url_for('static', filename='img/placeholder.png'))
+            abort(404)
         
     except Exception as e:
         current_app.logger.error(f"Error serving file {filename} for user {user_id}: {e}")
