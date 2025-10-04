@@ -129,7 +129,7 @@ def generate_unique_filename(original_filename, prefix="", username=None):
         username: Optional username to include at the start of filename
         
     Returns:
-        str: Unique filename in format <username>-<date>-<random number>.<ext>
+        str: Unique filename in format <username>.<date>.<random number>.<ext>
     """
     import random
     from datetime import datetime
@@ -149,8 +149,8 @@ def generate_unique_filename(original_filename, prefix="", username=None):
     # Use username or default
     user_part = secure_filename(username) if username else "user"
     
-    # Return filename in format: <username>-<date>-<random number>.<ext>
-    return f"{user_part}-{date}-{random_number}{file_ext}"
+    # Return filename in format: <username>.<date>.<random number>.<ext>
+    return f"{user_part}.{date}.{random_number}{file_ext}"
 
 def get_file_size_mb(file_path):
     """

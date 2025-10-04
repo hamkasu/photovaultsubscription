@@ -54,7 +54,7 @@ def upload_image():
         quadrant = request.form.get('quadrant', '')
         sequence_number = request.form.get('sequence_number', '')
         
-        # Generate secure filename in format: <username>-<date>-<random number>.<ext>
+        # Generate secure filename in format: <username>.<date>.<random number>.<ext>
         import random
         from werkzeug.utils import secure_filename as sanitize_name
         date = datetime.now().strftime('%Y%m%d')
@@ -63,7 +63,7 @@ def upload_image():
         safe_username = sanitize_name(current_user.username)
         
         # Use standard naming format for all camera uploads
-        filename = f"{safe_username}-{date}-{random_number}{file_extension}"
+        filename = f"{safe_username}.{date}.{random_number}{file_extension}"
         
         # Ensure upload directory exists
         upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))

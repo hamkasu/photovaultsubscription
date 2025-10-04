@@ -88,7 +88,7 @@ def generate_secure_filename(original_filename: str, username: str = None, prefi
         force_format: Force specific extension (e.g., 'jpg' for camera uploads)
         
     Returns:
-        Secure filename in format <username>-<date>-<random number>.<ext>
+        Secure filename in format <username>.<date>.<random number>.<ext>
     """
     import random
     
@@ -114,12 +114,12 @@ def generate_secure_filename(original_filename: str, username: str = None, prefi
     date = datetime.now().strftime('%Y%m%d')
     random_number = random.randint(10000000, 99999999)
     
-    # Return filename in format: <username>-<date>-<random number>.<ext>
-    filename = f"{username}-{date}-{random_number}.{ext}"
+    # Return filename in format: <username>.<date>.<random number>.<ext>
+    filename = f"{username}.{date}.{random_number}.{ext}"
     
     # Ensure filename isn't too long (filesystem limits)
     if len(filename) > 200:
-        filename = f"user-{date}-{random_number}.{ext}"
+        filename = f"user.{date}.{random_number}.{ext}"
     
     return filename
 
