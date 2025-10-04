@@ -125,12 +125,15 @@ def generate_unique_filename(original_filename, prefix="", username=None):
     
     Args:
         original_filename: Original filename from upload
-        prefix: Optional prefix for the filename
+        prefix: Optional prefix for the filename (ignored, kept for compatibility)
         username: Optional username to include at the start of filename
         
     Returns:
-        str: Unique filename with original extension
+        str: Unique filename in format <username>-<date>-<random number>.<ext>
     """
+    import random
+    from datetime import datetime
+    
     # Secure the filename
     safe_filename = secure_filename(original_filename) if original_filename else "upload"
     
@@ -139,33 +142,15 @@ def generate_unique_filename(original_filename, prefix="", username=None):
     if not file_ext:
         file_ext = '.jpg'  # Default extension
     
-    # Generate unique name with UUID and timestamp
-    # Calculate available characters for filename (12 total - extension length)
-    available_chars = 12 - len(file_ext)
-    if available_chars > 8:
-        available_chars = 8
-    unique_id = str(uuid.uuid4().hex)[:available_chars]
-
+    # Generate date and random number
+    date = datetime.now().strftime('%Y%m%d')
+    random_number = random.randint(10000000, 99999999)
     
-    # Return short filename
-    if prefix:
-        parts = []
-        if username:
-            parts.append(secure_filename(username))
-        parts.append(prefix)
-        # parts.append(timestamp)
-        parts.append(unique_id)
-        unique_name = "_".join(parts)
-    else:
-        parts = []
-        if username:
-            parts.append(secure_filename(username))
-        parts.append("upload")
-        # parts.append(timestamp)
-        parts.append(unique_id)
-        unique_name = "_".join(parts)
+    # Use username or default
+    user_part = secure_filename(username) if username else "user"
     
-    return f"{unique_id}{file_ext}"
+    # Return filename in format: <username>-<date>-<random number>.<ext>
+    return f"{user_part}-{date}-{random_number}{file_ext}"
 
 def get_file_size_mb(file_path):
     """

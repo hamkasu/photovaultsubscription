@@ -84,17 +84,19 @@ def generate_secure_filename(original_filename: str, username: str = None, prefi
     Args:
         original_filename: Original filename from upload
         username: Username for file organization (will be sanitized)
-        prefix: Optional prefix (e.g., 'camera', 'quad')
+        prefix: Optional prefix (ignored, kept for compatibility)
         force_format: Force specific extension (e.g., 'jpg' for camera uploads)
         
     Returns:
-        Secure filename
+        Secure filename in format <username>-<date>-<random number>.<ext>
     """
-    # Sanitize all inputs
+    import random
+    
+    # Sanitize username
     if username:
         username = sanitize_input(username, 50)
-    if prefix:
-        prefix = sanitize_input(prefix, 20)
+    else:
+        username = "user"
     
     # Get secure file extension - force specific format if specified
     if force_format:
@@ -108,23 +110,16 @@ def generate_secure_filename(original_filename: str, username: str = None, prefi
     else:
         ext = 'jpg'
     
-    # Generate timestamp and unique ID
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    unique_id = str(uuid.uuid4())[:8]
+    # Generate date and random number
+    date = datetime.now().strftime('%Y%m%d')
+    random_number = random.randint(10000000, 99999999)
     
-    # Build filename parts
-    parts = []
-    if username:
-        parts.append(username)
-    if prefix:
-        parts.append(prefix)
-    parts.extend([timestamp, unique_id])
-    
-    filename = "_".join(parts) + f".{ext}"
+    # Return filename in format: <username>-<date>-<random number>.<ext>
+    filename = f"{username}-{date}-{random_number}.{ext}"
     
     # Ensure filename isn't too long (filesystem limits)
     if len(filename) > 200:
-        filename = f"{unique_id}_{timestamp}.{ext}"
+        filename = f"user-{date}-{random_number}.{ext}"
     
     return filename
 
