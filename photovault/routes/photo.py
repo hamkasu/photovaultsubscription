@@ -1262,7 +1262,7 @@ def enhance_photo_api(photo_id):
         from photovault.models import Photo
         from photovault.utils.image_enhancement import enhancer
         # Use local create_thumbnail function for consistency
-        import uuid
+        import random
         from datetime import datetime
         import os
         
@@ -1292,11 +1292,10 @@ def enhance_photo_api(photo_id):
         data = request.get_json()
         enhancement_settings = data.get('settings', {})
         
-        # Generate filename for enhanced version
+        # Generate filename for enhanced version using username-enhanced-date-randomnumber format
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_id = str(uuid.uuid4())[:8]
-        base_name = os.path.splitext(photo.filename)[0]
-        enhanced_filename = f"{base_name}_enhanced_{timestamp}_{unique_id}.jpg"
+        random_number = random.randint(10000000, 99999999)
+        enhanced_filename = f"{current_user.username}-enhanced-{timestamp}-{random_number}.jpg"
         
         # Create user upload directory
         os.makedirs(user_upload_dir, exist_ok=True)
@@ -1312,7 +1311,7 @@ def enhance_photo_api(photo_id):
         )
         
         # Create thumbnail for enhanced version
-        thumbnail_filename = f"{base_name}_enhanced_{timestamp}_{unique_id}_thumb.jpg"
+        thumbnail_filename = f"{current_user.username}-enhanced-{timestamp}-{random_number}_thumb.jpg"
         thumbnail_path = os.path.join(user_upload_dir, thumbnail_filename)
         success, result = create_thumbnail(enhanced_filepath)
         if not success:
