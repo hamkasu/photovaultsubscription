@@ -1295,7 +1295,7 @@ def enhance_photo_api(photo_id):
         # Generate filename for enhanced version using username.enhanced.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
         date = datetime.now().strftime('%Y%m%d')
-        random_number = random.randint(10000000, 99999999)
+        random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         enhanced_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
         

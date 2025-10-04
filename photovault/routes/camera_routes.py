@@ -58,7 +58,7 @@ def upload_image():
         import random
         from werkzeug.utils import secure_filename as sanitize_name
         date = datetime.now().strftime('%Y%m%d')
-        random_number = random.randint(10000000, 99999999)
+        random_number = random.randint(100000, 999999)  # 6-digit random number
         file_extension = get_file_extension(file.filename)
         safe_username = sanitize_name(current_user.username)
         

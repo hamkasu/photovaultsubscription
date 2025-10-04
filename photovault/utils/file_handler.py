@@ -142,9 +142,9 @@ def generate_unique_filename(original_filename, prefix="", username=None):
     if not file_ext:
         file_ext = '.jpg'  # Default extension
     
-    # Generate date and random number
+    # Generate date and random number (6 digits)
     date = datetime.now().strftime('%Y%m%d')
-    random_number = random.randint(10000000, 99999999)
+    random_number = random.randint(100000, 999999)
     
     # Use username or default
     user_part = secure_filename(username) if username else "user"

@@ -110,9 +110,9 @@ def generate_secure_filename(original_filename: str, username: str = None, prefi
     else:
         ext = 'jpg'
     
-    # Generate date and random number
+    # Generate date and random number (6 digits)
     date = datetime.now().strftime('%Y%m%d')
-    random_number = random.randint(10000000, 99999999)
+    random_number = random.randint(100000, 999999)
     
     # Return filename in format: <username>.<date>.<random number>.<ext>
     filename = f"{username}.{date}.{random_number}.{ext}"
