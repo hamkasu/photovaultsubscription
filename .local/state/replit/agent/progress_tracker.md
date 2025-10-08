@@ -4,3 +4,4 @@
 [x] 4. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
 [x] 5. Fix Railway file upload issue - only PNG uploaded (fixed image format mismatch)
 [x] 6. Fix side-by-side colorization display issue (added cache-busting and safety checks)
+[x] 7. Add colorized button to Advanced Image Enhancement page (added Colorized view tab and AI colorization feature)
