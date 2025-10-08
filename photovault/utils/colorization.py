@@ -28,17 +28,24 @@ class PhotoColorizer:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         models_dir = os.path.join(base_dir, 'models', 'colorization')
         
-        if os.path.exists(models_dir):
-            self.prototxt_path = os.path.join(models_dir, 'colorization_deploy_v2.prototxt')
-            self.model_path = os.path.join(models_dir, 'colorization_release_v2.caffemodel')
-            self.pts_npy_path = os.path.join(models_dir, 'pts_in_hull.npy')
-            
-            if all(os.path.exists(p) for p in [self.prototxt_path, self.model_path, self.pts_npy_path]):
-                self._load_model()
-            else:
-                logger.warning("Colorization model files not found - colorization will use basic method")
+        self.prototxt_path = os.path.join(models_dir, 'colorization_deploy_v2.prototxt')
+        self.model_path = os.path.join(models_dir, 'colorization_release_v2.caffemodel')
+        self.pts_npy_path = os.path.join(models_dir, 'pts_in_hull.npy')
+        
+        # Check if models exist, if not try to download them
+        if not all(os.path.exists(p) for p in [self.prototxt_path, self.model_path, self.pts_npy_path]):
+            logger.info("Colorization models not found, attempting to download...")
+            try:
+                from .download_models import download_colorization_models
+                download_colorization_models()
+            except Exception as e:
+                logger.warning(f"Failed to download models: {e}")
+        
+        # Load model if all files exist
+        if all(os.path.exists(p) for p in [self.prototxt_path, self.model_path, self.pts_npy_path]):
+            self._load_model()
         else:
-            logger.info("Colorization models directory not found - using basic colorization")
+            logger.warning("Colorization model files not available - colorization will use basic method")
     
     def _load_model(self):
         """Load the pre-trained colorization model"""
