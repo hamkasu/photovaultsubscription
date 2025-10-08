@@ -221,6 +221,7 @@ def upload_photos():
         
         else:
             # All files failed
+            logger.error(f"All files failed to upload. Errors: {errors}")
             return jsonify({
                 'success': False,
                 'error': 'All files failed to upload',
