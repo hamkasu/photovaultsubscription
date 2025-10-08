@@ -198,7 +198,7 @@ def colorize_photo_ai():
         if not ai_service.is_available():
             return jsonify({
                 'success': False,
-                'error': 'AI service not available. Please configure OPENAI_API_KEY.'
+                'error': 'AI service not available. Please configure GEMINI_API_KEY.'
             }), 503
         
         # Get photo from database
@@ -347,7 +347,7 @@ def analyze_enhancement():
         if not ai_service.is_available():
             return jsonify({
                 'success': False,
-                'error': 'AI service not available. Please configure OPENAI_API_KEY.'
+                'error': 'AI service not available. Please configure GEMINI_API_KEY.'
             }), 503
         
         # Get photo from database
@@ -422,7 +422,7 @@ def analyze_photo():
         if not ai_service.is_available():
             return jsonify({
                 'success': False,
-                'error': 'AI service not available. Please configure OPENAI_API_KEY.'
+                'error': 'AI service not available. Please configure GEMINI_API_KEY.'
             }), 503
         
         # Get photo from database
