@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PhotoVault</string>
+    <string name="camera_permission_required">Camera permission is required to capture photos</string>
+    <string name="storage_permission_required">Storage permission is required to save photos</string>
+    
+    <!-- Auth -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="full_name">Full Name</string>
+    <string name="logout">Logout</string>
+    
+    <!-- Camera -->
+    <string name="capture">Capture</string>
+    <string name="flash_on">Flash On</string>
+    <string name="flash_off">Flash Off</string>
+    <string name="grid_on">Grid On</string>
+    <string name="grid_off">Grid Off</string>
+    <string name="edge_detection">Edge Detection</string>
+    <string name="batch_mode">Batch Mode</string>
+    <string name="enhance">Enhance</string>
+    
+    <!-- Gallery -->
+    <string name="gallery">Gallery</string>
+    <string name="photos">Photos</string>
+    <string name="upload_queue">Upload Queue</string>
+    <string name="syncing">Syncing…</string>
+    <string name="sync_complete">Sync complete</string>
+    
+    <!-- Family Vaults -->
+    <string name="family_vaults">Family Vaults</string>
+    <string name="create_vault">Create Vault</string>
+    <string name="invite_member">Invite Member</string>
+    <string name="vault_name">Vault Name</string>
+    <string name="vault_description">Description</string>
+    
+    <!-- Enhancement -->
+    <string name="brightness">Brightness</string>
+    <string name="contrast">Contrast</string>
+    <string name="saturation">Saturation</string>
+    <string name="auto_correct">Auto Correct</string>
+    <string name="perspective_correction">Perspective Correction</string>
+    <string name="denoise">Denoise</string>
+    <string name="sharpen">Sharpen</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    
+    <!-- Messages -->
+    <string name="photo_saved">Photo saved successfully</string>
+    <string name="photo_uploaded">Photo uploaded successfully</string>
+    <string name="upload_failed">Upload failed</string>
+    <string name="login_success">Login successful</string>
+    <string name="login_failed">Login failed</string>
+    <string name="register_success">Registration successful</string>
+    <string name="register_failed">Registration failed</string>
+</resources>
