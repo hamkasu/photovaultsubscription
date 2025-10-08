@@ -79,8 +79,10 @@ def upload_photos():
                 continue
                 
             try:
+                logger.info(f"Validating file: {file.filename}")
                 # Validate file
                 is_valid, validation_msg = validate_image_file(file)
+                logger.info(f"Validation result for {file.filename}: is_valid={is_valid}, msg={validation_msg}")
                 if not is_valid:
                     error_msg = f"{file.filename}: {validation_msg}"
                     logger.error(f"Validation failed: {error_msg}")
