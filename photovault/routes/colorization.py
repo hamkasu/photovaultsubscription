@@ -65,8 +65,7 @@ def colorize_photo():
             }), 404
         
         # Get file paths
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-        original_path = os.path.join(upload_folder, photo.filename)
+        original_path = photo.file_path
         
         if not os.path.exists(original_path):
             return jsonify({
@@ -191,8 +190,7 @@ def colorize_photo_ai():
             }), 404
         
         # Get file paths
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-        original_path = os.path.join(upload_folder, photo.filename)
+        original_path = photo.file_path
         
         if not os.path.exists(original_path):
             return jsonify({
@@ -320,8 +318,7 @@ def analyze_enhancement():
             }), 404
         
         # Get file path
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-        photo_path = os.path.join(upload_folder, photo.filename)
+        photo_path = photo.file_path
         
         if not os.path.exists(photo_path):
             return jsonify({
@@ -396,8 +393,7 @@ def analyze_photo():
             }), 404
         
         # Get file path
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-        photo_path = os.path.join(upload_folder, photo.filename)
+        photo_path = photo.file_path
         
         if not os.path.exists(photo_path):
             return jsonify({
@@ -469,8 +465,7 @@ def check_grayscale():
             }), 404
         
         # Get file path
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-        photo_path = os.path.join(upload_folder, photo.filename)
+        photo_path = photo.file_path
         
         if not os.path.exists(photo_path):
             return jsonify({
