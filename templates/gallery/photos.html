@@ -20,15 +20,24 @@ CALMIC SDN BHD - "Committed to Excellence"
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 <style>
+body {
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.container {
+    background-color: transparent;
+}
+
 .photo-checkbox {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 12px;
+    left: 12px;
     z-index: 10;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
-    padding: 5px;
+    padding: 6px;
     display: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .photo-item:hover .photo-checkbox,
@@ -38,41 +47,43 @@ CALMIC SDN BHD - "Committed to Excellence"
 
 .photo-item.selected {
     border: 3px solid #007bff;
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
-    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.4);
+    border-radius: 12px;
+    transform: translateY(-2px);
 }
 
 .photo-item.selected .img-fluid {
-    opacity: 0.8;
+    opacity: 0.85;
 }
 
 .photo-select {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.3rem;
+    height: 1.3rem;
+    cursor: pointer;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row mb-4">
+    <div class="row mb-4 align-items-center">
         <div class="col">
-            <h2>My Photos</h2>
-            <p class="text-muted">Browse and manage all your photos.</p>
+            <h2 class="fw-bold mb-2" style="color: #2c3e50;">My Photos</h2>
+            <p class="text-muted mb-0">Browse and manage all your photos.</p>
         </div>
         <div class="col-auto">
-            <div class="btn-group" role="group">
+            <div class="btn-group shadow-sm" role="group" style="border-radius: 8px; overflow: hidden;">
                 <a href="{{ url_for('gallery.photos') }}?filter=all" 
-                   class="btn {{ 'btn-primary' if current_filter == 'all' else 'btn-outline-primary' }}">
+                   class="btn {{ 'btn-primary' if current_filter == 'all' else 'btn-outline-primary' }}" style="font-weight: 500;">
                     <i class="bi bi-images"></i> All Photos
                 </a>
-                <a href="{{ url_for('gallery.originals') }}" class="btn btn-outline-secondary">
+                <a href="{{ url_for('gallery.originals') }}" class="btn btn-outline-secondary" style="font-weight: 500;">
                     <i class="bi bi-camera"></i> Original Only
                 </a>
-                <a href="{{ url_for('gallery.edited') }}" class="btn btn-outline-success">
+                <a href="{{ url_for('gallery.edited') }}" class="btn btn-outline-success" style="font-weight: 500;">
                     <i class="bi bi-pencil"></i> Edited Only
                 </a>
-                <a href="{{ url_for('gallery.compare_photos') }}" class="btn btn-outline-info">
+                <a href="{{ url_for('gallery.compare_photos') }}" class="btn btn-outline-info" style="font-weight: 500;">
                     <i class="bi bi-compare"></i> Compare
                 </a>
             </div>
