@@ -319,6 +319,25 @@ class ColorizationManager {
         if (photoImg) {
             photoImg.src = editedUrl + '?t=' + new Date().getTime();
         }
+        
+        // Update colorized image display
+        const colorizedImg = document.getElementById('colorizedImage');
+        if (colorizedImg) {
+            colorizedImg.src = editedUrl + '?t=' + new Date().getTime();
+        }
+        
+        // Extract and display filename
+        const filenameElement = document.getElementById('colorizedFilename');
+        if (filenameElement && editedUrl) {
+            const filename = editedUrl.split('/').pop();
+            filenameElement.textContent = filename;
+        }
+        
+        // Switch to colorized view
+        const colorizedViewBtn = document.querySelector('[data-view="colorized"]');
+        if (colorizedViewBtn) {
+            colorizedViewBtn.click();
+        }
     }
 
     /**
