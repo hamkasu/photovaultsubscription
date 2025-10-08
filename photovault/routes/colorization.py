@@ -83,6 +83,24 @@ def colorize_photo():
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+        
+        # Safety check: Ensure edited filename is different from original
+        # This prevents loading the same file twice in comparison view
+        attempts = 0
+        while edited_filename == photo.filename and attempts < 10:
+            random_number = random.randint(100000, 999999)
+            edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+            attempts += 1
+        
+        if edited_filename == photo.filename:
+            logger.error(f"Failed to generate unique edited filename for photo {photo_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to generate unique filename for edited version'
+            }), 500
+        
+        logger.info(f"Colorizing photo {photo_id}: original='{photo.filename}', edited='{edited_filename}'")
+        
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
         user_upload_folder = os.path.join(upload_folder, str(current_user.id))
         os.makedirs(user_upload_folder, exist_ok=True)
@@ -211,6 +229,24 @@ def colorize_photo_ai():
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+        
+        # Safety check: Ensure edited filename is different from original
+        # This prevents loading the same file twice in comparison view
+        attempts = 0
+        while edited_filename == photo.filename and attempts < 10:
+            random_number = random.randint(100000, 999999)
+            edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+            attempts += 1
+        
+        if edited_filename == photo.filename:
+            logger.error(f"Failed to generate unique edited filename for photo {photo_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to generate unique filename for edited version'
+            }), 500
+        
+        logger.info(f"Colorizing photo {photo_id}: original='{photo.filename}', edited='{edited_filename}'")
+        
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
         user_upload_folder = os.path.join(upload_folder, str(current_user.id))
         os.makedirs(user_upload_folder, exist_ok=True)

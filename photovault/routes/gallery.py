@@ -342,7 +342,12 @@ def uploaded_file(user_id, filename):
                 return Response(
                     file_content,
                     mimetype=content_type,
-                    headers={'Content-Disposition': f'inline; filename="{filename}"'}
+                    headers={
+                        'Content-Disposition': f'inline; filename="{filename}"',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
                 )
             else:
                 # App Storage exists check passed but download failed
@@ -439,7 +444,12 @@ def uploaded_file(user_id, filename):
             file_to_serve = os.path.join(uploads_dir, filename)
         
         if file_to_serve and os.path.exists(file_to_serve):
-            return send_file(file_to_serve)
+            response = send_file(file_to_serve)
+            # Add cache control headers to prevent stale image caching
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            return response
         else:
             # Try additional fallback locations before serving placeholder
             fallback_locations = []
@@ -484,7 +494,11 @@ def uploaded_file(user_id, filename):
             for fallback in fallback_locations:
                 if fallback and os.path.exists(fallback):
                     current_app.logger.info(f"File found at fallback location: {fallback}")
-                    return send_file(fallback)
+                    response = send_file(fallback)
+                    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+                    response.headers['Pragma'] = 'no-cache'
+                    response.headers['Expires'] = '0'
+                    return response
             
             current_app.logger.error(f"File not found: {file_to_serve} (requested filename: {filename}). Tried fallbacks: {fallback_locations}")
             # Serve placeholder for both thumbnails and regular images instead of 404
