@@ -7,6 +7,7 @@ import mimetypes
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, render_template
 from flask_login import login_required, current_user
+from flask_wtf.csrf import csrf_exempt
 from werkzeug.exceptions import RequestEntityTooLarge
 from photovault.utils.file_handler import (
     validate_image_file, generate_unique_filename
@@ -34,6 +35,7 @@ def upload_page():
     return render_template('upload.html', title='Upload Photos')
 
 @upload_bp.route('/api/upload', methods=['POST'])
+@csrf_exempt
 @login_required
 def upload_photos():
     """
