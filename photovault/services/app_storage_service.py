@@ -147,7 +147,7 @@ class AppStorageService:
             logger.error(f"Error checking file existence: {str(e)}")
             return False
     
-    def create_thumbnail(self, original_object_path: str, thumbnail_size: Tuple[int, int] = (150, 150)) -> Tuple[bool, str]:
+    def create_thumbnail(self, original_object_path: str, thumbnail_size: Tuple[int, int] = (400, 400)) -> Tuple[bool, str]:
         """
         Create and upload a thumbnail for an image
         
@@ -182,7 +182,7 @@ class AppStorageService:
                 
                 # Save thumbnail to bytes
                 thumbnail_bytes = io.BytesIO()
-                image.save(thumbnail_bytes, 'JPEG', optimize=True, quality=85)
+                image.save(thumbnail_bytes, 'JPEG', optimize=True, quality=90)
                 thumbnail_bytes.seek(0)
                 
                 # Generate thumbnail path

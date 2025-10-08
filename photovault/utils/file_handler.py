@@ -169,7 +169,7 @@ def get_file_size_mb(file_path):
     except Exception:
         return 0.0
 
-def create_thumbnail(file_path, thumbnail_size=(150, 150)):
+def create_thumbnail(file_path, thumbnail_size=(400, 400)):
     """
     Create thumbnail for uploaded image
     
@@ -199,7 +199,7 @@ def create_thumbnail(file_path, thumbnail_size=(150, 150)):
             thumbnail_path = f"{base_path}_thumb{ext}"
             
             # Save thumbnail
-            image.save(thumbnail_path, 'JPEG', optimize=True, quality=85)
+            image.save(thumbnail_path, 'JPEG', optimize=True, quality=90)
             
             return True, thumbnail_path
             

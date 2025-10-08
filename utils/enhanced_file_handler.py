@@ -73,7 +73,7 @@ def save_uploaded_file_enhanced(file, filename, user_id=None):
         logger.error(f'Error saving file {filename}: {str(e)}')
         return False, f'Save error: {str(e)}'
 
-def create_thumbnail_enhanced(file_path, thumbnail_size=(150, 150)):
+def create_thumbnail_enhanced(file_path, thumbnail_size=(400, 400)):
     """
     Create thumbnail for uploaded image, supporting both App Storage and local files
     
@@ -97,7 +97,7 @@ def create_thumbnail_enhanced(file_path, thumbnail_size=(150, 150)):
         logger.error(f'Error creating thumbnail: {str(e)}')
         return False, str(e)
 
-def _create_thumbnail_local(file_path, thumbnail_size=(150, 150)):
+def _create_thumbnail_local(file_path, thumbnail_size=(400, 400)):
     """
     Create thumbnail for local image file
     """
@@ -120,7 +120,7 @@ def _create_thumbnail_local(file_path, thumbnail_size=(150, 150)):
             thumbnail_path = f"{base_path}_thumb{ext}"
             
             # Save thumbnail
-            image.save(thumbnail_path, 'JPEG', optimize=True, quality=85)
+            image.save(thumbnail_path, 'JPEG', optimize=True, quality=90)
             
             return True, thumbnail_path
             
