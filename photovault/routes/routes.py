@@ -156,12 +156,26 @@ def process_and_save_image(file, file_path):
         if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
             image.thumbnail(max_size, Image.Resampling.LANCZOS)
         
-        # Save optimized image
+        # Determine format from file extension
+        file_ext = os.path.splitext(file_path)[1].lower()
+        image_format = {
+            '.jpg': 'JPEG',
+            '.jpeg': 'JPEG',
+            '.png': 'PNG',
+            '.gif': 'GIF',
+            '.bmp': 'BMP',
+            '.webp': 'WEBP'
+        }.get(file_ext, 'JPEG')
+        
+        # Save optimized image with correct format
         save_kwargs = {
-            'format': 'JPEG',
-            'quality': 85,
+            'format': image_format,
             'optimize': True
         }
+        
+        # Add quality parameter for JPEG format
+        if image_format == 'JPEG':
+            save_kwargs['quality'] = 85
         
         image.save(file_path, **save_kwargs)
         
