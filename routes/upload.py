@@ -77,7 +77,9 @@ def upload_photos():
                 # Validate file
                 is_valid, validation_msg = validate_image_file(file)
                 if not is_valid:
-                    errors.append(f"{file.filename}: {validation_msg}")
+                    error_msg = f"{file.filename}: {validation_msg}"
+                    logger.error(f"Validation failed: {error_msg}")
+                    errors.append(error_msg)
                     continue
                 
                 # Generate unique filename with username
@@ -93,7 +95,9 @@ def upload_photos():
                 )
                 
                 if not success:
-                    errors.append(f"{file.filename}: {file_path_or_error}")
+                    error_msg = f"{file.filename}: {file_path_or_error}"
+                    logger.error(f"File save failed: {error_msg}")
+                    errors.append(error_msg)
                     continue
                 
                 file_path = file_path_or_error
