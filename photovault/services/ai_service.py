@@ -2,51 +2,37 @@
 AI Service for PhotoVault
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
-Handles OpenAI integration for AI-powered image processing
+Handles Google Gemini integration for AI-powered image processing
 """
 
 import os
-import base64
 import logging
 from typing import Dict, Optional, Tuple
 from PIL import Image
 import io
+import json
 
-# the newest OpenAI model is "gpt-5" which was released August 7, 2025.
-# do not change this unless explicitly requested by the user
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
 class AIService:
-    """Handles AI-powered image processing using OpenAI"""
+    """Handles AI-powered image processing using Google Gemini"""
     
     def __init__(self):
-        """Initialize AI service with OpenAI client"""
-        self.api_key = os.environ.get('OPENAI_API_KEY')
+        """Initialize AI service with Google Gemini client"""
+        self.api_key = os.environ.get('GEMINI_API_KEY')
         if not self.api_key:
-            logger.warning("OPENAI_API_KEY not found - AI features will be disabled")
+            logger.warning("GEMINI_API_KEY not found - AI features will be disabled")
             self.client = None
         else:
-            self.client = OpenAI(api_key=self.api_key)
-            logger.info("AI service initialized successfully")
+            self.client = genai.Client(api_key=self.api_key)
+            logger.info("AI service initialized successfully with Google Gemini")
     
     def is_available(self) -> bool:
         """Check if AI service is available"""
         return self.client is not None
-    
-    def encode_image(self, image_path: str) -> str:
-        """
-        Encode image to base64 for OpenAI API
-        
-        Args:
-            image_path: Path to the image file
-            
-        Returns:
-            Base64 encoded image string
-        """
-        with open(image_path, 'rb') as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
     
     def colorize_image_ai(self, image_path: str, output_path: str) -> Tuple[str, Dict]:
         """
@@ -60,44 +46,29 @@ class AIService:
             Tuple of (output_path, metadata_dict)
         """
         if not self.is_available():
-            raise RuntimeError("AI service not available - OPENAI_API_KEY not configured")
+            raise RuntimeError("AI service not available - GEMINI_API_KEY not configured")
         
         try:
-            # Encode image
-            base64_image = self.encode_image(image_path)
+            # Read image as bytes
+            with open(image_path, "rb") as f:
+                image_bytes = f.read()
             
-            # Request AI colorization guidance
-            response = self.client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert photo colorization assistant. Analyze this black and white photo and provide detailed, realistic color suggestions for different elements in the image. Be specific about colors, tones, and natural appearances."
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "Please analyze this black and white photo and suggest realistic colors for the main elements. Provide your response as a detailed description of what colors should be applied to different parts of the image for a natural, realistic colorization."
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
+            # Request AI colorization guidance using Gemini
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=[
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type="image/jpeg",
+                    ),
+                    "Analyze this black and white photo in detail. Provide realistic color suggestions for different elements in the image. Be specific about colors, tones, and natural appearances for the main subjects, background, clothing, objects, and any other visible elements. Describe what colors would be most natural and historically accurate."
                 ],
-                max_completion_tokens=1024
             )
             
-            color_guidance = response.choices[0].message.content
+            color_guidance = response.text if response.text else "No guidance available"
             logger.info(f"AI colorization guidance generated: {len(color_guidance)} chars")
             
-            # For now, we'll use the existing DNN colorization but store AI guidance
-            # In a full implementation, you could use DALL-E or other image generation
+            # Use the existing DNN colorization but store AI guidance
             from photovault.utils.colorization import get_colorizer
             colorizer = get_colorizer()
             
@@ -107,7 +78,7 @@ class AIService:
             metadata = {
                 'method': 'ai_guided_' + method,
                 'ai_guidance': color_guidance,
-                'model': 'gpt-5'
+                'model': 'gemini-2.0-flash-exp'
             }
             
             return result_path, metadata
@@ -127,40 +98,38 @@ class AIService:
             Dictionary with enhancement suggestions
         """
         if not self.is_available():
-            raise RuntimeError("AI service not available - OPENAI_API_KEY not configured")
+            raise RuntimeError("AI service not available - GEMINI_API_KEY not configured")
         
         try:
-            base64_image = self.encode_image(image_path)
+            # Read image as bytes
+            with open(image_path, "rb") as f:
+                image_bytes = f.read()
             
-            response = self.client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional photo restoration and enhancement expert. Analyze photos and provide specific, actionable suggestions for improvement. Respond in JSON format with: {'needs_enhancement': boolean, 'suggestions': [list of suggestions], 'priority': 'low'|'medium'|'high', 'issues': [list of detected issues]}"
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "Analyze this photo and suggest enhancements. Identify issues like: low contrast, poor lighting, color fading, scratches, dust, blurriness, or any other quality problems. Provide specific enhancement suggestions."
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                response_format={"type": "json_object"},
-                max_completion_tokens=1024
+            system_prompt = (
+                "You are a professional photo restoration and enhancement expert. "
+                "Analyze photos and provide specific, actionable suggestions for improvement. "
+                "Respond in JSON format with: "
+                "{'needs_enhancement': boolean, 'suggestions': [list of suggestions], "
+                "'priority': 'low'|'medium'|'high', 'issues': [list of detected issues]}"
             )
             
-            import json
-            result = json.loads(response.choices[0].message.content)
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=[
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type="image/jpeg",
+                    ),
+                    "Analyze this photo and suggest enhancements. Identify issues like: low contrast, poor lighting, color fading, scratches, dust, blurriness, or any other quality problems. Provide specific enhancement suggestions."
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    response_mime_type="application/json",
+                ),
+            )
+            
+            result_text = response.text if response.text else "{}"
+            result = json.loads(result_text)
             logger.info(f"AI enhancement analysis completed: {result.get('priority', 'unknown')} priority")
             
             return result
@@ -180,34 +149,25 @@ class AIService:
             Detailed description of the image
         """
         if not self.is_available():
-            raise RuntimeError("AI service not available - OPENAI_API_KEY not configured")
+            raise RuntimeError("AI service not available - GEMINI_API_KEY not configured")
         
         try:
-            base64_image = self.encode_image(image_path)
+            # Read image as bytes
+            with open(image_path, "rb") as f:
+                image_bytes = f.read()
             
-            response = self.client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "Analyze this photo in detail. Describe the content, setting, subjects, time period (if identifiable), and any notable elements. This will be used for photo organization and tagging."
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=[
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type="image/jpeg",
+                    ),
+                    "Analyze this photo in detail. Describe the content, setting, subjects, time period (if identifiable), and any notable elements. This will be used for photo organization and tagging."
                 ],
-                max_completion_tokens=512
             )
             
-            analysis = response.choices[0].message.content
+            analysis = response.text if response.text else "No analysis available"
             logger.info(f"Image analysis completed: {len(analysis)} chars")
             
             return analysis
