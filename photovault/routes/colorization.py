@@ -129,7 +129,7 @@ def colorize_photo():
         return jsonify({
             'success': True,
             'photo_id': photo.id,
-            'edited_url': f'/uploads/{edited_filename}',
+            'edited_url': f'/uploads/{current_user.id}/{edited_filename}',
             'method': method_used,
             'message': f'Photo colorized successfully using {method_used} method'
         })
@@ -257,7 +257,7 @@ def colorize_photo_ai():
         return jsonify({
             'success': True,
             'photo_id': photo.id,
-            'edited_url': f'/uploads/{edited_filename}',
+            'edited_url': f'/uploads/{current_user.id}/{edited_filename}',
             'ai_guidance': metadata['ai_guidance'],
             'method': metadata['method'],
             'message': 'Photo colorized successfully using AI'
