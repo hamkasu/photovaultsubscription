@@ -3,6 +3,12 @@
 ## Overview
 PhotoVault is a comprehensive photo management and enhancement platform designed to provide a professional-grade experience. It offers features such as a professional camera interface, automatic photo upload and organization, secure storage, face detection and recognition, advanced photo enhancement and restoration, AI-powered smart tagging, family vault sharing, and social media integration. The platform operates on a subscription-based billing model, catering to a broad market seeking advanced photo management solutions.
 
+## Recent Changes (October 2025)
+- **Colorized Filename Format**: Changed from `<username>.enhanced.<date>.<random>` to `<username>.colored.<date>.<random>` format
+- **Cache-Busting Implementation**: Added timestamp-based cache busting to side-by-side comparison view to prevent browser caching issues
+- **Image Format Preservation**: Fixed Railway upload issue - images now preserve original format (PNG, JPG, GIF) instead of forcing JPEG conversion
+- **Filename Safety Checks**: Added validation to ensure edited_filename never matches original filename
+
 ## User Preferences
 None configured yet (will be added as needed)
 

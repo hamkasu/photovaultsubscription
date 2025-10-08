@@ -73,7 +73,7 @@ def colorize_photo():
                 'error': 'Original photo file not found'
             }), 404
         
-        # Generate edited filename using username.enhanced.date.randomnumber format
+        # Generate edited filename using username.colored.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
         from datetime import datetime
         from photovault.services.app_storage_service import app_storage
@@ -82,14 +82,14 @@ def colorize_photo():
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
-        edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+        edited_filename = f"{safe_username}.colored.{date}.{random_number}.jpg"
         
         # Safety check: Ensure edited filename is different from original
         # This prevents loading the same file twice in comparison view
         attempts = 0
         while edited_filename == photo.filename and attempts < 10:
             random_number = random.randint(100000, 999999)
-            edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+            edited_filename = f"{safe_username}.colored.{date}.{random_number}.jpg"
             attempts += 1
         
         if edited_filename == photo.filename:
@@ -219,7 +219,7 @@ def colorize_photo_ai():
                 'error': 'Original photo file not found'
             }), 404
         
-        # Generate edited filename using username.enhanced.date.randomnumber format
+        # Generate edited filename using username.colored.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
         from datetime import datetime
         from photovault.services.app_storage_service import app_storage
@@ -228,14 +228,14 @@ def colorize_photo_ai():
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
-        edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+        edited_filename = f"{safe_username}.colored.{date}.{random_number}.jpg"
         
         # Safety check: Ensure edited filename is different from original
         # This prevents loading the same file twice in comparison view
         attempts = 0
         while edited_filename == photo.filename and attempts < 10:
             random_number = random.randint(100000, 999999)
-            edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+            edited_filename = f"{safe_username}.colored.{date}.{random_number}.jpg"
             attempts += 1
         
         if edited_filename == photo.filename:
