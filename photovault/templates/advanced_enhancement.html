@@ -333,6 +333,7 @@ body {
                 <div class="preview-tabs">
                     <button class="tab-button active" data-view="original">Original</button>
                     <button class="tab-button" data-view="enhanced">Enhanced</button>
+                    <button class="tab-button" data-view="colorized">Colorized</button>
                     <button class="tab-button" data-view="sidebyside">Side by Side</button>
                 </div>
             </div>
@@ -355,6 +356,15 @@ body {
                          src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.edited_filename) if photo.edited_filename else url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
                          class="preview-image" 
                          alt="Enhanced">
+                </div>
+
+                <!-- Colorized View -->
+                <div id="colorizedView" class="single-image-view" style="display: none;">
+                    <h6>Colorized</h6>
+                    <img id="colorizedImage" 
+                         src="{{ url_for('gallery.uploaded_file', user_id=photo.user_id, filename=photo.filename) }}"
+                         class="preview-image" 
+                         alt="Colorized">
                 </div>
 
                 <!-- Side by Side View -->
@@ -542,16 +552,20 @@ function initializeEnhancement() {
 function switchView(view) {
     const originalView = document.getElementById('originalView');
     const enhancedView = document.getElementById('enhancedView');
+    const colorizedView = document.getElementById('colorizedView');
     const sideBySideView = document.getElementById('sideBySideView');
 
     originalView.style.display = 'none';
     enhancedView.style.display = 'none';
+    colorizedView.style.display = 'none';
     sideBySideView.style.display = 'none';
 
     if (view === 'original') {
         originalView.style.display = 'block';
     } else if (view === 'enhanced') {
         enhancedView.style.display = 'block';
+    } else if (view === 'colorized') {
+        colorizedView.style.display = 'block';
     } else if (view === 'sidebyside') {
         sideBySideView.style.display = 'flex';
     }

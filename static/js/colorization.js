@@ -309,6 +309,23 @@ class ColorizationManager {
         if (photoImg) {
             photoImg.src = editedUrl + '?t=' + new Date().getTime();
         }
+        
+        // Update colorized image view
+        const colorizedImg = document.getElementById('colorizedImage');
+        if (colorizedImg) {
+            colorizedImg.src = editedUrl + '?t=' + new Date().getTime();
+        }
+        
+        // Switch to colorized view
+        if (typeof switchView === 'function') {
+            switchView('colorized');
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            const colorizedTab = document.querySelector('[data-view="colorized"]');
+            if (colorizedTab) {
+                colorizedTab.classList.add('active');
+            }
+        }
     }
 
     /**
