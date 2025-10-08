@@ -50,6 +50,9 @@ class PhotoColorizer:
     def _load_model(self):
         """Load the pre-trained colorization model"""
         try:
+            if not self.prototxt_path or not self.model_path or not self.pts_npy_path:
+                raise RuntimeError("Model paths not initialized")
+            
             self.net = cv2.dnn.readNetFromCaffe(self.prototxt_path, self.model_path)
             
             pts = np.load(self.pts_npy_path, allow_pickle=True)
@@ -76,7 +79,7 @@ class PhotoColorizer:
         Returns:
             numpy array of colorized image (BGR format)
         """
-        if not self.initialized:
+        if not self.initialized or self.net is None:
             raise RuntimeError("DNN colorization model not initialized")
         
         scaled = image_array.astype("float32") / 255.0
