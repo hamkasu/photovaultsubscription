@@ -185,6 +185,11 @@ class ColorizationManager {
 
             const data = await response.json();
 
+            if (response.status === 503) {
+                this.showMessage('AI colorization requires OpenAI API key. Use the regular colorization button instead.', 'warning');
+                return;
+            }
+
             if (data.success) {
                 this.showMessage('Photo AI-colorized successfully!', 'success');
                 this.updatePhotoDisplay(data.edited_url);
@@ -226,6 +231,11 @@ class ColorizationManager {
             });
 
             const data = await response.json();
+
+            if (response.status === 503) {
+                this.showMessage('AI enhancement analysis requires OpenAI API key. This feature is currently unavailable.', 'warning');
+                return;
+            }
 
             if (data.success) {
                 this.showEnhancementAnalysis(data.analysis);
