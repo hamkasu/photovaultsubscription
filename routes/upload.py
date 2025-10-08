@@ -44,9 +44,6 @@ def upload_photos():
     """
     try:
         logger.info(f"Upload request from user: {current_user.id}")
-        print(f"DEBUG: Upload request from user {current_user.id}")
-        print(f"DEBUG: Request files: {request.files}")
-        print(f"DEBUG: Request form: {request.form}")
         
         # Check if files were provided
         if 'file' not in request.files:
@@ -56,14 +53,11 @@ def upload_photos():
             }), 400
         
         files = request.files.getlist('file')
-        logger.info(f"Received {len(files)} file(s), filenames: {[f.filename for f in files]}")
         
         # Filter out empty files
         files = [f for f in files if f.filename]
-        logger.info(f"After filtering: {len(files)} file(s) with filenames: {[f.filename for f in files]}")
         
         if not files:
-            logger.error("No files with filenames found after filtering")
             return jsonify({
                 'success': False,
                 'error': 'No valid files provided'
@@ -82,14 +76,10 @@ def upload_photos():
                 continue
                 
             try:
-                logger.info(f"Validating file: {file.filename}")
                 # Validate file
                 is_valid, validation_msg = validate_image_file(file)
-                logger.info(f"Validation result for {file.filename}: is_valid={is_valid}, msg={validation_msg}")
                 if not is_valid:
-                    error_msg = f"{file.filename}: {validation_msg}"
-                    logger.error(f"Validation failed: {error_msg}")
-                    errors.append(error_msg)
+                    errors.append(f"{file.filename}: {validation_msg}")
                     continue
                 
                 # Generate unique filename with username
@@ -105,9 +95,7 @@ def upload_photos():
                 )
                 
                 if not success:
-                    error_msg = f"{file.filename}: {file_path_or_error}"
-                    logger.error(f"File save failed: {error_msg}")
-                    errors.append(error_msg)
+                    errors.append(f"{file.filename}: {file_path_or_error}")
                     continue
                 
                 file_path = file_path_or_error
@@ -231,7 +219,6 @@ def upload_photos():
         
         else:
             # All files failed
-            logger.error(f"All files failed to upload. Errors: {errors}")
             return jsonify({
                 'success': False,
                 'error': 'All files failed to upload',
