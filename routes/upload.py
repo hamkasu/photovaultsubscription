@@ -44,6 +44,9 @@ def upload_photos():
     """
     try:
         logger.info(f"Upload request from user: {current_user.id}")
+        print(f"DEBUG: Upload request from user {current_user.id}")
+        print(f"DEBUG: Request files: {request.files}")
+        print(f"DEBUG: Request form: {request.form}")
         
         # Check if files were provided
         if 'file' not in request.files:
