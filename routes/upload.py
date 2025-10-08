@@ -56,11 +56,14 @@ def upload_photos():
             }), 400
         
         files = request.files.getlist('file')
+        logger.info(f"Received {len(files)} file(s), filenames: {[f.filename for f in files]}")
         
         # Filter out empty files
         files = [f for f in files if f.filename]
+        logger.info(f"After filtering: {len(files)} file(s) with filenames: {[f.filename for f in files]}")
         
         if not files:
+            logger.error("No files with filenames found after filtering")
             return jsonify({
                 'success': False,
                 'error': 'No valid files provided'
