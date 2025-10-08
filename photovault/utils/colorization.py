@@ -214,7 +214,7 @@ class PhotoColorizer:
             
             # Use a more realistic threshold to account for compression artifacts
             # and scanning imperfections in black and white photos
-            return max_diff < 30
+            return bool(max_diff < 30)
             
         except (FileNotFoundError, RuntimeError):
             raise

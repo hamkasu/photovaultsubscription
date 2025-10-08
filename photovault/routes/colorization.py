@@ -83,7 +83,10 @@ def colorize_photo():
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
-        temp_edited_path = os.path.join(upload_folder, edited_filename)
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_upload_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_upload_folder, exist_ok=True)
+        temp_edited_path = os.path.join(user_upload_folder, edited_filename)
         
         # Perform colorization (saves to temp local)
         colorizer = get_colorizer()
@@ -208,7 +211,10 @@ def colorize_photo_ai():
         random_number = random.randint(100000, 999999)  # 6-digit random number
         safe_username = sanitize_name(current_user.username)
         edited_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
-        temp_edited_path = os.path.join(upload_folder, edited_filename)
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_upload_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_upload_folder, exist_ok=True)
+        temp_edited_path = os.path.join(user_upload_folder, edited_filename)
         
         # Perform AI colorization (saves to temp local)
         result_path, metadata = ai_service.colorize_image_ai(
