@@ -9,11 +9,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  Alert,
 } from 'react-native';
 import { apiService } from '../services/api';
 
 const { width } = Dimensions.get('window');
-const PHOTO_SIZE = (width - 30) / 3; // 3 photos per row with margins
+const PHOTO_SIZE = (width - 30) / 3;
 
 export default function GalleryScreen({ navigation }) {
   const [photos, setPhotos] = useState([]);
@@ -21,6 +22,7 @@ export default function GalleryScreen({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadPhotos();
@@ -28,25 +30,71 @@ export default function GalleryScreen({ navigation }) {
 
   const loadPhotos = async (pageNumber = 1, refresh = false) => {
     try {
+      console.log(`📸 Loading photos - Page: ${pageNumber}, Refresh: ${refresh}`);
+      
       if (refresh) {
         setIsRefreshing(true);
       } else if (pageNumber === 1) {
         setIsLoading(true);
       }
 
+      setError(null);
       const response = await apiService.getPhotos(pageNumber, 20);
       
-      if (refresh || pageNumber === 1) {
-        setPhotos(response.photos || []);
-      } else {
-        setPhotos(prev => [...prev, ...(response.photos || [])]);
+      console.log('📸 API Response:', JSON.stringify(response, null, 2));
+      console.log('📸 Response type:', typeof response);
+      console.log('📸 Response keys:', Object.keys(response || {}));
+      
+      if (!response) {
+        console.error('❌ No response from API');
+        setError('No response from server');
+        return;
       }
 
-      setHasMore(response.has_more || false);
+      // Handle both direct response and nested data response
+      const data = response.data || response;
+      
+      if (data.error || response.error) {
+        console.error('❌ API Error:', data.error || response.error);
+        setError(data.error || response.error);
+        return;
+      }
+
+      // Check for success flag
+      if (data.success === false) {
+        console.error('❌ API returned success: false');
+        setError(data.message || 'Failed to load photos');
+        return;
+      }
+
+      const photosList = data.photos || response.photos || [];
+      console.log(`📸 Photos array length: ${photosList.length}`);
+      console.log(`📸 First photo:`, JSON.stringify(photosList[0], null, 2));
+      
+      if (refresh || pageNumber === 1) {
+        setPhotos(photosList);
+        console.log(`📸 Set ${photosList.length} photos (replace)`);
+      } else {
+        setPhotos(prev => {
+          const combined = [...prev, ...photosList];
+          console.log(`📸 Added ${photosList.length} photos to ${prev.length} existing = ${combined.length} total`);
+          return combined;
+        });
+      }
+
+      const hasMorePages = data.has_more || response.has_more || false;
+      const totalCount = data.total || response.total || 0;
+      
+      setHasMore(hasMorePages);
       setPage(pageNumber);
+      console.log(`📸 Has more: ${hasMorePages}, Total: ${totalCount}`);
 
     } catch (error) {
-      console.error('Error loading photos:', error);
+      console.error('❌ Error loading photos:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      setError(error.message || 'Failed to load photos');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -64,6 +112,7 @@ export default function GalleryScreen({ navigation }) {
   };
 
   const openPhoto = (photo) => {
+    console.log('📸 Opening photo:', photo.id);
     navigation.navigate('PhotoView', { photo });
   };
 
@@ -71,28 +120,43 @@ export default function GalleryScreen({ navigation }) {
     navigation.navigate('Camera');
   };
 
-  const renderPhoto = ({ item }) => (
-    <TouchableOpacity
-      style={styles.photoContainer}
-      onPress={() => openPhoto(item)}
-    >
-      <Image
-        source={{ uri: item.thumbnail_url || item.url }}
-        style={styles.photo}
-        resizeMode="cover"
-      />
-    </TouchableOpacity>
-  );
+  const renderPhoto = ({ item, index }) => {
+    console.log(`📸 Rendering photo ${index}:`, item.id, item.url?.substring(0, 50));
+    
+    return (
+      <TouchableOpacity
+        style={styles.photoContainer}
+        onPress={() => openPhoto(item)}
+      >
+        <Image
+          source={{ uri: item.thumbnail_url || item.url }}
+          style={styles.photo}
+          resizeMode="cover"
+          onError={(e) => console.error(`❌ Image load error for ${item.id}:`, e.nativeEvent.error)}
+          onLoad={() => console.log(`✅ Image loaded: ${item.id}`)}
+        />
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No Photos Yet</Text>
-      <Text style={styles.emptyDescription}>
-        Start building your photo collection by taking some pictures!
+      <Text style={styles.emptyTitle}>
+        {error ? '⚠️ Error' : 'No Photos Yet'}
       </Text>
-      <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
-        <Text style={styles.cameraButtonText}>Open Camera</Text>
-      </TouchableOpacity>
+      <Text style={styles.emptyDescription}>
+        {error || 'Start building your photo collection by taking some pictures!'}
+      </Text>
+      {!error && (
+        <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
+          <Text style={styles.cameraButtonText}>Open Camera</Text>
+        </TouchableOpacity>
+      )}
+      {error && (
+        <TouchableOpacity style={styles.retryButton} onPress={() => loadPhotos(1, true)}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -115,12 +179,14 @@ export default function GalleryScreen({ navigation }) {
     );
   }
 
+  console.log(`📸 Rendering FlatList with ${photos.length} photos`);
+
   return (
     <View style={styles.container}>
       <FlatList
         data={photos}
         renderItem={renderPhoto}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         numColumns={3}
         contentContainerStyle={photos.length === 0 ? styles.emptyList : styles.list}
         showsVerticalScrollIndicator={false}
@@ -197,6 +263,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   cameraButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  retryButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 8,
+    padding: 15,
+    paddingHorizontal: 30,
+  },
+  retryButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
