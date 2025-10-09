@@ -30,3 +30,4 @@
 [x] 30. Update iOS app to use new mobile API endpoints - COMPLETED: Changed gallery to /api/photos and upload to /api/upload
 [x] 31. Add support for original and edited photos in gallery - COMPLETED: API now returns both original and edited URLs
 [x] 32. Restart Expo Server with cleared cache - COMPLETED: Metro bundler cache cleared and rebuilt
+[x] 33. Add Calmic logo to mobile app - COMPLETED: Added logo to assets and displayed in dashboard header with "StoryKeep" title

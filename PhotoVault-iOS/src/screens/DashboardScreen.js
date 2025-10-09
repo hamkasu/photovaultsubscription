@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -185,9 +186,19 @@ export default function DashboardScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome, {user.username}</Text>
-          <View style={styles.subscriptionBadge}>
-            <Text style={styles.subscriptionText}>{user.subscription} Plan</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/calmic-logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.appTitle}>StoryKeep</Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.welcomeText}>Welcome, {user.username}</Text>
+            <View style={styles.subscriptionBadge}>
+              <Text style={styles.subscriptionText}>{user.subscription} Plan</Text>
+            </View>
           </View>
         </View>
 
@@ -226,9 +237,27 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
-  welcomeText: {
-    fontSize: 24,
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  appTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  userInfo: {
+    alignItems: 'center',
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: '600',
     color: '#fff',
     marginBottom: 5,
   },
@@ -237,14 +266,14 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   subscriptionBadge: {
-    marginTop: 10,
+    marginTop: 8,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 6,
     backgroundColor: '#007AFF',
     borderRadius: 20,
   },
   subscriptionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
   },
