@@ -46,3 +46,5 @@
 [x] 46. Import FamilyVault and FamilyMember models - COMPLETED: Updated imports in mobile_api.py
 [x] 47. Restart local PhotoVault Server - COMPLETED: Server running with new endpoint
 [x] 48. Identify deployment issue - COMPLETED: Changes are local only, need to deploy to Railway for iOS app to work
+[x] 49. Add vault detail API endpoint - COMPLETED: Created /api/family/vault/<vault_id> endpoint with JWT auth
+[x] 50. Include vault photos and members - COMPLETED: Endpoint returns vault details, photos list, and members list
