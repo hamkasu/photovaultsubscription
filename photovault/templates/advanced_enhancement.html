@@ -444,6 +444,9 @@ body {
                     <button id="colorize-btn" class="btn-enhance" disabled>
                         <i class="bi bi-palette"></i> Colorize (Traditional)
                     </button>
+                    <button id="sharpen-btn" class="btn-enhance">
+                        <i class="bi bi-aspect-ratio"></i> Sharpen
+                    </button>
                     <button id="colorize-ai-btn" class="btn-enhance" disabled>
                         <i class="bi bi-stars"></i> Colorize with AI
                     </button>
@@ -548,6 +551,14 @@ function initializeEnhancement() {
             item.style.borderLeft = '4px solid #667eea';
         }
     });
+
+    // Sharpen button event listener
+    const sharpenBtn = document.getElementById('sharpen-btn');
+    if (sharpenBtn) {
+        sharpenBtn.addEventListener('click', function() {
+            sharpenPhoto();
+        });
+    }
 }
 
 function switchView(view) {
@@ -640,6 +651,56 @@ function resetImage() {
     if (confirm('Reset to original image? This will discard all enhancements.')) {
         location.reload();
     }
+}
+
+function sharpenPhoto() {
+    if (!photoId) {
+        alert('No photo selected');
+        return;
+    }
+
+    showProcessing();
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/api/photos/${photoId}/sharpen`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            radius: 2.0,
+            amount: 1.5,
+            threshold: 3,
+            method: 'unsharp'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideProcessing();
+        if (data.success) {
+            // Update enhanced images with sharpened version
+            const timestamp = Date.now();
+            document.getElementById('enhancedImage').src = data.enhanced_url + '?t=' + timestamp;
+            document.getElementById('enhancedImageSide').src = data.enhanced_url + '?t=' + timestamp;
+            
+            // Switch to enhanced view
+            switchView('enhanced');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-view="enhanced"]').classList.add('active');
+            
+            // Show success message
+            showMessage('Photo sharpened successfully!', 'success');
+        } else {
+            showMessage('Sharpening failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        hideProcessing();
+        console.error('Error:', error);
+        showMessage('Sharpening failed: ' + error.message, 'error');
+    });
 }
 
 function showProcessing() {
