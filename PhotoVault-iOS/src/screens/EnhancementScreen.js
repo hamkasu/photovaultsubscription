@@ -83,7 +83,8 @@ export default function EnhancementScreen({ route, navigation }) {
       const response = await apiService.colorizePhoto(photo.id, 'dnn');
       
       if (response.success) {
-        setEnhancedUrl(response.edited_url + '?t=' + Date.now());
+        const colorizedUrl = response.edited_url || response.enhanced_url;
+        setEnhancedUrl(colorizedUrl + '?t=' + Date.now());
         setCurrentView('enhanced');
         Alert.alert('Success', 'Photo colorized successfully!');
       } else {

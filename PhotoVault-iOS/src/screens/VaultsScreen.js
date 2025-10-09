@@ -80,7 +80,7 @@ export default function VaultsScreen({ navigation }) {
   const renderVault = ({ item }) => (
     <TouchableOpacity
       style={styles.vaultCard}
-      onPress={() => navigation.navigate('VaultDetail', { vault: item })}
+      onPress={() => Alert.alert('Coming Soon', 'Vault detail view will be available in the next update!')}
     >
       <View style={styles.vaultIconContainer}>
         <Ionicons name="albums" size={40} color="#007AFF" />
