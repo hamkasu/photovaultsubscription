@@ -48,10 +48,27 @@ export default function LoginScreen({ navigation }) {
       });
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.message || 'Please check your credentials and try again.'
-      );
+      
+      let errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.status === 401) {
+          errorMessage = 'Invalid username or password. Please try again.';
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = 'Login failed. Please try again later.';
+        }
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      } else if (error.message) {
+        // Something else happened
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }

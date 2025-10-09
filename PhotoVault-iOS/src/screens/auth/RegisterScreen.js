@@ -62,10 +62,27 @@ export default function RegisterScreen({ navigation }) {
       );
     } catch (error) {
       console.error('Registration error:', error);
-      Alert.alert(
-        'Registration Failed',
-        error.response?.data?.message || 'Please try again with different credentials.'
-      );
+      
+      let errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.status === 409) {
+          errorMessage = 'Username or email already exists. Please try different credentials.';
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = 'Registration failed. Please try again later.';
+        }
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      } else if (error.message) {
+        // Something else happened
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Registration Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }

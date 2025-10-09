@@ -11,12 +11,15 @@ Email: support@calmic.com.my
 CALMIC SDN BHD - "Committed to Excellence"
 """
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from photovault.models import User, PasswordResetToken, db
 from photovault.utils import safe_db_query, retry_db_operation, TransientDBError
+from photovault.extensions import csrf
 import re
+import jwt
+from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -38,17 +41,30 @@ def validate_password(password):
     return True, "Password is valid"
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@csrf.exempt
 def login():
-    """User login route"""
-    if current_user.is_authenticated:
+    """User login route - handles both web forms and mobile API requests"""
+    # Check if request is JSON (mobile app)
+    is_api_request = request.is_json
+    
+    if current_user.is_authenticated and not is_api_request:
         return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-        remember = bool(request.form.get('remember'))
+        # Get data from JSON or form
+        if is_api_request:
+            data = request.get_json()
+            username = data.get('username', '').strip()
+            password = data.get('password', '')
+            remember = False
+        else:
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            remember = bool(request.form.get('remember'))
         
         if not username or not password:
+            if is_api_request:
+                return jsonify({'error': 'Please enter both username and password'}), 400
             flash('Please enter both username and password.', 'error')
             return render_template('login.html')
         
@@ -61,13 +77,34 @@ def login():
         try:
             user = safe_db_query(find_user, operation_name="user lookup")
         except TransientDBError:
+            if is_api_request:
+                return jsonify({'error': 'Temporary database issue. Please try again in a moment.'}), 503
             flash('Temporary database issue. Please try again in a moment.', 'error')
             return render_template('login.html')
         
         if user and check_password_hash(user.password_hash, password):
             login_user(user, remember=remember)
             
-            # Get next page from URL parameter
+            # Return JSON response for API requests
+            if is_api_request:
+                # Generate JWT token for mobile app
+                token = jwt.encode({
+                    'user_id': user.id,
+                    'username': user.username,
+                    'exp': datetime.utcnow() + timedelta(days=30)
+                }, current_app.config['SECRET_KEY'], algorithm='HS256')
+                
+                return jsonify({
+                    'success': True,
+                    'token': token,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email
+                    }
+                }), 200
+            
+            # Get next page from URL parameter for web
             next_page = request.args.get('next')
             if next_page and next_page.startswith('/'):
                 flash(f'Welcome back, {user.username}!', 'success')
@@ -76,6 +113,8 @@ def login():
                 flash(f'Welcome back, {user.username}!', 'success')
                 return redirect(url_for('main.dashboard'))
         else:
+            if is_api_request:
+                return jsonify({'error': 'Invalid username or password'}), 401
             flash('Invalid username or password.', 'error')
     
     return render_template('login.html')
