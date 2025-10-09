@@ -40,3 +40,5 @@
 [x] 40. Provide solution to user - COMPLETED: User needs to logout, register new account on local server, and login again
 [x] 41. Create user account in local database - COMPLETED: Created 'hamka' user with password 'password123'
 [x] 42. Restart Expo Server - COMPLETED: Server restarted successfully
+[x] 43. Revert to Railway production - COMPLETED: Changed BASE_URL back to https://web-production-535bd.up.railway.app
+[x] 44. Clarify production setup - COMPLETED: Using Railway for production, Replit for development only
