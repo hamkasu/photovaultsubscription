@@ -15,7 +15,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Configuration
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://309ba7ab-b6b1-4cbc-bd61-a30d55efa842-00-ynes8apsl406.janeway.replit.dev';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://486dcd23-ba9e-407a-a5ea-a8bcc256543b-00-28roak2gjiezj.riker.replit.dev';
 
 // Create axios instance
 const api = axios.create({
@@ -148,6 +148,61 @@ export const apiService = {
     });
 
     return await apiService.uploadPhoto(formData);
+  },
+
+  // Photo Enhancement
+  enhancePhoto: async (photoId, settings = {}) => {
+    const response = await api.post(`/api/photos/${photoId}/enhance`, { settings });
+    return response.data;
+  },
+
+  sharpenPhoto: async (photoId, params = {}) => {
+    const response = await api.post(`/api/photos/${photoId}/sharpen`, params);
+    return response.data;
+  },
+
+  colorizePhoto: async (photoId, method = 'dnn') => {
+    const response = await api.post(`/api/colorization/colorize`, {
+      photo_id: photoId,
+      method,
+    });
+    return response.data;
+  },
+
+  // Family Vaults
+  getVaults: async () => {
+    const response = await api.get('/api/family/vaults');
+    return response.data;
+  },
+
+  getVault: async (vaultId) => {
+    const response = await api.get(`/api/family/vault/${vaultId}`);
+    return response.data;
+  },
+
+  createVault: async (name, description) => {
+    const response = await api.post('/api/family/vault/create', { name, description });
+    return response.data;
+  },
+
+  joinVault: async (inviteCode) => {
+    const response = await api.post('/api/family/vault/join', { invite_code: inviteCode });
+    return response.data;
+  },
+
+  uploadToVault: async (vaultId, formData) => {
+    const response = await api.post(`/api/family/vault/${vaultId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Dashboard
+  getDashboard: async () => {
+    const response = await api.get('/dashboard');
+    return response.data;
   },
 
   // Health check
