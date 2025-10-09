@@ -104,7 +104,7 @@ export const apiService = {
 
   // User profile
   getProfile: async () => {
-    const response = await api.get('/auth/profile');
+    const response = await api.get('/api/auth/profile');
     return response.data;
   },
 
@@ -201,7 +201,7 @@ export const apiService = {
 
   // Dashboard
   getDashboard: async () => {
-    const response = await api.get('/dashboard');
+    const response = await api.get('/api/dashboard');
     return response.data;
   },
 

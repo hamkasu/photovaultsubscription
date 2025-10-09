@@ -2,15 +2,15 @@
 Mobile API Routes for StoryKeep iOS/Android App
 """
 from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
 from photovault.models import Photo, UserSubscription
 from photovault.extensions import db
+from photovault.utils.jwt_auth import token_required
 
 mobile_api_bp = Blueprint('mobile_api', __name__, url_prefix='/api')
 
 @mobile_api_bp.route('/dashboard', methods=['GET'])
-@login_required
-def get_dashboard():
+@token_required
+def get_dashboard(current_user):
     """Get dashboard statistics for mobile app"""
     try:
         # Calculate photo statistics
@@ -41,8 +41,8 @@ def get_dashboard():
         return jsonify({'error': str(e)}), 500
 
 @mobile_api_bp.route('/auth/profile', methods=['GET'])
-@login_required
-def get_profile():
+@token_required
+def get_profile(current_user):
     """Get user profile for mobile app"""
     try:
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()

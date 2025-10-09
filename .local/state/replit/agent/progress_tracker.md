@@ -21,3 +21,7 @@
 [x] 21. Install expo module in PhotoVault-iOS directory - COMPLETED: Installed expo and 820 packages
 [x] 22. Restart both workflows (PhotoVault Server and Expo Server) - COMPLETED: Both workflows running successfully
 [x] 23. Verify both servers are working - COMPLETED: PhotoVault Server on port 5000, Expo Server with tunnel ready
+[x] 24. Fix profile fetching error - COMPLETED: Updated iOS app API endpoints from /dashboard and /auth/profile to /api/dashboard and /api/auth/profile
+[x] 25. Create JWT authentication decorator - COMPLETED: Created photovault/utils/jwt_auth.py with token_required decorator for mobile API authentication
+[x] 26. Update mobile API endpoints to use JWT authentication - COMPLETED: Replaced @login_required with @token_required in mobile_api.py
+[x] 27. Restart PhotoVault Server with JWT authentication - COMPLETED: Server running successfully on port 5000
