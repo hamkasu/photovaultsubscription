@@ -110,7 +110,7 @@ export const apiService = {
 
   // Photos
   uploadPhoto: async (formData) => {
-    const response = await api.post('/upload', formData, {
+    const response = await api.post('/api/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -119,7 +119,7 @@ export const apiService = {
   },
 
   getPhotos: async (page = 1, limit = 20) => {
-    const response = await api.get(`/gallery/photos?page=${page}&limit=${limit}`);
+    const response = await api.get(`/api/photos?page=${page}&limit=${limit}`);
     return response.data;
   },
 

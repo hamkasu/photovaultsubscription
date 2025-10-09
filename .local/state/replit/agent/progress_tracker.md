@@ -25,3 +25,8 @@
 [x] 25. Create JWT authentication decorator - COMPLETED: Created photovault/utils/jwt_auth.py with token_required decorator for mobile API authentication
 [x] 26. Update mobile API endpoints to use JWT authentication - COMPLETED: Replaced @login_required with @token_required in mobile_api.py
 [x] 27. Restart PhotoVault Server with JWT authentication - COMPLETED: Server running successfully on port 5000
+[x] 28. Fix gallery missing photos issue - COMPLETED: Created /api/photos endpoint with JWT authentication
+[x] 29. Fix camera upload 405 error - COMPLETED: Created /api/upload endpoint with JWT authentication  
+[x] 30. Update iOS app to use new mobile API endpoints - COMPLETED: Changed gallery to /api/photos and upload to /api/upload
+[x] 31. Add support for original and edited photos in gallery - COMPLETED: API now returns both original and edited URLs
+[x] 32. Restart Expo Server with cleared cache - COMPLETED: Metro bundler cache cleared and rebuilt
