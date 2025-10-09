@@ -10,6 +10,7 @@ import zipfile
 import tempfile
 import time
 from photovault.utils.enhanced_file_handler import get_file_content, file_exists_enhanced
+from photovault.utils.jwt_auth import hybrid_auth
 
 # Create the gallery blueprint
 gallery_bp = Blueprint('gallery', __name__)
@@ -234,9 +235,9 @@ def file_diagnostics():
     return render_template('debug/file_diagnostics.html')
 
 @gallery_bp.route('/uploads/<int:user_id>/<path:filename>')
-@login_required
-def uploaded_file(user_id, filename):
-    """Secure route for serving uploaded files with authentication checks"""
+@hybrid_auth
+def uploaded_file(current_user, user_id, filename):
+    """Secure route for serving uploaded files with authentication checks (supports both session and JWT)"""
     # Security check: Users can access their own files, admin can access all files,
     # or if the photo is shared in a family vault where the user is a member
     access_allowed = (

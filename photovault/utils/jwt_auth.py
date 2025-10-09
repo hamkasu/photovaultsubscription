@@ -2,7 +2,8 @@
 JWT Authentication utility for mobile API endpoints
 """
 from functools import wraps
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, abort
+from flask_login import current_user as flask_current_user, login_required
 import jwt
 from photovault.models import User
 
@@ -39,5 +40,35 @@ def token_required(f):
             return jsonify({'error': 'Token verification failed'}), 401
         
         return f(current_user, *args, **kwargs)
+    
+    return decorated
+
+def hybrid_auth(f):
+    """
+    Decorator that supports both session-based and JWT authentication.
+    Checks for JWT token first, falls back to session authentication.
+    Used for routes that need to work with both web and mobile clients.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        authenticated_user = None
+        
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            try:
+                token = auth_header.split(" ")[1]
+                data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+                authenticated_user = User.query.get(data['user_id'])
+            except (IndexError, jwt.ExpiredSignatureError, jwt.InvalidTokenError, Exception) as e:
+                current_app.logger.debug(f"JWT auth failed, trying session: {str(e)}")
+                pass
+        
+        if not authenticated_user and flask_current_user.is_authenticated:
+            authenticated_user = flask_current_user
+        
+        if not authenticated_user:
+            abort(401)
+        
+        return f(authenticated_user, *args, **kwargs)
     
     return decorated
