@@ -181,15 +181,14 @@ def upload_photo(current_user):
             thumbnail_path = filepath
         
         # Create photo record
-        photo = Photo(
-            user_id=current_user.id,
-            filename=unique_filename,
-            original_name=file.filename,
-            file_path=filepath,
-            thumbnail_path=thumbnail_path,
-            file_size=file_size,
-            upload_source='mobile_camera'
-        )
+        photo = Photo()
+        photo.user_id = current_user.id
+        photo.filename = unique_filename
+        photo.original_name = file.filename
+        photo.file_path = filepath
+        photo.thumbnail_path = thumbnail_path
+        photo.file_size = file_size
+        photo.upload_source = 'mobile_camera'
         
         db.session.add(photo)
         db.session.commit()
