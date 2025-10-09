@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Gradle startup script for Unix
-
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-
-exec "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" "$@"
