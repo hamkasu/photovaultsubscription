@@ -85,6 +85,9 @@ def get_photos(current_user):
         # Build photo list with URLs
         photos_list = []
         for photo in photos_query.items:
+            # Get thumbnail filename from path
+            thumbnail_filename = os.path.basename(photo.thumbnail_path) if photo.thumbnail_path else photo.filename
+            
             photo_data = {
                 'id': photo.id,
                 'filename': photo.filename,
@@ -94,8 +97,8 @@ def get_photos(current_user):
                              _external=True),
                 'thumbnail_url': url_for('gallery.uploaded_file',
                                        user_id=current_user.id,
-                                       filename=photo.thumbnail_filename,
-                                       _external=True) if photo.thumbnail_filename else None,
+                                       filename=thumbnail_filename,
+                                       _external=True),
                 'created_at': photo.created_at.isoformat(),
                 'file_size': photo.file_size,
                 'has_edited': photo.edited_filename is not None
@@ -152,6 +155,9 @@ def upload_photo(current_user):
             return jsonify({'error': 'File too large (max 50MB)'}), 400
         
         # Generate unique filename
+        if not file.filename:
+            return jsonify({'error': 'Invalid filename'}), 400
+            
         ext = file.filename.rsplit('.', 1)[1].lower()
         unique_filename = f"{current_user.id}_{uuid.uuid4().hex[:12]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
         
@@ -164,21 +170,23 @@ def upload_photo(current_user):
         file.save(filepath)
         
         # Create thumbnail
+        thumbnail_filename = f"thumb_{unique_filename}"
+        thumbnail_path = os.path.join(user_folder, thumbnail_filename)
         try:
             img = Image.open(filepath)
             img.thumbnail((300, 300))
-            thumbnail_filename = f"thumb_{unique_filename}"
-            thumbnail_path = os.path.join(user_folder, thumbnail_filename)
             img.save(thumbnail_path)
         except Exception as e:
             logger.error(f"Thumbnail creation failed: {e}")
-            thumbnail_filename = unique_filename
+            thumbnail_path = filepath
         
         # Create photo record
         photo = Photo(
             user_id=current_user.id,
             filename=unique_filename,
-            thumbnail_filename=thumbnail_filename,
+            original_name=file.filename,
+            file_path=filepath,
+            thumbnail_path=thumbnail_path,
             file_size=file_size,
             upload_source='mobile_camera'
         )
@@ -199,7 +207,7 @@ def upload_photo(current_user):
                              _external=True),
                 'thumbnail_url': url_for('gallery.uploaded_file',
                                        user_id=current_user.id,
-                                       filename=thumbnail_filename,
+                                       filename=os.path.basename(thumbnail_path),
                                        _external=True)
             }
         }), 201
