@@ -104,12 +104,12 @@ waitForPort = 5000
 name = "Expo Server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd PhotoVault-iOS && npx expo start --tunnel --clear"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd PhotoVault-iOS && yes | npx expo start --tunnel --clear"
 
 [deployment]
 deploymentTarget = "autoscale"
