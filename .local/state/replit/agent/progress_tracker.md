@@ -8,4 +8,4 @@
 [x] 8. Install Python 3.11 dependencies from requirements.txt - ALL PACKAGES INSTALLED SUCCESSFULLY - COMPLETED
 [x] 9. Restart PhotoVault Server workflow - SERVER RUNNING ON PORT 5000 - COMPLETED
 [x] 10. Verify application is working - DATABASE INITIALIZED, PAGES LOADING SUCCESSFULLY - COMPLETED
-[x] 11. Update iOS app API configuration to connect to Railway production - COMPLETED: Changed BASE_URL to https://photoverone-production-c5dd.up.railway.app
+[x] 11. Update iOS app API configuration to connect to Railway production - COMPLETED: Changed BASE_URL to https://web-production-535bd.up.railway.app
