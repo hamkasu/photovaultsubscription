@@ -1,5 +1,5 @@
 /*
-PhotoVault Mobile Login Screen
+StoryKeep Mobile Login Screen
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -174,9 +174,9 @@ export default function LoginScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
           <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoText}>PhotoVault</Text>
+            <Text style={styles.logoText}>StoryKeep</Text>
           </View>
-          <Text style={styles.subtitle}>Professional Photo Management</Text>
+          <Text style={styles.subtitle}>Save Your Family Stories</Text>
         </View>
 
         <View style={styles.formContainer}>

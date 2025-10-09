@@ -57,7 +57,7 @@ export default function DashboardScreen({ navigation }) {
       if (!permissionResult.granted) {
         Alert.alert(
           'Permission Required',
-          'PhotoVault needs access to your photo library to upload photos.'
+          'StoryKeep needs access to your photo library to upload photos.'
         );
         return;
       }
@@ -140,8 +140,8 @@ export default function DashboardScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome to PhotoVault</Text>
-          <Text style={styles.subtitleText}>Professional Photo Management</Text>
+          <Text style={styles.welcomeText}>Welcome to StoryKeep</Text>
+          <Text style={styles.subtitleText}>Save Your Family Stories</Text>
         </View>
 
         <View style={styles.menuContainer}>

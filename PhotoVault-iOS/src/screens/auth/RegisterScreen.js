@@ -96,7 +96,7 @@ export default function RegisterScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join PhotoVault to start managing your photos</Text>
+          <Text style={styles.subtitle}>Join StoryKeep to save your family stories</Text>
         </View>
 
         <View style={styles.formContainer}>

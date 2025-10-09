@@ -34,7 +34,7 @@ export default function CameraScreen({ navigation }) {
     return (
       <View style={styles.permissionContainer}>
         <Text style={styles.permissionText}>
-          PhotoVault needs access to your camera to take photos
+          StoryKeep needs access to your camera to take photos
         </Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
@@ -88,7 +88,7 @@ export default function CameraScreen({ navigation }) {
         }
       );
 
-      // Upload to PhotoVault backend
+      // Upload to StoryKeep backend
       const metadata = {
         source: 'camera',
         facing: facing,
