@@ -14,6 +14,10 @@ import { apiService } from '../services/api';
 
 export default function DashboardScreen({ navigation }) {
   const [isUploading, setIsUploading] = useState(false);
+  const [user, setUser] = useState({
+    username: 'Loading...',
+    subscription: 'Free'
+  });
   const [stats, setStats] = useState({
     photos: 0,
     albums: 0,
@@ -22,18 +26,35 @@ export default function DashboardScreen({ navigation }) {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const profile = await apiService.getProfile();
+      console.log('Profile response:', profile);
+      setUser({
+        username: profile.username || profile.user?.username || 'User',
+        subscription: profile.subscription_plan || profile.user?.subscription_plan || 'Free'
+      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      console.error('Error details:', error.response?.data);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
       const data = await apiService.getDashboard();
+      console.log('Dashboard response:', data);
       setStats({
-        photos: data.stats?.total_photos || 0,
-        albums: data.stats?.total_albums || 0,
-        storage: data.stats?.storage_used || '0 MB'
+        photos: data.stats?.total_photos || data.total_photos || 0,
+        albums: data.stats?.total_albums || data.total_albums || 0,
+        storage: data.stats?.storage_used || data.storage_used || '0 MB'
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
   const menuItems = [
@@ -164,8 +185,10 @@ export default function DashboardScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome to StoryKeep</Text>
-          <Text style={styles.subtitleText}>Save Your Family Stories</Text>
+          <Text style={styles.welcomeText}>Welcome, {user.username}</Text>
+          <View style={styles.subscriptionBadge}>
+            <Text style={styles.subscriptionText}>{user.subscription} Plan</Text>
+          </View>
         </View>
 
         <View style={styles.menuContainer}>
@@ -212,6 +235,18 @@ const styles = StyleSheet.create({
   subtitleText: {
     fontSize: 16,
     color: '#666',
+  },
+  subscriptionBadge: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+  },
+  subscriptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
   },
   menuContainer: {
     padding: 20,

@@ -13,3 +13,7 @@
 [x] 13. Add logout button to dashboard header - COMPLETED: Added logout icon with confirmation dialog
 [x] 14. Enable real-time stats on dashboard - COMPLETED: Fetches actual photo count, albums, storage from API
 [x] 15. Add image cropping for photo extraction - COMPLETED: Enabled allowsEditing in image picker for cropping
+[x] 16. Add username display to dashboard - COMPLETED: Shows "Welcome, [username]"
+[x] 17. Add subscription plan badge to dashboard - COMPLETED: Shows subscription plan (Free, Basic, etc.)
+[x] 18. Create mobile API endpoints - COMPLETED: Added /api/dashboard and /api/auth/profile JSON endpoints
+[x] 19. Fix 0 data issue - COMPLETED: Created proper JSON API responses with stats and user profile
