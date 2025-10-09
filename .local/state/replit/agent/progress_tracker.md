@@ -42,3 +42,7 @@
 [x] 42. Restart Expo Server - COMPLETED: Server restarted successfully
 [x] 43. Revert to Railway production - COMPLETED: Changed BASE_URL back to https://web-production-535bd.up.railway.app
 [x] 44. Clarify production setup - COMPLETED: Using Railway for production, Replit for development only
+[x] 45. Fix iOS Family Vault 404 error - COMPLETED: Added /api/family/vaults endpoint to mobile_api.py with JWT authentication
+[x] 46. Import FamilyVault and FamilyMember models - COMPLETED: Updated imports in mobile_api.py
+[x] 47. Restart local PhotoVault Server - COMPLETED: Server running with new endpoint
+[x] 48. Identify deployment issue - COMPLETED: Changes are local only, need to deploy to Railway for iOS app to work

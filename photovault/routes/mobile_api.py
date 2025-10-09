@@ -2,7 +2,7 @@
 Mobile API Routes for StoryKeep iOS/Android App
 """
 from flask import Blueprint, jsonify, request, current_app, url_for
-from photovault.models import Photo, UserSubscription
+from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember
 from photovault.extensions import db, csrf
 from photovault.utils.jwt_auth import token_required
 from werkzeug.utils import secure_filename
@@ -208,3 +208,44 @@ def upload_photo(current_user):
         logger.error(f"Upload error: {str(e)}")
         db.session.rollback()
         return jsonify({'error': 'Upload failed'}), 500
+
+@mobile_api_bp.route('/family/vaults', methods=['GET'])
+@token_required
+def get_family_vaults(current_user):
+    """Get user's family vaults for mobile app"""
+    try:
+        # Get vaults created by user
+        created_vaults = FamilyVault.query.filter_by(created_by=current_user.id).all()
+        
+        # Get vaults user is a member of
+        member_vaults = db.session.query(FamilyVault).join(FamilyMember).filter(
+            FamilyMember.user_id == current_user.id,
+            FamilyMember.status == 'active'
+        ).all()
+        
+        # Combine and deduplicate
+        all_vaults = list({v.id: v for v in created_vaults + member_vaults}.values())
+        
+        # Build response
+        vaults_list = []
+        for vault in all_vaults:
+            vault_data = {
+                'id': vault.id,
+                'name': vault.name,
+                'description': vault.description,
+                'vault_code': vault.vault_code,
+                'is_public': vault.is_public,
+                'created_at': vault.created_at.isoformat() if vault.created_at else None,
+                'is_creator': vault.created_by == current_user.id,
+                'member_role': vault.get_member_role(current_user.id) if hasattr(vault, 'get_member_role') else 'member'
+            }
+            vaults_list.append(vault_data)
+        
+        return jsonify({
+            'success': True,
+            'vaults': vaults_list
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching family vaults: {str(e)}")
+        return jsonify({'error': str(e)}), 500
