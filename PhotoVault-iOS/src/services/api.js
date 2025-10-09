@@ -15,7 +15,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Configuration
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://web-production-535bd.up.railway.app';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://c4edbe00-4cb1-4cc7-8c47-1d0cce23e4a2-00-3g7y27ivf684i.kirk.replit.dev';
 
 // Create axios instance
 const api = axios.create({
