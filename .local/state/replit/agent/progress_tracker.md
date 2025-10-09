@@ -17,3 +17,7 @@
 [x] 17. Add subscription plan badge to dashboard - COMPLETED: Shows subscription plan (Free, Basic, etc.)
 [x] 18. Create mobile API endpoints - COMPLETED: Added /api/dashboard and /api/auth/profile JSON endpoints
 [x] 19. Fix 0 data issue - COMPLETED: Created proper JSON API responses with stats and user profile
+[x] 20. Re-install Python dependencies (Flask and all requirements) - COMPLETED: Successfully installed all packages from requirements.txt
+[x] 21. Install expo module in PhotoVault-iOS directory - COMPLETED: Installed expo and 820 packages
+[x] 22. Restart both workflows (PhotoVault Server and Expo Server) - COMPLETED: Both workflows running successfully
+[x] 23. Verify both servers are working - COMPLETED: PhotoVault Server on port 5000, Expo Server with tunnel ready
