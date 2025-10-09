@@ -40,15 +40,12 @@ export default function DashboardScreen({ navigation }) {
       onPress: () => handleUploadFromDevice(),
     },
     {
-      id: 'enhance',
-      title: 'Enhancement',
-      description: 'Improve photo quality',
-      icon: 'sparkles',
+      id: 'vaults',
+      title: 'Family Vaults',
+      description: 'Share photos with family',
+      icon: 'albums',
       color: '#AF52DE',
-      onPress: () => {
-        // TODO: Navigate to enhancement screen
-        console.log('Enhancement');
-      },
+      onPress: () => navigation.navigate('Vaults'),
     },
   ];
 

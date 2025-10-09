@@ -88,8 +88,7 @@ export default function PhotoViewScreen({ route, navigation }) {
   };
 
   const handleEdit = () => {
-    // TODO: Navigate to edit screen
-    Alert.alert('Edit', 'Photo editing functionality coming soon!');
+    navigation.navigate('Enhancement', { photo });
   };
 
   const formatDate = (dateString) => {

@@ -23,6 +23,8 @@ import DashboardScreen from '../screens/DashboardScreen';
 import CameraScreen from '../screens/CameraScreen';
 import GalleryScreen from '../screens/GalleryScreen';
 import PhotoViewScreen from '../screens/PhotoViewScreen';
+import EnhancementScreen from '../screens/EnhancementScreen';
+import VaultsScreen from '../screens/VaultsScreen';
 
 // Import services
 import { initializeAuth, getAuthToken } from '../services/api';
@@ -103,6 +105,16 @@ export default function AppNavigator() {
           name="PhotoView" 
           component={PhotoViewScreen} 
           options={{ title: 'Photo' }}
+        />
+        <Stack.Screen 
+          name="Enhancement" 
+          component={EnhancementScreen} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Vaults" 
+          component={VaultsScreen} 
+          options={{ title: 'Family Vaults' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
