@@ -227,6 +227,10 @@ def detect_and_extract_photos(current_user):
         
         logger.info(f"Photo detection request from user: {current_user.id}")
         
+        # Check if request has JSON data
+        if not request.json:
+            return jsonify({'error': 'Invalid request format, JSON expected'}), 400
+        
         # Check if photo_id was provided
         if 'photo_id' not in request.json:
             return jsonify({'error': 'No photo_id provided'}), 400
@@ -251,30 +255,19 @@ def detect_and_extract_photos(current_user):
                 'extracted_photos': []
             })
         
-        # Extract detected photos
+        # Extract detected photos using the extract_photos method
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
         user_folder = os.path.join(upload_folder, str(current_user.id))
         os.makedirs(user_folder, exist_ok=True)
         
+        # Use the extract_photos method which handles all extractions at once
+        extracted_files = detector.extract_photos(photo.file_path, user_folder, detected)
+        
         extracted_photos = []
         
-        for i, detection in enumerate(detected):
+        for i, extracted_file in enumerate(extracted_files):
             try:
-                # Extract photo region
-                extracted_path = os.path.join(
-                    user_folder,
-                    f"{current_user.id}_{uuid.uuid4().hex[:12]}_extracted_{i}.jpg"
-                )
-                
-                success = detector.extract_photo(
-                    photo.file_path,
-                    detection,
-                    extracted_path
-                )
-                
-                if not success:
-                    logger.warning(f"Failed to extract photo {i}")
-                    continue
+                extracted_path = extracted_file['file_path']
                 
                 # Create thumbnail
                 thumbnail_filename = f"thumb_{os.path.basename(extracted_path)}"
@@ -306,7 +299,7 @@ def detect_and_extract_photos(current_user):
                 extracted_photos.append({
                     'id': extracted_photo.id,
                     'filename': extracted_photo.filename,
-                    'confidence': detection.get('confidence', 0),
+                    'confidence': extracted_file.get('confidence', 0),
                     'url': url_for('gallery.uploaded_file',
                                  user_id=current_user.id,
                                  filename=extracted_photo.filename,
@@ -318,7 +311,7 @@ def detect_and_extract_photos(current_user):
                 })
                 
             except Exception as extract_error:
-                logger.error(f"Error extracting photo {i}: {extract_error}")
+                logger.error(f"Error processing extracted photo {i}: {extract_error}")
                 continue
         
         logger.info(f"Extracted {len(extracted_photos)} photos from image {photo_id}")
