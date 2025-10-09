@@ -9,3 +9,7 @@
 [x] 9. Restart PhotoVault Server workflow - SERVER RUNNING ON PORT 5000 - COMPLETED
 [x] 10. Verify application is working - DATABASE INITIALIZED, PAGES LOADING SUCCESSFULLY - COMPLETED
 [x] 11. Update iOS app API configuration to connect to Railway production - COMPLETED: Changed BASE_URL to https://web-production-535bd.up.railway.app
+[x] 12. Rebrand iOS app from PhotoVault to StoryKeep - COMPLETED: Updated all UI text, app name, headers
+[x] 13. Add logout button to dashboard header - COMPLETED: Added logout icon with confirmation dialog
+[x] 14. Enable real-time stats on dashboard - COMPLETED: Fetches actual photo count, albums, storage from API
+[x] 15. Add image cropping for photo extraction - COMPLETED: Enabled allowsEditing in image picker for cropping

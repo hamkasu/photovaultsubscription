@@ -1,5 +1,5 @@
 /*
-PhotoVault Mobile Navigation
+StoryKeep Mobile Navigation
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -14,7 +14,8 @@ CALMIC SDN BHD - "Committed to Excellence"
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Import screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -27,7 +28,7 @@ import EnhancementScreen from '../screens/EnhancementScreen';
 import VaultsScreen from '../screens/VaultsScreen';
 
 // Import services
-import { initializeAuth, getAuthToken } from '../services/api';
+import { initializeAuth, getAuthToken, apiService } from '../services/api';
 
 const Stack = createNativeStackNavigator();
 
@@ -49,6 +50,28 @@ export default function AppNavigator() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = async (navigation) => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await apiService.logout();
+            setIsAuthenticated(false);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          },
+        },
+      ]
+    );
   };
 
   if (isLoading) {
@@ -89,7 +112,14 @@ export default function AppNavigator() {
         <Stack.Screen 
           name="Dashboard" 
           component={DashboardScreen} 
-          options={{ title: 'PhotoVault' }}
+          options={({ navigation }) => ({
+            title: 'StoryKeep',
+            headerRight: () => (
+              <TouchableOpacity onPress={() => handleLogout(navigation)}>
+                <Ionicons name="log-out-outline" size={24} color="#fff" />
+              </TouchableOpacity>
+            ),
+          })}
         />
         <Stack.Screen 
           name="Camera" 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,28 @@ import { apiService } from '../services/api';
 
 export default function DashboardScreen({ navigation }) {
   const [isUploading, setIsUploading] = useState(false);
+  const [stats, setStats] = useState({
+    photos: 0,
+    albums: 0,
+    storage: '0 MB'
+  });
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const data = await apiService.getDashboard();
+      setStats({
+        photos: data.stats?.total_photos || 0,
+        albums: data.stats?.total_albums || 0,
+        storage: data.stats?.storage_used || '0 MB'
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    }
+  };
   const menuItems = [
     {
       id: 'camera',
@@ -62,11 +84,10 @@ export default function DashboardScreen({ navigation }) {
         return;
       }
 
-      // Launch image picker
+      // Launch image picker with cropping enabled
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1],
         quality: 0.8,
         allowsMultipleSelection: false,
       });
@@ -86,6 +107,9 @@ export default function DashboardScreen({ navigation }) {
       };
 
       await apiService.uploadCameraPhoto(asset.uri, metadata);
+      
+      // Refresh dashboard stats
+      await fetchDashboardData();
 
       Alert.alert(
         'Success',
@@ -150,15 +174,15 @@ export default function DashboardScreen({ navigation }) {
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{stats.photos}</Text>
             <Text style={styles.statLabel}>Photos</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{stats.albums}</Text>
             <Text style={styles.statLabel}>Albums</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0 MB</Text>
+            <Text style={styles.statNumber}>{stats.storage}</Text>
             <Text style={styles.statLabel}>Storage</Text>
           </View>
         </View>
