@@ -52,3 +52,9 @@
 [x] 52. Install Expo in PhotoVault-iOS directory - COMPLETED: Installed expo and 821 packages
 [x] 53. Restart both workflows - COMPLETED: PhotoVault Server and Expo Server both running successfully
 [x] 54. Final verification - COMPLETED: PhotoVault Server on port 5000, Expo Server with tunnel and QR code ready
+[x] 55. Debug iOS gallery empty issue on Railway - COMPLETED: Identified authentication endpoint bug
+[x] 56. Fix /auth/register endpoint to handle JSON requests - COMPLETED: Updated to support both web forms and mobile API
+[x] 57. Add JSON response support to all validation errors - COMPLETED: Register now returns proper JSON responses
+[x] 58. Fix Photo model compatibility in mobile API - COMPLETED: Updated to use correct model fields
+[ ] 59. Deploy authentication fixes to Railway via GitHub - PENDING: User needs to push changes
+[ ] 60. Test iOS app after Railway deployment - PENDING: Verify registration, login, and gallery work

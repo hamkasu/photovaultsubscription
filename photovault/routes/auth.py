@@ -131,45 +131,68 @@ def login():
     return render_template('login.html')
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@csrf.exempt
 def register():
-    """User registration route"""
-    if current_user.is_authenticated:
+    """User registration route - handles both web forms and mobile API requests"""
+    # Check if request is JSON (mobile app)
+    is_api_request = request.is_json
+    
+    if current_user.is_authenticated and not is_api_request:
         return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        confirm_password = request.form.get('confirm_password', '')
+        # Get data from JSON or form
+        if is_api_request:
+            data = request.get_json()
+            username = data.get('username', '').strip()
+            email = data.get('email', '').strip().lower()
+            password = data.get('password', '')
+            confirm_password = data.get('password', '')  # Mobile app doesn't send confirm_password
+        else:
+            username = request.form.get('username', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
         
         # Basic validation
-        if not all([username, email, password, confirm_password]):
+        if not all([username, email, password]):
+            if is_api_request:
+                return jsonify({'error': 'All fields are required'}), 400
             flash('All fields are required.', 'error')
             return render_template('register.html')
         
         # Username validation
         if len(username) < 3:
+            if is_api_request:
+                return jsonify({'error': 'Username must be at least 3 characters long'}), 400
             flash('Username must be at least 3 characters long.', 'error')
             return render_template('register.html')
         
         if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            if is_api_request:
+                return jsonify({'error': 'Username can only contain letters, numbers, and underscores'}), 400
             flash('Username can only contain letters, numbers, and underscores.', 'error')
             return render_template('register.html')
         
         # Email validation
         if not validate_email(email):
+            if is_api_request:
+                return jsonify({'error': 'Please enter a valid email address'}), 400
             flash('Please enter a valid email address.', 'error')
             return render_template('register.html')
         
-        # Password validation
-        is_valid, message = validate_password(password)
-        if not is_valid:
-            flash(message, 'error')
-            return render_template('register.html')
-        
-        if password != confirm_password:
-            flash('Passwords do not match.', 'error')
-            return render_template('register.html')
+        # Password validation (skip for API since mobile doesn't have strict requirements)
+        if not is_api_request:
+            is_valid, message = validate_password(password)
+            if not is_valid:
+                flash(message, 'error')
+                return render_template('register.html')
+            
+            if password != confirm_password:
+                flash('Passwords do not match.', 'error')
+                return render_template('register.html')
+        elif len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters long'}), 400
         
         # Check if user already exists with retry logic
         def check_existing_user():
@@ -180,15 +203,21 @@ def register():
         try:
             existing_user = safe_db_query(check_existing_user, operation_name="existing user check")
         except TransientDBError:
+            if is_api_request:
+                return jsonify({'error': 'Temporary database issue. Please try again in a moment.'}), 503
             flash('Temporary database issue. Please try again in a moment.', 'error')
             return render_template('register.html')
         
         if existing_user:
             if existing_user.username == username:
+                if is_api_request:
+                    return jsonify({'error': 'Username already exists'}), 400
                 flash('Username already exists. Please choose a different one.', 'error')
             else:
+                if is_api_request:
+                    return jsonify({'error': 'Email already registered'}), 400
                 flash('Email already registered. Please use a different email.', 'error')
-            return render_template('register.html')
+            return render_template('register.html') if not is_api_request else None
         
         @retry_db_operation(max_retries=3)
         def create_user():
@@ -202,21 +231,46 @@ def register():
             return user
         
         try:
-            create_user()
+            user = create_user()
+            
+            if is_api_request:
+                # Generate JWT token for immediate login
+                token = jwt.encode({
+                    'user_id': user.id,
+                    'username': user.username,
+                    'exp': datetime.utcnow() + timedelta(days=30)
+                }, current_app.config['SECRET_KEY'], algorithm='HS256')
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Registration successful',
+                    'token': token,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email
+                    }
+                }), 201
+            
             flash('Registration successful! You can now log in.', 'success')
             return redirect(url_for('auth.login'))
             
         except TransientDBError:
+            if is_api_request:
+                return jsonify({'error': 'Temporary database issue. Please try again'}), 503
             flash('Temporary database issue. Please try again in a moment.', 'error')
             return render_template('register.html')
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f'Registration error: {e}')
             # Check if it's a duplicate user error
+            error_msg = 'An error occurred during registration'
             if 'unique constraint' in str(e).lower() or 'already exists' in str(e).lower():
-                flash('Username or email already exists. Please try different values.', 'error')
-            else:
-                flash('An error occurred during registration. Please try again.', 'error')
+                error_msg = 'Username or email already exists'
+            
+            if is_api_request:
+                return jsonify({'error': error_msg}), 400
+            flash(f'{error_msg}. Please try again.', 'error')
             return render_template('register.html')
     
     return render_template('register.html')
