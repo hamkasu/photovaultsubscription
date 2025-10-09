@@ -1,5 +1,5 @@
 /*
-PhotoVault Mobile API Service
+StoryKeep Mobile API Service
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -27,7 +27,7 @@ const api = axios.create({
 });
 
 // Token management
-const TOKEN_KEY = 'photovault_auth_token';
+const TOKEN_KEY = 'storykeep_auth_token';
 
 export const setAuthToken = async (token) => {
   if (token) {
