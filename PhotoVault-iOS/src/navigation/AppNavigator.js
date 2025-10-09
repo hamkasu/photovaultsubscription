@@ -124,7 +124,7 @@ export default function AppNavigator() {
         <Stack.Screen 
           name="Camera" 
           component={CameraScreen} 
-          options={{ title: 'Camera', headerShown: false }}
+          options={{ title: 'Digitizer', headerShown: false }}
         />
         <Stack.Screen 
           name="Gallery" 

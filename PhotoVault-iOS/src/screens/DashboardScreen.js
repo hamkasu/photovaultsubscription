@@ -61,8 +61,8 @@ export default function DashboardScreen({ navigation }) {
   const menuItems = [
     {
       id: 'camera',
-      title: 'Camera',
-      description: 'Capture new photos',
+      title: 'Digitizer',
+      description: 'Auto-extract detected photos',
       icon: 'camera',
       color: '#007AFF',
       onPress: () => navigation.navigate('Camera'),

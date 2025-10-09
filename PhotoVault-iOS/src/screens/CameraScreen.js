@@ -95,11 +95,33 @@ export default function CameraScreen({ navigation }) {
         timestamp: new Date().toISOString(),
       };
 
-      await apiService.uploadCameraPhoto(compressedImage.uri, metadata);
+      const uploadResult = await apiService.uploadCameraPhoto(compressedImage.uri, metadata);
+      
+      // Automatically detect and extract photos (Digitizer functionality)
+      let detectionMessage = 'Photo uploaded successfully!';
+      let extractedCount = 0;
+      
+      if (uploadResult?.photo?.id) {
+        try {
+          const detectionResult = await apiService.detectAndExtractPhotos(uploadResult.photo.id);
+          
+          if (detectionResult?.success && detectionResult?.extracted_photos?.length > 0) {
+            extractedCount = detectionResult.extracted_photos.length;
+            detectionMessage = `Success! Extracted ${extractedCount} photo${extractedCount > 1 ? 's' : ''} from your image.`;
+          } else if (detectionResult?.total_detected > 0 && detectionResult?.extracted_photos?.length === 0) {
+            detectionMessage = 'Photo uploaded. Some photos were detected but could not be extracted.';
+          } else {
+            detectionMessage = 'Photo uploaded. No photos detected for extraction.';
+          }
+        } catch (detectionError) {
+          console.error('Detection error:', detectionError);
+          detectionMessage = 'Photo uploaded successfully! (Detection unavailable)';
+        }
+      }
 
       Alert.alert(
-        'Success',
-        'Photo uploaded successfully!',
+        'Digitizer Complete',
+        detectionMessage,
         [
           {
             text: 'Take Another',

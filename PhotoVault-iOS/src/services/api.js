@@ -169,6 +169,14 @@ export const apiService = {
     return response.data;
   },
 
+  // Photo Detection (Digitizer)
+  detectAndExtractPhotos: async (photoId) => {
+    const response = await api.post('/api/detect-and-extract', {
+      photo_id: photoId,
+    });
+    return response.data;
+  },
+
   // Family Vaults
   getVaults: async () => {
     const response = await api.get('/api/family/vaults');

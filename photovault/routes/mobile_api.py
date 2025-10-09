@@ -217,6 +217,124 @@ def upload_photo(current_user):
         db.session.rollback()
         return jsonify({'error': 'Upload failed'}), 500
 
+@mobile_api_bp.route('/detect-and-extract', methods=['POST'])
+@csrf.exempt
+@token_required
+def detect_and_extract_photos(current_user):
+    """Detect and extract photos from uploaded image (digitizer functionality)"""
+    try:
+        from photovault.utils.photo_detection import PhotoDetector
+        
+        logger.info(f"Photo detection request from user: {current_user.id}")
+        
+        # Check if photo_id was provided
+        if 'photo_id' not in request.json:
+            return jsonify({'error': 'No photo_id provided'}), 400
+        
+        photo_id = request.json['photo_id']
+        
+        # Get the original photo
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            return jsonify({'error': 'Photo not found'}), 404
+        
+        # Initialize detector
+        detector = PhotoDetector()
+        
+        # Detect photos in the image
+        detected = detector.detect_photos(photo.file_path)
+        
+        if not detected or len(detected) == 0:
+            return jsonify({
+                'success': True,
+                'message': 'No photos detected',
+                'extracted_photos': []
+            })
+        
+        # Extract detected photos
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        user_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        extracted_photos = []
+        
+        for i, detection in enumerate(detected):
+            try:
+                # Extract photo region
+                extracted_path = os.path.join(
+                    user_folder,
+                    f"{current_user.id}_{uuid.uuid4().hex[:12]}_extracted_{i}.jpg"
+                )
+                
+                success = detector.extract_photo(
+                    photo.file_path,
+                    detection,
+                    extracted_path
+                )
+                
+                if not success:
+                    logger.warning(f"Failed to extract photo {i}")
+                    continue
+                
+                # Create thumbnail
+                thumbnail_filename = f"thumb_{os.path.basename(extracted_path)}"
+                thumbnail_path = os.path.join(user_folder, thumbnail_filename)
+                try:
+                    img = Image.open(extracted_path)
+                    img.thumbnail((300, 300))
+                    img.save(thumbnail_path)
+                except Exception as e:
+                    logger.error(f"Thumbnail creation failed: {e}")
+                    thumbnail_path = extracted_path
+                
+                # Get file size
+                extracted_size = os.path.getsize(extracted_path)
+                
+                # Create new photo record following the correct pattern
+                extracted_photo = Photo()
+                extracted_photo.user_id = current_user.id
+                extracted_photo.filename = os.path.basename(extracted_path)
+                extracted_photo.original_name = f"extracted_{i}_from_{photo.original_name}"
+                extracted_photo.file_path = extracted_path
+                extracted_photo.thumbnail_path = thumbnail_path
+                extracted_photo.file_size = extracted_size
+                extracted_photo.upload_source = 'digitizer'
+                
+                db.session.add(extracted_photo)
+                db.session.commit()
+                
+                extracted_photos.append({
+                    'id': extracted_photo.id,
+                    'filename': extracted_photo.filename,
+                    'confidence': detection.get('confidence', 0),
+                    'url': url_for('gallery.uploaded_file',
+                                 user_id=current_user.id,
+                                 filename=extracted_photo.filename,
+                                 _external=True),
+                    'thumbnail_url': url_for('gallery.uploaded_file',
+                                           user_id=current_user.id,
+                                           filename=thumbnail_filename,
+                                           _external=True)
+                })
+                
+            except Exception as extract_error:
+                logger.error(f"Error extracting photo {i}: {extract_error}")
+                continue
+        
+        logger.info(f"Extracted {len(extracted_photos)} photos from image {photo_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully extracted {len(extracted_photos)} photos',
+            'total_detected': len(detected),
+            'extracted_photos': extracted_photos
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Photo detection error: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Photo detection failed'}), 500
+
 @mobile_api_bp.route('/family/vaults', methods=['GET'])
 @token_required
 def get_family_vaults(current_user):
