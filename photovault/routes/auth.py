@@ -82,7 +82,20 @@ def login():
             flash('Temporary database issue. Please try again in a moment.', 'error')
             return render_template('login.html')
         
-        if user and check_password_hash(user.password_hash, password):
+        # Debug logging
+        if is_api_request:
+            current_app.logger.info(f"Login attempt for username: {username}, user found: {user is not None}")
+        
+        if not user:
+            if is_api_request:
+                return jsonify({'error': 'Invalid username or password'}), 401
+            flash('Invalid username or password.', 'error')
+        elif not check_password_hash(user.password_hash, password):
+            if is_api_request:
+                current_app.logger.warning(f"Password check failed for user: {username}")
+                return jsonify({'error': 'Invalid username or password'}), 401
+            flash('Invalid username or password.', 'error')
+        else:
             login_user(user, remember=remember)
             
             # Return JSON response for API requests
@@ -93,6 +106,8 @@ def login():
                     'username': user.username,
                     'exp': datetime.utcnow() + timedelta(days=30)
                 }, current_app.config['SECRET_KEY'], algorithm='HS256')
+                
+                current_app.logger.info(f"Successful API login for user: {username}")
                 
                 return jsonify({
                     'success': True,
@@ -112,10 +127,6 @@ def login():
             else:
                 flash(f'Welcome back, {user.username}!', 'success')
                 return redirect(url_for('main.dashboard'))
-        else:
-            if is_api_request:
-                return jsonify({'error': 'Invalid username or password'}), 401
-            flash('Invalid username or password.', 'error')
     
     return render_template('login.html')
 
