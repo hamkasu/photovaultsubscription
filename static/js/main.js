@@ -1,5 +1,5 @@
 /*
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -27,8 +27,8 @@ document.getElementById('uploadBtn').addEventListener('click', triggerUpload);
 
 // Keep only non-upload related JavaScript here
 document.addEventListener('DOMContentLoaded', function() {
-    // Other PhotoVault functionality (navigation, search, etc.)
-    console.log('PhotoVault main.js loaded');
+    // Other StoryKeep functionality (navigation, search, etc.)
+    console.log('StoryKeep main.js loaded');
     
     // Example: Navigation highlighting
     const currentPath = window.location.pathname;

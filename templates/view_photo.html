@@ -1,5 +1,5 @@
 <!--
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -13,7 +13,7 @@ CALMIC SDN BHD - "Committed to Excellence"
 
 {% extends "base.html" %}
 
-{% block title %}{{ photo.original_name }} - PhotoVault{% endblock %}
+{% block title %}{{ photo.original_name }} - StoryKeep{% endblock %}
 
 {% block extra_css %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -814,7 +814,7 @@ function sharePhoto() {
     
     if (navigator.share) {
         navigator.share({
-            title: 'PhotoVault - ' + photoTitle,
+            title: 'StoryKeep - ' + photoTitle,
             text: 'Check out this photo: ' + photoTitle,
             url: url
         });

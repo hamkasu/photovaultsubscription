@@ -1,10 +1,10 @@
 /**
- * PhotoVault TensorFlow.js Manager - OPTIMIZED VERSION
+ * StoryKeep TensorFlow.js Manager - OPTIMIZED VERSION
  * Handles AI model loading with lazy loading, caching, and progressive enhancement
  */
-class PhotoVaultTensorFlowManager {
+class StoryKeepTensorFlowManager {
     constructor() {
-        console.log('🤖 Initializing PhotoVault TensorFlow.js Manager');
+        console.log('🤖 Initializing StoryKeep TensorFlow.js Manager');
         
         this.models = {
             cocoSSD: null,
@@ -587,6 +587,6 @@ class SmartComposition {
 }
 
 // Export for global use
-window.PhotoVaultTensorFlowManager = PhotoVaultTensorFlowManager;
+window.StoryKeepTensorFlowManager = StoryKeepTensorFlowManager;
 window.ActivityRecognizer = ActivityRecognizer;
 window.SmartComposition = SmartComposition;

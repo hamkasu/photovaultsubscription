@@ -1,5 +1,5 @@
 /*
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -12,12 +12,12 @@ CALMIC SDN BHD - "Committed to Excellence"
 */
 
 /**
- * PhotoVault Enhanced Camera Handler
+ * StoryKeep Enhanced Camera Handler
  * Provides full-screen camera functionality with landscape mode and tap-to-capture
  */
-class PhotoVaultEnhancedCamera {
+class StoryKeepEnhancedCamera {
     constructor() {
-        console.log('🚀 Initializing PhotoVault Enhanced Camera System');
+        console.log('🚀 Initializing StoryKeep Enhanced Camera System');
         
         // DOM Elements
         this.elements = this.initializeElements();
@@ -102,7 +102,7 @@ class PhotoVaultEnhancedCamera {
             // Setup file upload
             this.setupFileUpload();
             
-            console.log('✅ PhotoVault Enhanced Camera initialized successfully');
+            console.log('✅ StoryKeep Enhanced Camera initialized successfully');
         } catch (error) {
             console.error('❌ Failed to initialize camera system:', error);
             this.showError('Failed to initialize camera system: ' + error.message);
@@ -1026,10 +1026,10 @@ class PhotoVaultEnhancedCamera {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.photoVaultCamera = new PhotoVaultEnhancedCamera();
+    window.photoVaultCamera = new StoryKeepEnhancedCamera();
 });
 
 // Export for module usage (if needed)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PhotoVaultEnhancedCamera;
+    module.exports = StoryKeepEnhancedCamera;
 }

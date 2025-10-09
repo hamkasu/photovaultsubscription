@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>PhotoVault Camera</title>
+    <title>StoryKeep Camera</title>
     
     <!-- TensorFlow.js Libraries for AI Features -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2/dist/posenet.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/deeplab@0.2.1/dist/deeplab.min.js"></script>
     
-    <!-- PhotoVault TensorFlow.js Manager -->
+    <!-- StoryKeep TensorFlow.js Manager -->
     <script src="{{ url_for('static', filename='js/tensorflow-manager.js') }}"></script>
     
     <style>
@@ -843,7 +843,7 @@
         <div class="demo-mode" id="demoMode">
             <div class="demo-content">
                 <div class="permission-icon">📱</div>
-                <div class="demo-title">PhotoVault Camera - UPDATED v2</div>
+                <div class="demo-title">StoryKeep Camera - UPDATED v2</div>
                 <div class="permission-description">
                     Professional camera interface with tap-to-capture functionality
                 </div>
@@ -1001,7 +1001,7 @@
                 <div class="permission-icon">📷</div>
                 <div class="permission-title">Camera Access Required</div>
                 <div class="permission-description">
-                    PhotoVault needs camera permission to capture photos
+                    StoryKeep needs camera permission to capture photos
                 </div>
                 
                 <button class="permission-button" id="requestPermissionBtn">
@@ -1025,7 +1025,7 @@
     <canvas id="captureCanvas" style="display: none;"></canvas>
 
     <script>
-        class PhotoVaultCamera {
+        class StoryKeepCamera {
             constructor() {
                 this.isDemo = this.detectDemoEnvironment();
                 
@@ -1090,7 +1090,7 @@
 
             showDemoMode() {
                 document.getElementById('demoMode').style.display = 'flex';
-                console.log('PhotoVault Camera - Demo Mode Active');
+                console.log('StoryKeep Camera - Demo Mode Active');
                 console.log('Deploy to HTTPS server with camera permissions for full functionality');
             }
 
@@ -1240,7 +1240,7 @@
 
             showPermissionScreen(error) {
                 let title = 'Camera Access Required';
-                let description = 'PhotoVault needs camera permission to capture photos';
+                let description = 'StoryKeep needs camera permission to capture photos';
 
                 if (error.name === 'NotAllowedError') {
                     title = 'Camera Permission Denied';
@@ -1997,11 +1997,11 @@
             }
         }
 
-        // Enhanced PhotoVault Camera with AI Features
-        class PhotoVaultEnhancedAICamera extends PhotoVaultCamera {
+        // Enhanced StoryKeep Camera with AI Features
+        class StoryKeepEnhancedAICamera extends StoryKeepCamera {
             constructor() {
                 super();
-                console.log('🤖 Initializing AI-Enhanced PhotoVault Camera');
+                console.log('🤖 Initializing AI-Enhanced StoryKeep Camera');
                 
                 // AI Components
                 this.tensorflowManager = null;
@@ -2047,7 +2047,7 @@
                     this.showAILoading('Loading face detection...');
                     
                     // Initialize TensorFlow.js Manager
-                    this.tensorflowManager = new PhotoVaultTensorFlowManager();
+                    this.tensorflowManager = new StoryKeepTensorFlowManager();
                     
                     // ⚡ LAZY LOADING - Only load BlazeFace initially (4 seconds vs 40+)
                     const modelsLoaded = await this.tensorflowManager.initializeModels(['blazeFace']);
@@ -2574,7 +2574,7 @@
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            const camera = new PhotoVaultEnhancedAICamera();
+            const camera = new StoryKeepEnhancedAICamera();
             
             // Override the original capturePhoto method to use AI-enhanced version
             const originalCapturePhoto = camera.capturePhoto;

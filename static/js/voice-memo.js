@@ -1,5 +1,5 @@
 /*
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -12,7 +12,7 @@ CALMIC SDN BHD - "Committed to Excellence"
 */
 
 /**
- * Voice Memo Recording Component for PhotoVault
+ * Voice Memo Recording Component for StoryKeep
  * Uses HTML5 MediaRecorder API for browser-based voice recording
  */
 

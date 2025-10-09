@@ -1,9 +1,9 @@
 /**
- * PhotoVault Upload & Camera Handler - Clean Implementation
+ * StoryKeep Upload & Camera Handler - Clean Implementation
  * Fixes all conflicting implementations and provides unified functionality
  */
 
-class PhotoVaultUploader {
+class StoryKeepUploader {
     constructor() {
         // State management
         this.selectedFiles = [];
@@ -48,7 +48,7 @@ class PhotoVaultUploader {
     }
     
     init() {
-        console.log('PhotoVault Uploader: Initializing...');
+        console.log('StoryKeep Uploader: Initializing...');
         this.bindEvents();
         this.initializeCamera().catch(err => {
             console.warn('Camera initialization failed:', err);
@@ -1310,12 +1310,12 @@ class PhotoVaultUploader {
 // Initialize uploader when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('uploadForm')) {
-        window.photoVaultUploader = new PhotoVaultUploader();
+        window.photoVaultUploader = new StoryKeepUploader();
     }
 });
 
 // Missing methods - added as prototype methods
-PhotoVaultUploader.prototype.showMessage = function(message, type = 'info', timeout = 3000) {
+StoryKeepUploader.prototype.showMessage = function(message, type = 'info', timeout = 3000) {
     const box = document.getElementById('uploadProgress');
     if (!box) { console.log(`[${type}] ${message}`); return; }
     const map = { success: 'alert-success', info: 'alert-info', warning: 'alert-warning', error: 'alert-danger' };
@@ -1329,7 +1329,7 @@ PhotoVaultUploader.prototype.showMessage = function(message, type = 'info', time
 };
 
 // Camera shutter effect for photo capture confirmation
-PhotoVaultUploader.prototype.showCameraShutterEffect = function() {
+StoryKeepUploader.prototype.showCameraShutterEffect = function() {
     // Create a full-screen white overlay for shutter effect
     const shutterOverlay = document.createElement('div');
     shutterOverlay.style.cssText = `
@@ -1360,12 +1360,12 @@ PhotoVaultUploader.prototype.showCameraShutterEffect = function() {
 };
 
 // Enhanced success confirmation with icons and animations
-PhotoVaultUploader.prototype.showSuccessConfirmation = function() {
+StoryKeepUploader.prototype.showSuccessConfirmation = function() {
     // Create enhanced success message with icon
     const successMessage = `
         <i class="bi bi-check-circle-fill text-success"></i> 
         <strong>Photo Captured Successfully!</strong>
-        <br><small>Your photo has been saved and uploaded to PhotoVault</small>
+        <br><small>Your photo has been saved and uploaded to StoryKeep</small>
     `;
     
     // Show the enhanced message
@@ -1417,7 +1417,7 @@ PhotoVaultUploader.prototype.showSuccessConfirmation = function() {
 };
 
 // Reset capture button to original state
-PhotoVaultUploader.prototype.resetCaptureButton = function() {
+StoryKeepUploader.prototype.resetCaptureButton = function() {
     const captureBtn = document.getElementById('captureBtn');
     if (captureBtn) {
         captureBtn.disabled = false;
@@ -1426,7 +1426,7 @@ PhotoVaultUploader.prototype.resetCaptureButton = function() {
 };
 
 // Optional: Camera shutter sound effect
-PhotoVaultUploader.prototype.playCameraShutterSound = function() {
+StoryKeepUploader.prototype.playCameraShutterSound = function() {
     try {
         // Create a short beep sound using Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1448,7 +1448,7 @@ PhotoVaultUploader.prototype.playCameraShutterSound = function() {
     }
 };
 
-PhotoVaultUploader.prototype.setupDragAndDrop = function(area) {
+StoryKeepUploader.prototype.setupDragAndDrop = function(area) {
     const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
     ['dragenter','dragover'].forEach(ev => area.addEventListener(ev, (e)=>{ stop(e); area.classList.add('dragover'); }));
     ['dragleave','drop'].forEach(ev => area.addEventListener(ev, (e)=>{ stop(e); area.classList.remove('dragover'); }));
@@ -1463,7 +1463,7 @@ PhotoVaultUploader.prototype.setupDragAndDrop = function(area) {
     });
 };
 
-PhotoVaultUploader.prototype.handleFormSubmit = async function(e) {
+StoryKeepUploader.prototype.handleFormSubmit = async function(e) {
     e.preventDefault();
     if (this.isUploading) return;
     if (!this.selectedFiles.length) { this.showMessage('Please select files first', 'warning'); return; }

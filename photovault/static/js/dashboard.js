@@ -1,5 +1,5 @@
 /*
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,

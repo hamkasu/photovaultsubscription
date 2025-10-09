@@ -1,5 +1,5 @@
 /**
- * Voice Memo Recording Component for PhotoVault
+ * Voice Memo Recording Component for StoryKeep
  * Uses HTML5 MediaRecorder API for browser-based voice recording
  */
 

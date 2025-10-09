@@ -1,7 +1,7 @@
-# PhotoVault - Professional Photo Management Platform
+# StoryKeep - Save Your Family Stories
 
 ## Overview
-PhotoVault is a comprehensive photo management and enhancement platform designed to provide a professional-grade experience. It offers features such as a professional camera interface, automatic photo upload and organization, secure storage, face detection and recognition, advanced photo enhancement and restoration, AI-powered smart tagging, family vault sharing, and social media integration. The platform operates on a subscription-based billing model, catering to a broad market seeking advanced photo management solutions.
+StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancement platform designed to provide a professional-grade experience. It offers features such as a professional camera interface, automatic photo upload and organization, secure storage, face detection and recognition, advanced photo enhancement and restoration, AI-powered smart tagging, family vault sharing, and social media integration. The platform operates on a subscription-based billing model, catering to a broad market seeking advanced photo management solutions.
 
 ## Recent Changes (October 2025)
 - **Colorized Filename Format**: Changed to `<username>.<date>.col.<random>` format for colorized images

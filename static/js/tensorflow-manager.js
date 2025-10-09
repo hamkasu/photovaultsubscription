@@ -1,5 +1,5 @@
 /*
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -12,12 +12,12 @@ CALMIC SDN BHD - "Committed to Excellence"
 */
 
 /**
- * PhotoVault TensorFlow.js Manager - DISABLED
- * AI functionality has been removed from PhotoVault
+ * StoryKeep TensorFlow.js Manager - DISABLED
+ * AI functionality has been removed from StoryKeep
  */
-class PhotoVaultTensorFlowManager {
+class StoryKeepTensorFlowManager {
     constructor() {
-        console.log('🤖 PhotoVault TensorFlow.js Manager - AI functionality disabled');
+        console.log('🤖 StoryKeep TensorFlow.js Manager - AI functionality disabled');
         
         this.models = {
             cocoSSD: null,
@@ -110,9 +110,9 @@ class PhotoVaultTensorFlowManager {
 }
 
 // Global instance - disabled but maintains compatibility
-window.photoVaultTensorFlow = new PhotoVaultTensorFlowManager();
+window.photoVaultTensorFlow = new StoryKeepTensorFlowManager();
 
 // Compatibility exports for existing code
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PhotoVaultTensorFlowManager;
+    module.exports = StoryKeepTensorFlowManager;
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Debug Test - PhotoVault</title>
+    <title>Camera Debug Test - StoryKeep</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .debug-box {
@@ -39,7 +39,7 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">🔍 PhotoVault Camera Debug Test</h4>
+                        <h4 class="mb-0">🔍 StoryKeep Camera Debug Test</h4>
                     </div>
                     <div class="card-body">
                         
@@ -136,7 +136,7 @@
         class DebugLogger {
             constructor() {
                 this.logElement = document.getElementById('debugLog');
-                this.log('🚀 PhotoVault Camera Debug Started');
+                this.log('🚀 StoryKeep Camera Debug Started');
             }
             
             log(message, type = 'info') {
@@ -484,7 +484,7 @@
 
         // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔍 Starting PhotoVault Camera Debug Test');
+            console.log('🔍 Starting StoryKeep Camera Debug Test');
             window.cameraDebugTester = new CameraDebugTester();
         });
 

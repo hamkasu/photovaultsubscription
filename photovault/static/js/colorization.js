@@ -1,5 +1,5 @@
 /**
- * PhotoVault Colorization Module
+ * StoryKeep Colorization Module
  * Handles AI-powered and traditional colorization features
  */
 

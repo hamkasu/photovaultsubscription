@@ -1,5 +1,5 @@
 /*
-PhotoVault - Professional Photo Management Platform
+StoryKeep - Professional Photo Management Platform
 Copyright (c) 2025 Calmic Sdn Bhd. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution,
@@ -11,7 +11,7 @@ Email: support@calmic.com.my
 CALMIC SDN BHD - "Committed to Excellence"
 */
 
-// Enhanced markup functions for PhotoVault editor
+// Enhanced markup functions for StoryKeep editor
 
 function drawRectangle(x, y, width, height, fill = false) {
     ctx.beginPath();
