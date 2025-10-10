@@ -17,15 +17,29 @@ import { photoAPI } from '../services/api';
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export default function GalleryScreen({ navigation }) {
+  const [allPhotos, setAllPhotos] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [authToken, setAuthToken] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     loadPhotos();
   }, [filter]);
+
+  useEffect(() => {
+    updatePagePhotos();
+  }, [currentPage, allPhotos]);
+
+  const updatePagePhotos = () => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    setPhotos(allPhotos.slice(startIndex, endIndex));
+  };
 
   const loadPhotos = async () => {
     try {
@@ -40,11 +54,17 @@ export default function GalleryScreen({ navigation }) {
       });
       const dashboardData = await dashboardResponse.json();
       
-      // Use all_photos from dashboard (all 46 photos with working URLs)
+      // Use all_photos from dashboard
       if (dashboardData.all_photos && dashboardData.all_photos.length > 0) {
-        setPhotos(dashboardData.all_photos);
+        setAllPhotos(dashboardData.all_photos);
+        const pages = Math.ceil(dashboardData.all_photos.length / ITEMS_PER_PAGE);
+        setTotalPages(pages);
+        setCurrentPage(1);
       } else {
+        setAllPhotos([]);
         setPhotos([]);
+        setTotalPages(1);
+        setCurrentPage(1);
       }
     } catch (error) {
       console.error('Gallery error:', error);
@@ -137,7 +157,9 @@ export default function GalleryScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Gallery</Text>
-        <Text style={styles.count}>{photos.length} photos</Text>
+        <Text style={styles.count}>
+          {allPhotos.length} photos {totalPages > 1 ? `(Page ${currentPage} of ${totalPages})` : ''}
+        </Text>
       </View>
 
       <View style={styles.filterContainer}>
@@ -145,6 +167,44 @@ export default function GalleryScreen({ navigation }) {
         <FilterButton label="Originals" value="originals" />
         <FilterButton label="Enhanced" value="enhanced" />
       </View>
+
+      {totalPages > 1 && (
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
+            style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
+            onPress={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+          >
+            <Ionicons name="play-skip-back" size={20} color={currentPage === 1 ? '#ccc' : '#E85D75'} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
+            onPress={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? '#ccc' : '#E85D75'} />
+          </TouchableOpacity>
+
+          <Text style={styles.paginationText}>{currentPage} / {totalPages}</Text>
+
+          <TouchableOpacity
+            style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
+            onPress={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? '#ccc' : '#E85D75'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
+            onPress={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            <Ionicons name="play-skip-forward" size={20} color={currentPage === totalPages ? '#ccc' : '#E85D75'} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {photos.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -291,5 +351,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#f8f8f8',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    gap: 15,
+  },
+  paginationButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E85D75',
+  },
+  paginationButtonDisabled: {
+    borderColor: '#ddd',
+    backgroundColor: '#f5f5f5',
+  },
+  paginationText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginHorizontal: 10,
   },
 });
