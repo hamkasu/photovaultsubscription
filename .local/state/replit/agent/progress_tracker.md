@@ -235,3 +235,6 @@
 [x] 231. Implement mobile-friendly colorize endpoint - COMPLETED: Checks grayscale, colorizes image, and updates edited_filename
 [x] 232. Restart PhotoVault Server with new endpoints - COMPLETED: Server running on port 5000 with mobile enhancement endpoints
 [x] 233. DEPLOYMENT NEEDED - Railway must be updated with these endpoints for iOS app to work (changes are local only)
+[x] 234. Expand camera frame for multiple photo detection - COMPLETED: Increased guide frame from 80% to 95% width and 70% height
+[x] 235. Update camera guide text for multiple photos - COMPLETED: Changed to "Align photos within the frame - Multiple photos supported"
+[x] 236. Restart Expo Server with expanded camera frame - COMPLETED: Server running with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code ready

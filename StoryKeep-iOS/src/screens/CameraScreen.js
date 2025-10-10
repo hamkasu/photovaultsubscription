@@ -188,7 +188,7 @@ export default function CameraScreen({ navigation }) {
           <View style={styles.guides}>
             <View style={styles.guideFrame} />
             <Text style={styles.guideText}>
-              Align photo within the frame
+              Align photos within the frame - Multiple photos supported
             </Text>
           </View>
         )}
@@ -305,8 +305,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   guideFrame: {
-    width: width * 0.8,
-    height: width * 0.8,
+    width: width * 0.95,
+    height: height * 0.7,
     borderWidth: 3,
     borderColor: '#E85D75',
     borderRadius: 10,
@@ -319,6 +319,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 10,
     borderRadius: 5,
+    fontWeight: '600',
   },
   header: {
     position: 'absolute',
