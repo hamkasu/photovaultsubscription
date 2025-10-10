@@ -161,3 +161,8 @@
 [x] 161. Fix camera props for expo-camera v17 - COMPLETED: Changed 'type' to 'facing' and 'flashMode' to 'flash'
 [x] 162. Restart Expo Server with camera fix - COMPLETED: Camera now working without render errors
 [x] 163. Diagnose gallery empty issue - COMPLETED: iOS app connects to Railway production (https://web-production-535bd.up.railway.app), local Replit DB is empty
+[x] 164. Identify root cause of empty gallery - COMPLETED: SQLAlchemy 2.0 deprecated .paginate() method, causing /api/photos to fail silently
+[x] 165. Fix /api/photos pagination for SQLAlchemy 2.0 - COMPLETED: Replaced .paginate() with manual pagination using .limit() and .offset()
+[x] 166. Add input validation to prevent negative offsets - COMPLETED: Added max(1, page) and capped per_page at 100
+[x] 167. Architect review of gallery fix - COMPLETED: Approved with input validation improvements applied
+[x] 168. Restart PhotoVault Server with gallery fix - COMPLETED: Server running with fixed pagination on local Replit
