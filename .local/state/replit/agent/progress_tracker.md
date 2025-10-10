@@ -204,3 +204,5 @@
 [x] 204. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel at exp://qakercs-anonymous-8081.exp.direct and QR code displayed
+[x] 205. Fix iOS gallery using dashboard pattern - COMPLETED: Updated /api/photos to use exact same URL pattern as dashboard (/uploads/{user_id}/{filename})
+[x] 206. Restart PhotoVault Server with gallery fix - COMPLETED: Server running on port 5000 with simplified gallery endpoint
