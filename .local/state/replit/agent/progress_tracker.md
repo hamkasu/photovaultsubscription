@@ -156,3 +156,8 @@
 [x] 156. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
 [x] 157. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel and Metro bundler running
 [x] 158. Final verification - COMPLETED: Both servers running successfully with no critical errors
+[x] 159. Fix Camera render error in iOS app - COMPLETED: Updated CameraScreen.js to use CameraView instead of Camera for expo-camera v17+
+[x] 160. Update camera permissions to use useCameraPermissions hook - COMPLETED: Replaced manual permission handling with expo-camera v17 hook
+[x] 161. Fix camera props for expo-camera v17 - COMPLETED: Changed 'type' to 'facing' and 'flashMode' to 'flash'
+[x] 162. Restart Expo Server with camera fix - COMPLETED: Camera now working without render errors
+[x] 163. Diagnose gallery empty issue - COMPLETED: iOS app connects to Railway production (https://web-production-535bd.up.railway.app), local Replit DB is empty
