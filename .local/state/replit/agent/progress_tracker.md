@@ -270,3 +270,12 @@
 [x] 264. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized and subscription plans updated
     - Expo Server: Running with Metro bundler, tunnel ready for iOS app testing
+[x] 265. Diagnose iOS Railway vault error - COMPLETED: Identified "Failed to load vault details" error on Railway production
+[x] 266. Root cause analysis - COMPLETED: Local Replit has vault fixes (improved access checks, VaultPhoto imports, debug logging) but Railway production still has old code
+[x] 267. Confirm deployment needed - COMPLETED: Vault detail endpoint improvements are local only, Railway needs update
+[ ] 268. USER ACTION REQUIRED: Deploy to Railway - Push mobile_api.py changes to GitHub for auto-deployment
+    - Command: git add photovault/routes/mobile_api.py
+    - Command: git commit -m "Fix iOS vault details and camera upload endpoints"
+    - Command: git push origin main
+    - Guide: RAILWAY_IOS_FIXES_DEPLOY.md has complete deployment instructions
+    - Expected fix: Vault details will load correctly on iOS app after Railway deploys
