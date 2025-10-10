@@ -590,88 +590,142 @@ def get_family_vaults(current_user):
 @mobile_api_bp.route('/family/vault/<int:vault_id>', methods=['GET'])
 @token_required
 def get_vault_detail(current_user, vault_id):
-    """Get vault details for mobile app"""
+    """Get vault details for mobile app - REWRITTEN for better error handling"""
     try:
-        logger.info(f"📋 Fetching vault details for vault_id={vault_id}, user={current_user.id}")
+        logger.info(f"🔍 VAULT DETAIL REQUEST: vault_id={vault_id}, user_id={current_user.id}, username={current_user.username}")
         
-        # Get vault
+        # Step 1: Get vault with null check
         vault = FamilyVault.query.get(vault_id)
         if not vault:
-            logger.error(f"❌ Vault {vault_id} not found")
-            return jsonify({'error': 'Vault not found'}), 404
+            logger.error(f"❌ VAULT NOT FOUND: vault_id={vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Vault not found',
+                'vault_id': vault_id
+            }), 404
         
-        # Check if user has access (creator or active member)
-        is_creator = vault.created_by == current_user.id
-        is_member = FamilyMember.query.filter_by(
+        logger.info(f"✅ VAULT FOUND: id={vault.id}, name={vault.name}, created_by={vault.created_by}")
+        
+        # Step 2: Check access permissions
+        is_creator = (vault.created_by == current_user.id)
+        
+        # Check membership
+        membership = FamilyMember.query.filter_by(
             vault_id=vault_id,
             user_id=current_user.id,
             status='active'
-        ).first() is not None
+        ).first()
+        is_member = membership is not None
         
         has_access = is_creator or is_member
         
+        logger.info(f"🔐 ACCESS CHECK: is_creator={is_creator}, is_member={is_member}, has_access={has_access}")
+        
         if not has_access:
-            logger.error(f"❌ User {current_user.id} has no access to vault {vault_id}")
-            return jsonify({'error': 'Access denied'}), 403
+            logger.error(f"❌ ACCESS DENIED: user_id={current_user.id} has no access to vault_id={vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'You do not have permission to view this vault',
+                'vault_id': vault_id
+            }), 403
         
-        logger.info(f"✅ User has access to vault (creator={is_creator}, member={is_member})")
-        
-        # Get vault photos
-        vault_photos = VaultPhoto.query.filter_by(vault_id=vault_id).order_by(VaultPhoto.shared_at.desc()).all()
-        
-        # Get vault members
-        members = FamilyMember.query.filter_by(vault_id=vault_id, status='active').all()
-        
-        # Build response
+        # Step 3: Get vault photos with safe handling
         photos_list = []
-        for vp in vault_photos:
-            photo = vp.photo if hasattr(vp, 'photo') else None
-            if photo:
-                photos_list.append({
-                    'id': photo.id,
-                    'filename': photo.filename,
-                    'url': url_for('gallery.uploaded_file',
-                                 user_id=photo.user_id,
-                                 filename=photo.filename,
-                                 _external=True),
-                    'thumbnail_url': url_for('gallery.uploaded_file',
-                                           user_id=photo.user_id,
-                                           filename=photo.thumbnail_filename,
-                                           _external=True) if photo.thumbnail_filename else None,
-                    'shared_at': vp.shared_at.isoformat() if vp.shared_at else None
-                })
+        try:
+            # Try to use VaultPhoto model
+            vault_photos = VaultPhoto.query.filter_by(vault_id=vault_id).order_by(VaultPhoto.shared_at.desc()).all()
+            logger.info(f"📸 FOUND {len(vault_photos)} vault photos using VaultPhoto model")
+            
+            for vp in vault_photos:
+                try:
+                    photo = Photo.query.get(vp.photo_id)
+                    if photo:
+                        photo_url = f"/uploads/{photo.user_id}/{photo.filename}" if photo.filename else None
+                        thumbnail_url = f"/uploads/{photo.user_id}/{photo.thumbnail_filename}" if photo.thumbnail_filename else None
+                        
+                        photos_list.append({
+                            'id': photo.id,
+                            'filename': photo.filename,
+                            'url': photo_url,
+                            'thumbnail_url': thumbnail_url,
+                            'shared_at': vp.shared_at.isoformat() if vp.shared_at else None,
+                            'user_id': photo.user_id
+                        })
+                except Exception as photo_error:
+                    logger.warning(f"⚠️ Error processing vault photo {vp.id}: {str(photo_error)}")
+                    continue
+                    
+        except Exception as vault_photo_error:
+            logger.error(f"❌ VaultPhoto query failed: {str(vault_photo_error)}")
+            logger.info("📋 Using fallback: returning empty photos list")
+            photos_list = []
         
+        # Step 4: Get vault members with safe handling
         members_list = []
-        for member in members:
-            user = member.user if hasattr(member, 'user') else None
-            if user:
-                members_list.append({
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'role': member.role,
-                    'joined_at': member.joined_at.isoformat() if member.joined_at else None
-                })
+        try:
+            members = FamilyMember.query.filter_by(vault_id=vault_id, status='active').all()
+            logger.info(f"👥 FOUND {len(members)} vault members")
+            
+            for member in members:
+                try:
+                    user = User.query.get(member.user_id)
+                    if user:
+                        members_list.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'email': user.email,
+                            'role': member.role if hasattr(member, 'role') else 'member',
+                            'joined_at': member.joined_at.isoformat() if member.joined_at else None
+                        })
+                except Exception as member_error:
+                    logger.warning(f"⚠️ Error processing member {member.id}: {str(member_error)}")
+                    continue
+                    
+        except Exception as members_error:
+            logger.error(f"❌ Members query failed: {str(members_error)}")
+            members_list = []
         
-        return jsonify({
+        # Step 5: Determine member role safely
+        member_role = 'viewer'
+        if is_creator:
+            member_role = 'owner'
+        elif membership and hasattr(membership, 'role'):
+            member_role = membership.role
+        
+        # Step 6: Build success response
+        response_data = {
             'success': True,
             'vault': {
                 'id': vault.id,
                 'name': vault.name,
-                'description': vault.description,
-                'vault_code': vault.vault_code,
-                'is_public': vault.is_public,
+                'description': vault.description if hasattr(vault, 'description') else '',
+                'vault_code': vault.vault_code if hasattr(vault, 'vault_code') else None,
+                'is_public': vault.is_public if hasattr(vault, 'is_public') else False,
                 'created_at': vault.created_at.isoformat() if vault.created_at else None,
-                'is_creator': vault.created_by == current_user.id,
-                'member_role': vault.get_member_role(current_user.id) if hasattr(vault, 'get_member_role') else 'member'
+                'is_creator': is_creator,
+                'member_role': member_role,
+                'photo_count': len(photos_list),
+                'member_count': len(members_list)
             },
             'photos': photos_list,
             'members': members_list
-        })
+        }
+        
+        logger.info(f"✅ VAULT DETAIL SUCCESS: {len(photos_list)} photos, {len(members_list)} members")
+        return jsonify(response_data), 200
         
     except Exception as e:
-        logger.error(f"Error fetching vault details: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 VAULT DETAIL FATAL ERROR: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        
+        return jsonify({
+            'success': False,
+            'error': f'Failed to load vault details: {str(e)}',
+            'vault_id': vault_id,
+            'error_type': type(e).__name__
+        }), 500
 
 @mobile_api_bp.route('/photos/<int:photo_id>/enhance', methods=['POST'])
 @csrf.exempt
