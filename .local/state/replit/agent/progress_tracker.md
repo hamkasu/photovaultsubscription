@@ -141,3 +141,7 @@
 [x] 141. Fix storage_used format - COMPLETED: Returns number instead of string with "MB"
 [x] 142. Speed up logout navigation - COMPLETED: Auth check interval reduced from 1000ms to 300ms
 [x] 143. Restart both servers with dashboard fixes - COMPLETED: PhotoVault Server and Expo Server running with fixes
+[x] 144. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 145. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
+[x] 146. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://3gpu3ju-anonymous-8081.exp.direct and QR code ready
+[x] 147. Final verification - COMPLETED: Both servers running successfully with no critical errors
