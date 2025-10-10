@@ -196,3 +196,5 @@
 [x] 196. Restart Expo Server with Gallery restored - COMPLETED: Server running with tunnel at exp://ljqf_ek-anonymous-8081.exp.direct and QR code ready
 [x] 197. Fix diagnostic image not loading in iOS app - COMPLETED: Added JWT Bearer token in Authorization header to Image component
 [x] 198. Restart Expo Server with diagnostic image fix - COMPLETED: Server running with tunnel at exp://ljqf_ek-anonymous-8081.exp.direct and QR code ready
+[x] 199. Add JWT authentication to Gallery images - COMPLETED: Updated GalleryScreen to include Authorization Bearer token in image headers
+[x] 200. Restart Expo Server with Gallery authentication - COMPLETED: Server running with tunnel at exp://ljqf_ek-anonymous-8081.exp.direct and QR code ready

@@ -11,13 +11,17 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI } from '../services/api';
+
+const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export default function GalleryScreen({ navigation }) {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
     loadPhotos();
@@ -25,8 +29,12 @@ export default function GalleryScreen({ navigation }) {
 
   const loadPhotos = async () => {
     try {
-      const response = await photoAPI.getPhotos(filter);
+      const [response, token] = await Promise.all([
+        photoAPI.getPhotos(filter),
+        AsyncStorage.getItem('authToken'),
+      ]);
       setPhotos(response.photos || []);
+      setAuthToken(token);
     } catch (error) {
       console.error('Gallery error:', error);
       Alert.alert('Error', 'Failed to load photos');
@@ -41,28 +49,51 @@ export default function GalleryScreen({ navigation }) {
     loadPhotos();
   };
 
-  const renderPhoto = ({ item }) => (
-    <TouchableOpacity
-      style={styles.photoCard}
-      onPress={() => navigation.navigate('PhotoDetail', { photo: item })}
-    >
-      <Image
-        source={{ uri: item.thumbnail_url || item.url }}
-        style={styles.photoImage}
-      />
-      {item.edited_url && (
-        <View style={styles.enhancedBadge}>
-          <Ionicons name="sparkles" size={16} color="#fff" />
-        </View>
-      )}
-      {item.voice_memo_count > 0 && (
-        <View style={styles.voiceBadge}>
-          <Ionicons name="mic" size={14} color="#fff" />
-          <Text style={styles.voiceBadgeText}>{item.voice_memo_count}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+  const renderPhoto = ({ item }) => {
+    // Get the image URL - prefer thumbnail, fallback to url or original_url
+    const imageUrl = item.thumbnail_url || item.url || item.original_url;
+    
+    // Construct full URL if it's a relative path
+    const fullImageUrl = imageUrl?.startsWith('http') 
+      ? imageUrl 
+      : imageUrl?.startsWith('/') 
+        ? `${BASE_URL}${imageUrl}`
+        : imageUrl;
+
+    return (
+      <TouchableOpacity
+        style={styles.photoCard}
+        onPress={() => navigation.navigate('PhotoDetail', { photo: item })}
+      >
+        {fullImageUrl && authToken ? (
+          <Image
+            source={{ 
+              uri: fullImageUrl,
+              headers: {
+                Authorization: `Bearer ${authToken}`
+              }
+            }}
+            style={styles.photoImage}
+          />
+        ) : (
+          <View style={styles.photoImagePlaceholder}>
+            <ActivityIndicator size="small" color="#E85D75" />
+          </View>
+        )}
+        {item.edited_url && (
+          <View style={styles.enhancedBadge}>
+            <Ionicons name="sparkles" size={16} color="#fff" />
+          </View>
+        )}
+        {item.voice_memo_count > 0 && (
+          <View style={styles.voiceBadge}>
+            <Ionicons name="mic" size={14} color="#fff" />
+            <Text style={styles.voiceBadgeText}>{item.voice_memo_count}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const FilterButton = ({ label, value }) => (
     <TouchableOpacity
@@ -195,6 +226,13 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
+  },
+  photoImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
   },
   enhancedBadge: {
     position: 'absolute',
