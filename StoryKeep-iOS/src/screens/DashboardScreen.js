@@ -61,10 +61,7 @@ export default function DashboardScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
+            // Navigation will be handled automatically by App.js when auth state changes
           },
         },
       ]

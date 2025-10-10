@@ -132,3 +132,5 @@
 [x] 132. Fix iOS navigation error (RESET action not handled) - COMPLETED: Updated App.js to auto-detect auth state changes
 [x] 133. Remove manual navigation.reset() calls - COMPLETED: Updated LoginScreen and RegisterScreen to use automatic navigation
 [x] 134. Restart Expo Server with navigation fix - COMPLETED: Server running with QR code, navigation errors resolved
+[x] 135. Fix logout RESET navigation errors - COMPLETED: Updated DashboardScreen and SettingsScreen to use automatic navigation
+[x] 136. Restart Expo Server with all navigation fixes - COMPLETED: All RESET errors resolved, server running with QR code
