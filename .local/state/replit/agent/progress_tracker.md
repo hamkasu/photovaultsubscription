@@ -224,3 +224,8 @@
 [x] 222. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized and subscription plans updated
     - Expo Server: Running with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code displayed for testing
+[x] 223. Fix EnhancePhotoScreen missing image - COMPLETED: Added JWT authentication with Authorization Bearer token header
+[x] 224. Import AsyncStorage to load authToken - COMPLETED: Added useEffect to load auth token from AsyncStorage
+[x] 225. Update Image component with BASE_URL and headers - COMPLETED: Using same pattern as Dashboard (BASE_URL + original_url + Bearer token)
+[x] 226. Add loading indicator while auth token loads - COMPLETED: Shows ActivityIndicator until authToken and imageUrl are available
+[x] 227. Restart Expo Server with EnhancePhotoScreen fix - COMPLETED: Server running with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code ready

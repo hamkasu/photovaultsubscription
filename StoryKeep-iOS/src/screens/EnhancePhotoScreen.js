@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,30 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI } from '../services/api';
 
 const { width } = Dimensions.get('window');
+const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export default function EnhancePhotoScreen({ route, navigation }) {
   const { photo } = route.params;
   const [processing, setProcessing] = useState(false);
   const [showOriginal, setShowOriginal] = useState(true);
+  const [authToken, setAuthToken] = useState(null);
+
+  useEffect(() => {
+    loadAuthToken();
+  }, []);
+
+  const loadAuthToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      setAuthToken(token);
+    } catch (error) {
+      console.error('Failed to load auth token:', error);
+    }
+  };
 
   const handleAutoEnhance = async () => {
     setProcessing(true);
@@ -77,7 +93,9 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     </TouchableOpacity>
   );
 
-  const imageUrl = showOriginal ? photo.url : (photo.edited_url || photo.url);
+  const imageUrl = showOriginal 
+    ? (photo.original_url || photo.url) 
+    : (photo.edited_url || photo.original_url || photo.url);
 
   return (
     <View style={styles.container}>
@@ -90,7 +108,22 @@ export default function EnhancePhotoScreen({ route, navigation }) {
       </View>
 
       <ScrollView>
-        <Image source={{ uri: imageUrl }} style={styles.image} />
+        {authToken && imageUrl ? (
+          <Image 
+            source={{ 
+              uri: `${BASE_URL}${imageUrl}`,
+              headers: {
+                Authorization: `Bearer ${authToken}`
+              }
+            }} 
+            style={styles.image}
+            resizeMode="contain"
+          />
+        ) : (
+          <View style={styles.image}>
+            <ActivityIndicator size="large" color="#E85D75" />
+          </View>
+        )}
 
         {photo.edited_url && (
           <View style={styles.toggleContainer}>
@@ -207,6 +240,8 @@ const styles = StyleSheet.create({
     width: width,
     height: width,
     backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   toggleContainer: {
     flexDirection: 'row',
