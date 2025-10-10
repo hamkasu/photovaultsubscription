@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { dashboardAPI, photoAPI } from '../services/api';
+import api from '../services/api';
 
 export default function DashboardScreen({ navigation }) {
   const [stats, setStats] = useState(null);
@@ -21,6 +22,7 @@ export default function DashboardScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -28,15 +30,17 @@ export default function DashboardScreen({ navigation }) {
 
   const loadDashboardData = async () => {
     try {
-      const [statsData, photosData, userDataString] = await Promise.all([
+      const [statsData, photosData, userDataString, token] = await Promise.all([
         dashboardAPI.getStats(),
         photoAPI.getPhotos('all'),
         AsyncStorage.getItem('userData'),
+        AsyncStorage.getItem('authToken'),
       ]);
 
       setStats(statsData);
       setRecentPhotos(photosData.photos?.slice(0, 6) || []);
       setUserData(userDataString ? JSON.parse(userDataString) : null);
+      setAuthToken(token);
     } catch (error) {
       console.error('Dashboard error:', error);
       Alert.alert('Error', 'Failed to load dashboard data');
@@ -174,9 +178,14 @@ export default function DashboardScreen({ navigation }) {
           <Text style={styles.diagnosticText}>Debug Photos Count: {stats?.debug_photos_count || 0}</Text>
           <Text style={styles.diagnosticText}>Recent Photo ID: {stats.recent_photo.id}</Text>
           <Text style={styles.diagnosticText}>Filename: {stats.recent_photo.filename}</Text>
-          {stats.recent_photo.original_url && (
+          {stats.recent_photo.original_url && authToken && (
             <Image
-              source={{ uri: `https://web-production-535bd.up.railway.app${stats.recent_photo.original_url}` }}
+              source={{ 
+                uri: `https://web-production-535bd.up.railway.app${stats.recent_photo.original_url}`,
+                headers: {
+                  Authorization: `Bearer ${authToken}`
+                }
+              }}
               style={styles.diagnosticImage}
               resizeMode="contain"
             />
