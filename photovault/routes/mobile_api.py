@@ -606,3 +606,184 @@ def get_vault_detail(current_user, vault_id):
     except Exception as e:
         logger.error(f"Error fetching vault details: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@mobile_api_bp.route('/photos/<int:photo_id>/enhance', methods=['POST'])
+@csrf.exempt
+@token_required
+def enhance_photo_mobile(current_user, photo_id):
+    """
+    Mobile API endpoint to apply image enhancement with JWT authentication
+    """
+    try:
+        from photovault.utils.image_enhancement import enhancer
+        import random
+        from datetime import datetime
+        
+        # Get the photo and verify ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        
+        # Construct full file path
+        user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        if os.path.isabs(photo.file_path):
+            full_file_path = photo.file_path
+        else:
+            full_file_path = os.path.join(user_upload_dir, photo.file_path)
+        
+        # Check if file exists
+        if not os.path.exists(full_file_path):
+            return jsonify({'success': False, 'error': 'Photo file not found'}), 404
+        
+        # Check image size
+        file_size = os.path.getsize(full_file_path)
+        if file_size > 10 * 1024 * 1024:  # 10MB limit
+            return jsonify({
+                'success': False, 
+                'error': 'Image too large for enhancement. Please use smaller images (under 10MB).'
+            }), 400
+        
+        # Get enhancement settings from request
+        data = request.get_json() or {}
+        enhancement_settings = data.get('settings', {})
+        
+        # Generate filename for enhanced version
+        from werkzeug.utils import secure_filename as sanitize_name
+        date = datetime.now().strftime('%Y%m%d')
+        random_number = random.randint(100000, 999999)
+        safe_username = sanitize_name(current_user.username)
+        enhanced_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
+        
+        # Create user upload directory
+        os.makedirs(user_upload_dir, exist_ok=True)
+        
+        # Enhanced image path
+        enhanced_filepath = os.path.join(user_upload_dir, enhanced_filename)
+        
+        # Apply enhancements
+        output_path, applied_settings = enhancer.auto_enhance_photo(
+            full_file_path, 
+            enhanced_filepath, 
+            enhancement_settings
+        )
+        
+        # Update photo record with enhanced version
+        photo.edited_filename = enhanced_filename
+        photo.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        logger.info(f"Photo {photo_id} enhanced successfully for user {current_user.id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo enhanced successfully',
+            'photo': {
+                'id': photo.id,
+                'filename': photo.filename,
+                'enhanced_filename': enhanced_filename,
+                'enhanced_url': f'/uploads/{current_user.id}/{enhanced_filename}',
+                'settings_applied': applied_settings
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Mobile enhance error for photo {photo_id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Enhancement failed'}), 500
+
+@mobile_api_bp.route('/photos/<int:photo_id>/colorize', methods=['POST'])
+@csrf.exempt
+@token_required
+def colorize_photo_mobile(current_user, photo_id):
+    """
+    Mobile API endpoint to colorize a black and white photo with JWT authentication
+    """
+    try:
+        from photovault.utils.colorization import get_colorizer
+        
+        # Get the photo and verify ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        
+        # Get colorization method from request
+        data = request.get_json() or {}
+        method = data.get('method', 'auto')
+        
+        if method not in ['auto', 'dnn', 'basic']:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid colorization method. Use auto, dnn, or basic'
+            }), 400
+        
+        # Initialize colorizer
+        colorizer = get_colorizer()
+        
+        # Check if file exists
+        if not os.path.exists(photo.file_path):
+            return jsonify({'success': False, 'error': 'Photo file not found'}), 404
+        
+        # Check if photo is grayscale
+        try:
+            is_grayscale = colorizer.is_grayscale(photo.file_path)
+        except Exception as e:
+            logger.error(f"Error checking grayscale: {str(e)}")
+            return jsonify({'success': False, 'error': 'Error processing photo'}), 500
+        
+        if not is_grayscale:
+            return jsonify({
+                'success': False,
+                'error': 'Photo is already in color',
+                'is_grayscale': False
+            }), 400
+        
+        # Generate unique filename for colorized version
+        unique_id = str(uuid.uuid4())
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        file_extension = os.path.splitext(photo.filename)[1] or '.jpg'
+        colorized_filename = f"{current_user.id}_{unique_id}_colorized_{timestamp}{file_extension}"
+        
+        # Create user folder
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        colorized_path = os.path.join(user_folder, colorized_filename)
+        
+        logger.info(f"Colorizing photo {photo_id} for user {current_user.id} using method: {method}")
+        
+        # Perform colorization
+        try:
+            colorized_path, actual_method = colorizer.colorize_image(photo.file_path, colorized_path, method=method)
+        except RuntimeError as e:
+            if 'DNN model not available' in str(e):
+                return jsonify({
+                    'success': False,
+                    'error': 'DNN colorization model not available. Using basic method instead.'
+                }), 400
+            else:
+                raise
+        
+        # Update photo record with colorized version
+        photo.edited_filename = colorized_filename
+        photo.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        logger.info(f"Photo {photo_id} colorized successfully using {actual_method}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo colorized successfully',
+            'photo': {
+                'id': photo.id,
+                'filename': photo.filename,
+                'colorized_filename': colorized_filename,
+                'colorized_url': f'/uploads/{current_user.id}/{colorized_filename}',
+                'method_used': actual_method
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Mobile colorize error for photo {photo_id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Colorization failed'}), 500

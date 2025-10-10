@@ -229,3 +229,9 @@
 [x] 225. Update Image component with BASE_URL and headers - COMPLETED: Using same pattern as Dashboard (BASE_URL + original_url + Bearer token)
 [x] 226. Add loading indicator while auth token loads - COMPLETED: Shows ActivityIndicator until authToken and imageUrl are available
 [x] 227. Restart Expo Server with EnhancePhotoScreen fix - COMPLETED: Server running with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code ready
+[x] 228. Fix iOS Railway app enhance/colorize 404/400 errors - COMPLETED: Added /api/photos/<photo_id>/enhance and /api/photos/<photo_id>/colorize endpoints
+[x] 229. Add JWT authentication to enhancement endpoints - COMPLETED: Both endpoints use @token_required decorator for mobile compatibility  
+[x] 230. Implement mobile-friendly enhance endpoint - COMPLETED: Handles image enhancement with auto_enhance_photo method and updates edited_filename
+[x] 231. Implement mobile-friendly colorize endpoint - COMPLETED: Checks grayscale, colorizes image, and updates edited_filename
+[x] 232. Restart PhotoVault Server with new endpoints - COMPLETED: Server running on port 5000 with mobile enhancement endpoints
+[x] 233. DEPLOYMENT NEEDED - Railway must be updated with these endpoints for iOS app to work (changes are local only)
