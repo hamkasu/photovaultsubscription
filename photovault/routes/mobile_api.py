@@ -201,8 +201,8 @@ def get_profile(current_user):
 def get_photos(current_user):
     """Get photos for mobile app gallery with pagination and filtering"""
     try:
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('limit', 20, type=int)
+        page = max(1, request.args.get('page', 1, type=int))
+        per_page = max(1, min(100, request.args.get('limit', 20, type=int)))
         filter_type = request.args.get('filter', 'all')
         
         logger.info(f"Fetching photos for user {current_user.id}, filter: {filter_type}, page: {page}")
