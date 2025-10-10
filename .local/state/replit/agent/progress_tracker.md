@@ -147,3 +147,5 @@
 [x] 147. Final verification - COMPLETED: Both servers running successfully with no critical errors
 [x] 148. Fix iOS gallery empty issue on Railway - COMPLETED: Added filter parameter support and enhanced logging to /api/photos endpoint
 [x] 149. Restart PhotoVault Server with gallery fix - COMPLETED: Server running with improved photo fetching endpoint
+[x] 150. Fix iOS Camera render error - COMPLETED: Replaced CameraType enum with string constants for expo-camera v17+ compatibility
+[x] 151. Restart Expo Server with camera fix - COMPLETED: Camera now uses CAMERA_TYPE.back string constant instead of enum

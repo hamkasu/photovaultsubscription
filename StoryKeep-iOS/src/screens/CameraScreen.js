@@ -8,18 +8,24 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { Camera, CameraType } from 'expo-camera';
+import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { photoAPI } from '../services/api';
 
 const { width, height } = Dimensions.get('window');
 
-// Flash mode constants for expo-camera v15+
+// Flash mode constants for expo-camera v17+
 const FLASH_MODE = {
   off: 'off',
   on: 'on',
   auto: 'auto',
+};
+
+// Camera type constants for expo-camera v17+
+const CAMERA_TYPE = {
+  back: 'back',
+  front: 'front',
 };
 
 export default function CameraScreen({ navigation }) {
@@ -182,7 +188,7 @@ export default function CameraScreen({ navigation }) {
       <Camera
         ref={cameraRef}
         style={styles.camera}
-        type={CameraType.back}
+        type={CAMERA_TYPE.back}
         flashMode={flashMode}
       >
         {showGuides && (
