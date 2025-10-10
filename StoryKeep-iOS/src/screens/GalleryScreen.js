@@ -29,12 +29,31 @@ export default function GalleryScreen({ navigation }) {
 
   const loadPhotos = async () => {
     try {
-      const [response, token] = await Promise.all([
-        photoAPI.getPhotos(filter),
-        AsyncStorage.getItem('authToken'),
-      ]);
-      setPhotos(response.photos || []);
+      const token = await AsyncStorage.getItem('authToken');
       setAuthToken(token);
+      
+      // TEMPORARY FIX: Get image from dashboard since gallery endpoint is broken on Railway
+      const dashboardResponse = await fetch(`${BASE_URL}/api/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const dashboardData = await dashboardResponse.json();
+      
+      // If dashboard has a recent photo, show it in gallery
+      if (dashboardData.recent_photo) {
+        const photo = {
+          id: dashboardData.recent_photo.id,
+          filename: dashboardData.recent_photo.filename,
+          url: dashboardData.recent_photo.original_url,
+          original_url: dashboardData.recent_photo.original_url,
+          edited_url: dashboardData.recent_photo.edited_url,
+          created_at: dashboardData.recent_photo.created_at
+        };
+        setPhotos([photo]);
+      } else {
+        setPhotos([]);
+      }
     } catch (error) {
       console.error('Gallery error:', error);
       Alert.alert('Error', 'Failed to load photos');

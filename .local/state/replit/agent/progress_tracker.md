@@ -206,3 +206,5 @@
     - Expo Server: Running with tunnel at exp://qakercs-anonymous-8081.exp.direct and QR code displayed
 [x] 205. Fix iOS gallery using dashboard pattern - COMPLETED: Updated /api/photos to use exact same URL pattern as dashboard (/uploads/{user_id}/{filename})
 [x] 206. Restart PhotoVault Server with gallery fix - COMPLETED: Server running on port 5000 with simplified gallery endpoint
+[x] 207. Make Gallery fetch from working dashboard endpoint - COMPLETED: Updated GalleryScreen.js to fetch image from /api/dashboard instead of broken /api/photos
+[x] 208. Restart Expo Server with gallery fix - COMPLETED: Server running with tunnel at exp://qakercs-anonymous-8081.exp.direct and QR code displayed
