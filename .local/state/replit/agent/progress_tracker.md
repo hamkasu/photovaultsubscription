@@ -238,3 +238,11 @@
 [x] 234. Expand camera frame for multiple photo detection - COMPLETED: Increased guide frame from 80% to 95% width and 70% height
 [x] 235. Update camera guide text for multiple photos - COMPLETED: Changed to "Align photos within the frame - Multiple photos supported"
 [x] 236. Restart Expo Server with expanded camera frame - COMPLETED: Server running with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code ready
+[x] 237. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 238. Upgrade Node.js to version 22 - COMPLETED: Upgraded from Node.js 20.19.3 to 22.17.0 for better Expo compatibility
+[x] 239. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully with Node.js 22
+[x] 240. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://qurytmy-anonymous-8081.exp.direct and QR code ready
+[x] 241. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized
+    - Expo Server: Running with tunnel at exp://qurytmy-anonymous-8081.exp.direct and QR code displayed
+[x] 242. Import migration completed successfully - ALL SYSTEMS OPERATIONAL
