@@ -214,19 +214,26 @@ def get_photos(current_user):
         if filter_type == 'enhanced':
             query = query.filter(Photo.edited_filename.isnot(None))
         elif filter_type == 'originals':
-            query = query.filter(Photo.edited_filename.is_(None))
+            query = query.filter(Photo.edited_filename == None)
         # 'all' returns everything, no additional filter needed
         
-        # Order by creation date and paginate
-        photos_query = query.order_by(Photo.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        # Order by creation date
+        query = query.order_by(Photo.created_at.desc())
         
-        logger.info(f"Found {photos_query.total} total photos, returning {len(photos_query.items)} items")
+        # Get total count
+        total = query.count()
+        
+        # Manual pagination
+        offset = (page - 1) * per_page
+        photos = query.limit(per_page).offset(offset).all()
+        
+        has_more = (offset + len(photos)) < total
+        
+        logger.info(f"Found {total} total photos, returning {len(photos)} items for page {page}")
         
         # Build photo list with URLs
         photos_list = []
-        for photo in photos_query.items:
+        for photo in photos:
             # Get thumbnail filename from path
             thumbnail_filename = os.path.basename(photo.thumbnail_path) if photo.thumbnail_path else photo.filename
             
@@ -260,8 +267,8 @@ def get_photos(current_user):
             'photos': photos_list,
             'page': page,
             'per_page': per_page,
-            'total': photos_query.total,
-            'has_more': photos_query.has_next
+            'total': total,
+            'has_more': has_more
         }
         
         logger.info(f"Returning {len(photos_list)} photos to mobile app")
