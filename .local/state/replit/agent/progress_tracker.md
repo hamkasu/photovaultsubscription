@@ -279,3 +279,6 @@
     - Command: git push origin main
     - Guide: RAILWAY_IOS_FIXES_DEPLOY.md has complete deployment instructions
     - Expected fix: Vault details will load correctly on iOS app after Railway deploys
+[x] 269. Confirm Railway vault 500 error - COMPLETED: iOS app shows "Request failed with status code 500" from Railway production
+[x] 270. Verify local vs Railway code gap - COMPLETED: Local has VaultPhoto imports and fixes, Railway has old broken code
+[ ] 271. CRITICAL: Deploy to Railway immediately - Railway production is returning 500 errors, blocking all vault functionality on iOS app
