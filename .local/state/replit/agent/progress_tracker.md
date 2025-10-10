@@ -149,3 +149,6 @@
 [x] 149. Restart PhotoVault Server with gallery fix - COMPLETED: Server running with improved photo fetching endpoint
 [x] 150. Fix iOS Camera render error - COMPLETED: Replaced CameraType enum with string constants for expo-camera v17+ compatibility
 [x] 151. Restart Expo Server with camera fix - COMPLETED: Camera now uses CAMERA_TYPE.back string constant instead of enum
+[x] 152. Fix iOS logout failure - COMPLETED: Updated logout to clear both AsyncStorage and SecureStore biometric credentials
+[x] 153. Apply logout fix to both DashboardScreen and SettingsScreen - COMPLETED: Both screens now properly clear all stored credentials
+[x] 154. Restart Expo Server with logout fix - COMPLETED: Logout now fully clears user session and biometric data

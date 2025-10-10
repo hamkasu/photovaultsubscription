@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { dashboardAPI, photoAPI } from '../services/api';
 
 export default function DashboardScreen({ navigation }) {
@@ -60,7 +61,10 @@ export default function DashboardScreen({ navigation }) {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
+            // Clear all storage including biometric credentials
             await AsyncStorage.clear();
+            await SecureStore.deleteItemAsync('userEmail').catch(() => {});
+            await SecureStore.deleteItemAsync('userPassword').catch(() => {});
             // Navigation will be handled automatically by App.js when auth state changes
           },
         },
