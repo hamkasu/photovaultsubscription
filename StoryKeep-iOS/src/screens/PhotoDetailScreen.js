@@ -14,8 +14,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { photoAPI, voiceMemoAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
+const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export default function PhotoDetailScreen({ route, navigation }) {
   const { photo: initialPhoto } = route.params;
@@ -23,10 +25,17 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [showOriginal, setShowOriginal] = useState(true);
   const [aiMetadata, setAIMetadata] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
-    loadAIMetadata();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    const token = await AsyncStorage.getItem('authToken');
+    setAuthToken(token);
+    loadAIMetadata();
+  };
 
   const loadAIMetadata = async () => {
     try {
@@ -93,7 +102,17 @@ export default function PhotoDetailScreen({ route, navigation }) {
     );
   };
 
-  const imageUrl = showOriginal ? photo.url : (photo.edited_url || photo.url);
+  // Use same URL pattern as Dashboard and Gallery
+  const getImageUrl = (urlPath) => {
+    if (!urlPath) return null;
+    if (urlPath.startsWith('http')) return urlPath;
+    if (urlPath.startsWith('/')) return `${BASE_URL}${urlPath}`;
+    return urlPath;
+  };
+
+  const originalImageUrl = getImageUrl(photo.original_url || photo.url);
+  const editedImageUrl = getImageUrl(photo.edited_url);
+  const imageUrl = showOriginal ? originalImageUrl : (editedImageUrl || originalImageUrl);
 
   return (
     <View style={styles.container}>
@@ -108,7 +127,21 @@ export default function PhotoDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView>
-        <Image source={{ uri: imageUrl }} style={styles.image} />
+        {imageUrl && authToken ? (
+          <Image 
+            source={{ 
+              uri: imageUrl,
+              headers: {
+                Authorization: `Bearer ${authToken}`
+              }
+            }} 
+            style={styles.image} 
+          />
+        ) : (
+          <View style={styles.image}>
+            <ActivityIndicator size="large" color="#E85D75" />
+          </View>
+        )}
 
         {photo.edited_url && (
           <View style={styles.toggleContainer}>
@@ -249,6 +282,8 @@ const styles = StyleSheet.create({
     width: width,
     height: width,
     backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   toggleContainer: {
     flexDirection: 'row',

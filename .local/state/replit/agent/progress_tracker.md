@@ -214,3 +214,7 @@
 [x] 212. Add pagination to gallery - COMPLETED: Limited to 20 photos per page with navigation controls
 [x] 213. Add navigation arrows - COMPLETED: First, Previous, Next, Last buttons with page counter (Page X of Y)
 [x] 214. Restart Expo Server with pagination - COMPLETED: Server running with tunnel at exp://qakercs-anonymous-8081.exp.direct
+[x] 215. Fix PhotoDetail blank image bug - COMPLETED: Updated PhotoDetailScreen to use same URL pattern as Dashboard (BASE_URL + original_url + Bearer token)
+[x] 216. Add auth token to PhotoDetail - COMPLETED: Added AsyncStorage to load authToken and pass in Authorization header
+[x] 217. Add loading indicator - COMPLETED: Shows ActivityIndicator while image loads in PhotoDetail
+[x] 218. Restart Expo Server with PhotoDetail fix - COMPLETED: Server running with tunnel at exp://qakercs-anonymous-8081.exp.direct
