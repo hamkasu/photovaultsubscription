@@ -727,6 +727,131 @@ def get_vault_detail(current_user, vault_id):
             'error_type': type(e).__name__
         }), 500
 
+@mobile_api_bp.route('/family/vault/<int:vault_id>/add-photo', methods=['POST'])
+@csrf.exempt
+@token_required
+def add_photo_to_vault(current_user, vault_id):
+    """Add a photo to family vault - Mobile API"""
+    try:
+        logger.info(f"📸 ADD PHOTO TO VAULT REQUEST: vault_id={vault_id}, user_id={current_user.id}")
+        
+        # Get request data
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        photo_id = data.get('photo_id')
+        caption = data.get('caption', '')
+        
+        if not photo_id:
+            return jsonify({
+                'success': False,
+                'error': 'photo_id is required'
+            }), 400
+        
+        logger.info(f"📋 Data: photo_id={photo_id}, caption={caption}")
+        
+        # Step 1: Verify vault exists and user has access
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            logger.error(f"❌ VAULT NOT FOUND: vault_id={vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Vault not found'
+            }), 404
+        
+        # Check access (creator or active member)
+        is_creator = vault.created_by == current_user.id
+        is_member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first() is not None
+        
+        has_access = is_creator or is_member
+        
+        if not has_access:
+            logger.error(f"❌ ACCESS DENIED: user {current_user.id} cannot add photos to vault {vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'You do not have permission to add photos to this vault'
+            }), 403
+        
+        logger.info(f"✅ ACCESS GRANTED: is_creator={is_creator}, is_member={is_member}")
+        
+        # Step 2: Verify photo exists and belongs to user
+        photo = Photo.query.get(photo_id)
+        if not photo:
+            logger.error(f"❌ PHOTO NOT FOUND: photo_id={photo_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Photo not found'
+            }), 404
+        
+        if photo.user_id != current_user.id:
+            logger.error(f"❌ PHOTO OWNERSHIP ERROR: photo {photo_id} belongs to user {photo.user_id}, not {current_user.id}")
+            return jsonify({
+                'success': False,
+                'error': 'You can only add your own photos to vaults'
+            }), 403
+        
+        logger.info(f"✅ PHOTO VERIFIED: id={photo.id}, filename={photo.filename}")
+        
+        # Step 3: Check if photo already in vault
+        existing = VaultPhoto.query.filter_by(
+            vault_id=vault_id,
+            photo_id=photo_id
+        ).first()
+        
+        if existing:
+            logger.warning(f"⚠️ PHOTO ALREADY IN VAULT: vault_id={vault_id}, photo_id={photo_id}")
+            return jsonify({
+                'success': True,
+                'message': 'Photo is already in this vault',
+                'vault_photo_id': existing.id
+            }), 200
+        
+        # Step 4: Add photo to vault
+        vault_photo = VaultPhoto()
+        vault_photo.vault_id = vault_id
+        vault_photo.photo_id = photo_id
+        vault_photo.shared_by = current_user.id
+        vault_photo.shared_at = datetime.utcnow()
+        vault_photo.caption = caption
+        
+        db.session.add(vault_photo)
+        db.session.commit()
+        
+        logger.info(f"✅ PHOTO ADDED TO VAULT: vault_photo_id={vault_photo.id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo added to vault successfully',
+            'vault_photo': {
+                'id': vault_photo.id,
+                'vault_id': vault_id,
+                'photo_id': photo_id,
+                'caption': caption,
+                'shared_at': vault_photo.shared_at.isoformat()
+            }
+        }), 201
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 ADD PHOTO TO VAULT ERROR: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        db.session.rollback()
+        
+        return jsonify({
+            'success': False,
+            'error': f'Failed to add photo to vault: {str(e)}',
+            'error_type': type(e).__name__
+        }), 500
+
 @mobile_api_bp.route('/photos/<int:photo_id>/enhance', methods=['POST'])
 @csrf.exempt
 @token_required

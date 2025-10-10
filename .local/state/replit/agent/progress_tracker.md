@@ -291,3 +291,13 @@
     - The rewritten code will handle VaultPhoto import issues gracefully
     - Better error messages will help diagnose Railway-specific issues
     - Command: git add photovault/routes/mobile_api.py && git commit -m "Rewrite vault endpoint with robust error handling" && git push origin main
+[x] 278. Vault works on iOS Railway - COMPLETED: User confirmed vault is now working after deployment or graceful error handling
+[x] 279. Identify new issue - add photos to vault - COMPLETED: iOS app's addPhotoToVault feature does not work on Railway
+[x] 280. Diagnose missing endpoint - COMPLETED: /api/family/vault/<vault_id>/add-photo endpoint does not exist in mobile_api.py
+[x] 281. Create add photo to vault endpoint - COMPLETED: Built comprehensive endpoint with JWT auth, access checks, and validation
+[x] 282. Add permission validation - COMPLETED: Checks vault access (creator or active member), photo ownership, duplicate detection
+[x] 283. Add comprehensive logging - COMPLETED: Emoji debug logs (📸 REQUEST, ✅ SUCCESS, ❌ ERROR, ⚠️ WARNING, 💥 FATAL)
+[x] 284. Fix VaultPhoto constructor LSP error - COMPLETED: Changed to property assignment instead of constructor arguments
+[x] 285. Restart PhotoVault Server with add photo endpoint - COMPLETED: Server running successfully on port 5000
+[ ] 286. DEPLOY TO RAILWAY - Add photo to vault endpoint is local only, Railway needs this new endpoint
+    - Command: git add photovault/routes/mobile_api.py && git commit -m "Add photo to vault endpoint for iOS app" && git push origin main
