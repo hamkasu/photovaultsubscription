@@ -386,44 +386,95 @@ def detect_and_extract_photos(current_user):
     """Detect and extract photos from uploaded image (digitizer functionality)"""
     try:
         from photovault.utils.photo_detection import PhotoDetector
+        from photovault.utils.file_handler import validate_image_file, generate_unique_filename
         
-        logger.info(f"Photo detection request from user: {current_user.id}")
+        logger.info(f"🎯 Photo detection request from user: {current_user.id}")
         
-        # Check if request has JSON data
-        if not request.json:
-            return jsonify({'error': 'Invalid request format, JSON expected'}), 400
+        # Check if file was uploaded
+        if 'image' not in request.files:
+            logger.error("❌ No image file in request")
+            return jsonify({'error': 'No image file provided'}), 400
         
-        # Check if photo_id was provided
-        if 'photo_id' not in request.json:
-            return jsonify({'error': 'No photo_id provided'}), 400
+        file = request.files['image']
         
-        photo_id = request.json['photo_id']
+        if not file or not file.filename:
+            logger.error("❌ Empty file")
+            return jsonify({'error': 'No file selected'}), 400
         
-        # Get the original photo
-        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
-        if not photo:
-            return jsonify({'error': 'Photo not found'}), 404
+        logger.info(f"📁 Processing uploaded file: {file.filename}")
+        
+        # Validate file
+        is_valid, validation_msg = validate_image_file(file)
+        if not is_valid:
+            logger.error(f"❌ Invalid file: {validation_msg}")
+            return jsonify({'error': f'Invalid file: {validation_msg}'}), 400
+        
+        # Generate unique filename
+        unique_filename = generate_unique_filename(
+            file.filename,
+            prefix='digitizer',
+            username=current_user.username
+        )
+        
+        # Save uploaded file
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        user_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        source_path = os.path.join(user_folder, unique_filename)
+        file.save(source_path)
+        
+        logger.info(f"💾 Saved source image to: {source_path}")
         
         # Initialize detector
         detector = PhotoDetector()
         
         # Detect photos in the image
-        detected = detector.detect_photos(photo.file_path)
+        detected = detector.detect_photos(source_path)
         
         if not detected or len(detected) == 0:
+            logger.info("ℹ️ No photos detected in image")
+            # Still save the original image
+            file_size = os.path.getsize(source_path)
+            
+            # Create thumbnail
+            thumbnail_filename = f"thumb_{unique_filename}"
+            thumbnail_path = os.path.join(user_folder, thumbnail_filename)
+            try:
+                img = Image.open(source_path)
+                img.thumbnail((300, 300))
+                img.save(thumbnail_path)
+            except Exception as e:
+                logger.error(f"Thumbnail creation failed: {e}")
+                thumbnail_path = source_path
+            
+            # Save as regular photo
+            photo = Photo()
+            photo.user_id = current_user.id
+            photo.filename = unique_filename
+            photo.original_name = file.filename
+            photo.file_path = source_path
+            photo.thumbnail_path = thumbnail_path
+            photo.file_size = file_size
+            photo.upload_source = 'digitizer'
+            
+            db.session.add(photo)
+            db.session.commit()
+            
             return jsonify({
                 'success': True,
-                'message': 'No photos detected',
-                'extracted_photos': []
-            })
+                'message': 'No photos detected - saved as single image',
+                'photos_extracted': 0,
+                'photo': {
+                    'id': photo.id,
+                    'filename': photo.filename
+                }
+            }), 200
         
-        # Extract detected photos using the extract_photos method
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-        user_folder = os.path.join(upload_folder, str(current_user.id))
-        os.makedirs(user_folder, exist_ok=True)
+        logger.info(f"✅ Detected {len(detected)} photos in image")
         
-        # Use the extract_photos method which handles all extractions at once
-        extracted_files = detector.extract_photos(photo.file_path, user_folder, detected)
+        # Extract detected photos
+        extracted_files = detector.extract_photos(source_path, user_folder, detected)
         
         extracted_photos = []
         
@@ -445,11 +496,11 @@ def detect_and_extract_photos(current_user):
                 # Get file size
                 extracted_size = os.path.getsize(extracted_path)
                 
-                # Create new photo record following the correct pattern
+                # Create new photo record
                 extracted_photo = Photo()
                 extracted_photo.user_id = current_user.id
                 extracted_photo.filename = os.path.basename(extracted_path)
-                extracted_photo.original_name = f"extracted_{i}_from_{photo.original_name}"
+                extracted_photo.original_name = f"extracted_{i+1}_from_{file.filename}"
                 extracted_photo.file_path = extracted_path
                 extracted_photo.thumbnail_path = thumbnail_path
                 extracted_photo.file_size = extracted_size
@@ -461,34 +512,39 @@ def detect_and_extract_photos(current_user):
                 extracted_photos.append({
                     'id': extracted_photo.id,
                     'filename': extracted_photo.filename,
-                    'confidence': extracted_file.get('confidence', 0),
-                    'url': url_for('gallery.uploaded_file',
-                                 user_id=current_user.id,
-                                 filename=extracted_photo.filename,
-                                 _external=True),
-                    'thumbnail_url': url_for('gallery.uploaded_file',
-                                           user_id=current_user.id,
-                                           filename=thumbnail_filename,
-                                           _external=True)
+                    'confidence': extracted_file.get('confidence', 0)
                 })
                 
+                logger.info(f"✅ Extracted photo {i+1}: {extracted_photo.filename}")
+                
             except Exception as extract_error:
-                logger.error(f"Error processing extracted photo {i}: {extract_error}")
+                logger.error(f"❌ Error processing extracted photo {i}: {extract_error}")
                 continue
         
-        logger.info(f"Extracted {len(extracted_photos)} photos from image {photo_id}")
+        # Clean up source file after successful extraction
+        try:
+            if os.path.exists(source_path):
+                os.remove(source_path)
+                logger.info(f"🗑️ Cleaned up source file: {source_path}")
+        except Exception as e:
+            logger.error(f"Failed to clean up source file: {e}")
+        
+        logger.info(f"🎉 Successfully extracted {len(extracted_photos)} photos")
         
         return jsonify({
             'success': True,
             'message': f'Successfully extracted {len(extracted_photos)} photos',
+            'photos_extracted': len(extracted_photos),
             'total_detected': len(detected),
             'extracted_photos': extracted_photos
         }), 200
         
     except Exception as e:
-        logger.error(f"Photo detection error: {str(e)}")
+        logger.error(f"❌ Photo detection error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         db.session.rollback()
-        return jsonify({'error': 'Photo detection failed'}), 500
+        return jsonify({'error': f'Photo detection failed: {str(e)}'}), 500
 
 @mobile_api_bp.route('/family/vaults', methods=['GET'])
 @token_required

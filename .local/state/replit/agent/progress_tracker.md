@@ -246,3 +246,9 @@
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel at exp://qurytmy-anonymous-8081.exp.direct and QR code displayed
 [x] 242. Import migration completed successfully - ALL SYSTEMS OPERATIONAL
+[x] 243. Fix iOS camera upload error - COMPLETED: Rewrote /api/detect-and-extract to accept file uploads instead of photo_id
+[x] 244. Update endpoint to handle multipart/form-data - COMPLETED: Accepts 'image' file, validates, saves, detects, and extracts photos
+[x] 245. Add fallback for no-detection case - COMPLETED: Saves as single image when no photos detected
+[x] 246. Architect review of camera fix - COMPLETED: Approved - endpoint correctly handles iOS uploads and matches client expectations
+[x] 247. Restart PhotoVault Server with camera fix - COMPLETED: Server running successfully on port 5000
+[x] 248. DEPLOYMENT NEEDED - Railway must be updated with camera fix for iOS app to work (changes are local only)
