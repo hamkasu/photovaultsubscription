@@ -170,3 +170,7 @@
 [x] 170. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
 [x] 171. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://2nchth8-anonymous-8081.exp.direct and QR code ready
 [x] 172. Final verification - COMPLETED: Both servers running successfully with no critical errors
+[x] 173. Diagnose iOS gallery 0 photos on Railway - COMPLETED: Confirmed same table used for dashboard (46 photos) and gallery
+[x] 174. Identify deployment gap - COMPLETED: Local Replit has SQLAlchemy 2.0 fixes, Railway production still has old broken code
+[x] 175. Create deployment guide - COMPLETED: Created RAILWAY_GALLERY_FIX.md with push instructions for user
+[x] 176. Explain root cause to user - COMPLETED: Dashboard works (.count), gallery fails (.paginate deprecated), needs Railway deployment
