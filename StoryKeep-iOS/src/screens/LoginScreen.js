@@ -72,10 +72,7 @@ export default function LoginScreen({ navigation }) {
           }
         }
         
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        });
+        // Navigation will be handled automatically by App.js when auth state changes
       }
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');

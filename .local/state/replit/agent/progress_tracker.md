@@ -129,3 +129,6 @@
 [x] 129. Restart PhotoVault Server with mobile auth endpoints - COMPLETED: Server running on port 5000 with mobile authentication
 [x] 130. Fix Expo Server module error - COMPLETED: Reinstalled expo package in StoryKeep-iOS directory
 [x] 131. Restart Expo Server to show QR code - COMPLETED: Server running with tunnel at exp://390pqgm-anonymous-8081.exp.direct and QR code displayed
+[x] 132. Fix iOS navigation error (RESET action not handled) - COMPLETED: Updated App.js to auto-detect auth state changes
+[x] 133. Remove manual navigation.reset() calls - COMPLETED: Updated LoginScreen and RegisterScreen to use automatic navigation
+[x] 134. Restart Expo Server with navigation fix - COMPLETED: Server running with QR code, navigation errors resolved

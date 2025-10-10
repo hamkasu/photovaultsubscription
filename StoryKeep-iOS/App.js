@@ -61,12 +61,19 @@ export default function App() {
 
   useEffect(() => {
     checkAuthStatus();
+    
+    // Listen for storage changes
+    const interval = setInterval(checkAuthStatus, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const checkAuthStatus = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
-      setIsAuthenticated(!!token);
+      const newAuthState = !!token;
+      if (newAuthState !== isAuthenticated) {
+        setIsAuthenticated(newAuthState);
+      }
     } catch (error) {
       console.error('Error checking auth status:', error);
     } finally {

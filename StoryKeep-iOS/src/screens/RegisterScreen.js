@@ -45,15 +45,8 @@ export default function RegisterScreen({ navigation }) {
         await AsyncStorage.setItem('authToken', response.token);
         await AsyncStorage.setItem('userData', JSON.stringify(response.user));
         
-        Alert.alert('Success', 'Account created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.reset({
-              index: 0,
-              routes: [{ name: 'Main' }],
-            }),
-          },
-        ]);
+        Alert.alert('Success', 'Account created successfully!');
+        // Navigation will be handled automatically by App.js when auth state changes
       }
     } catch (error) {
       Alert.alert('Registration Failed', error.response?.data?.message || 'Please try again');
