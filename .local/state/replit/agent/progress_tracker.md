@@ -152,3 +152,7 @@
 [x] 152. Fix iOS logout failure - COMPLETED: Updated logout to clear both AsyncStorage and SecureStore biometric credentials
 [x] 153. Apply logout fix to both DashboardScreen and SettingsScreen - COMPLETED: Both screens now properly clear all stored credentials
 [x] 154. Restart Expo Server with logout fix - COMPLETED: Logout now fully clears user session and biometric data
+[x] 155. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 156. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
+[x] 157. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel and Metro bundler running
+[x] 158. Final verification - COMPLETED: Both servers running successfully with no critical errors
