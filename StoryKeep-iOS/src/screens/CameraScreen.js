@@ -8,16 +8,23 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { Camera, CameraType, FlashMode } from 'expo-camera';
+import { Camera, CameraType } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { photoAPI } from '../services/api';
 
 const { width, height } = Dimensions.get('window');
 
+// Flash mode constants for expo-camera v15+
+const FLASH_MODE = {
+  off: 'off',
+  on: 'on',
+  auto: 'auto',
+};
+
 export default function CameraScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
-  const [flashMode, setFlashMode] = useState(FlashMode.off);
+  const [flashMode, setFlashMode] = useState(FLASH_MODE.off);
   const [batchMode, setBatchMode] = useState(false);
   const [capturedPhotos, setCapturedPhotos] = useState([]);
   const [processing, setProcessing] = useState(false);
@@ -33,17 +40,17 @@ export default function CameraScreen({ navigation }) {
 
   const toggleFlash = () => {
     setFlashMode((current) =>
-      current === FlashMode.off
-        ? FlashMode.on
-        : current === FlashMode.on
-        ? FlashMode.auto
-        : FlashMode.off
+      current === FLASH_MODE.off
+        ? FLASH_MODE.on
+        : current === FLASH_MODE.on
+        ? FLASH_MODE.auto
+        : FLASH_MODE.off
     );
   };
 
   const getFlashIcon = () => {
-    if (flashMode === FlashMode.off) return 'flash-off';
-    if (flashMode === FlashMode.on) return 'flash';
+    if (flashMode === FLASH_MODE.off) return 'flash-off';
+    if (flashMode === FLASH_MODE.on) return 'flash';
     return 'flash-outline';
   };
 
