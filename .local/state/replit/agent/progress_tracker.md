@@ -124,3 +124,6 @@
 [x] 124. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
 [x] 125. Restart PhotoVault Server workflow - COMPLETED: Server running successfully on port 5000 with database initialized
 [x] 126. Final verification - COMPLETED: PhotoVault Server on port 5000, Expo Server running with Metro bundler
+[x] 127. Fix iOS login issue - COMPLETED: Added /api/auth/login and /api/auth/register endpoints to mobile_api.py
+[x] 128. Fix User model initialization error - COMPLETED: Updated to use property assignment instead of constructor
+[x] 129. Restart PhotoVault Server with mobile auth endpoints - COMPLETED: Server running on port 5000 with mobile authentication

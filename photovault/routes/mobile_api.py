@@ -2,15 +2,18 @@
 Mobile API Routes for StoryKeep iOS/Android App
 """
 from flask import Blueprint, jsonify, request, current_app, url_for
-from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember
+from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User
 from photovault.extensions import db, csrf
 from photovault.utils.jwt_auth import token_required
 from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash, generate_password_hash
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image
 import logging
+import jwt
+import re
 
 logger = logging.getLogger(__name__)
 mobile_api_bp = Blueprint('mobile_api', __name__, url_prefix='/api')
@@ -20,6 +23,129 @@ MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_email(email):
+    """Validate email format"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+@mobile_api_bp.route('/auth/login', methods=['POST'])
+@csrf.exempt
+def mobile_login():
+    """Mobile app login endpoint"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Support both email and username for login
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
+        
+        # Find user by email or username
+        user = User.query.filter(
+            (User.email == email) | (User.username == email)
+        ).first()
+        
+        if not user or not check_password_hash(user.password_hash, password):
+            logger.warning(f"Failed login attempt for: {email}")
+            return jsonify({'error': 'Invalid email or password'}), 401
+        
+        # Generate JWT token
+        token = jwt.encode({
+            'user_id': user.id,
+            'username': user.username,
+            'exp': datetime.utcnow() + timedelta(days=30)
+        }, current_app.config['SECRET_KEY'], algorithm='HS256')
+        
+        logger.info(f"Successful mobile login for user: {user.username}")
+        
+        return jsonify({
+            'success': True,
+            'token': token,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Mobile login error: {str(e)}")
+        return jsonify({'error': 'An error occurred during login'}), 500
+
+@mobile_api_bp.route('/auth/register', methods=['POST'])
+@csrf.exempt
+def mobile_register():
+    """Mobile app registration endpoint"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        
+        # Validation
+        if not username or not email or not password:
+            return jsonify({'error': 'Username, email, and password are required'}), 400
+        
+        if len(username) < 3:
+            return jsonify({'error': 'Username must be at least 3 characters long'}), 400
+        
+        if not validate_email(email):
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        if len(password) < 8:
+            return jsonify({'error': 'Password must be at least 8 characters long'}), 400
+        
+        # Check if user already exists
+        existing_user = User.query.filter(
+            (User.username == username) | (User.email == email)
+        ).first()
+        
+        if existing_user:
+            if existing_user.username == username:
+                return jsonify({'error': 'Username already exists'}), 400
+            else:
+                return jsonify({'error': 'Email already registered'}), 400
+        
+        # Create new user
+        new_user = User()
+        new_user.username = username
+        new_user.email = email
+        new_user.password_hash = generate_password_hash(password)
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # Generate JWT token
+        token = jwt.encode({
+            'user_id': new_user.id,
+            'username': new_user.username,
+            'exp': datetime.utcnow() + timedelta(days=30)
+        }, current_app.config['SECRET_KEY'], algorithm='HS256')
+        
+        logger.info(f"New mobile user registered: {username}")
+        
+        return jsonify({
+            'success': True,
+            'token': token,
+            'user': {
+                'id': new_user.id,
+                'username': new_user.username,
+                'email': new_user.email
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Mobile registration error: {str(e)}")
+        return jsonify({'error': 'An error occurred during registration'}), 500
 
 @mobile_api_bp.route('/dashboard', methods=['GET'])
 @token_required
