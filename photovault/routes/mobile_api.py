@@ -169,12 +169,29 @@ def get_dashboard(current_user):
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         subscription_plan = user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
         
+        # DIAGNOSTIC: Get one recent photo to test serialization
+        recent_photo = None
+        if photos:
+            # Get the most recent photo
+            sorted_photos = sorted(photos, key=lambda p: p.created_at if p.created_at else datetime.min, reverse=True)
+            if sorted_photos:
+                photo = sorted_photos[0]
+                recent_photo = {
+                    'id': photo.id,
+                    'filename': photo.filename,
+                    'original_url': f'/uploads/{photo.filename}' if photo.filename else None,
+                    'edited_url': f'/uploads/{photo.edited_filename}' if photo.edited_filename else None,
+                    'created_at': photo.created_at.isoformat() if photo.created_at else None
+                }
+        
         return jsonify({
             'total_photos': total_photos,
             'enhanced_photos': enhanced_photos,
             'albums': 0,  # TODO: Implement albums
             'storage_used': total_size_mb,  # Return as number, not string
-            'subscription_plan': subscription_plan
+            'subscription_plan': subscription_plan,
+            'recent_photo': recent_photo,  # DIAGNOSTIC
+            'debug_photos_count': len(photos)  # DIAGNOSTIC
         })
     except Exception as e:
         logger.error(f"Dashboard error: {str(e)}")

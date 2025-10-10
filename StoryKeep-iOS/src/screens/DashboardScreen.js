@@ -167,6 +167,23 @@ export default function DashboardScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* DIAGNOSTIC SECTION */}
+      {stats?.recent_photo && (
+        <View style={styles.diagnosticSection}>
+          <Text style={styles.sectionTitle}>🔍 Diagnostic Info</Text>
+          <Text style={styles.diagnosticText}>Debug Photos Count: {stats?.debug_photos_count || 0}</Text>
+          <Text style={styles.diagnosticText}>Recent Photo ID: {stats.recent_photo.id}</Text>
+          <Text style={styles.diagnosticText}>Filename: {stats.recent_photo.filename}</Text>
+          {stats.recent_photo.original_url && (
+            <Image
+              source={{ uri: `https://web-production-535bd.up.railway.app${stats.recent_photo.original_url}` }}
+              style={styles.diagnosticImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      )}
+
       {recentPhotos.length > 0 && (
         <View style={styles.recentSection}>
           <Text style={styles.sectionTitle}>Recent Photos</Text>
@@ -292,6 +309,25 @@ const styles = StyleSheet.create({
   },
   actionButtonTextSecondary: {
     color: '#E85D75',
+  },
+  diagnosticSection: {
+    padding: 20,
+    backgroundColor: '#FFF9E6',
+    margin: 15,
+    borderRadius: 10,
+  },
+  diagnosticText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    fontFamily: 'monospace',
+  },
+  diagnosticImage: {
+    width: '100%',
+    height: 200,
+    marginTop: 10,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
   },
   recentSection: {
     padding: 20,
