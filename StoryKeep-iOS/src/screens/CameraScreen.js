@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { photoAPI } from '../services/api';
@@ -29,20 +29,13 @@ const CAMERA_TYPE = {
 };
 
 export default function CameraScreen({ navigation }) {
-  const [hasPermission, setHasPermission] = useState(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [flashMode, setFlashMode] = useState(FLASH_MODE.off);
   const [batchMode, setBatchMode] = useState(false);
   const [capturedPhotos, setCapturedPhotos] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [showGuides, setShowGuides] = useState(true);
   const cameraRef = useRef(null);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
 
   const toggleFlash = () => {
     setFlashMode((current) =>
@@ -165,17 +158,17 @@ export default function CameraScreen({ navigation }) {
     }
   };
 
-  if (hasPermission === null) {
+  if (!permission) {
     return <View style={styles.container} />;
   }
 
-  if (hasPermission === false) {
+  if (!permission.granted) {
     return (
       <View style={styles.container}>
         <Text style={styles.permissionText}>No access to camera</Text>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => Camera.requestCameraPermissionsAsync()}
+          onPress={requestPermission}
         >
           <Text style={styles.buttonText}>Grant Permission</Text>
         </TouchableOpacity>
@@ -185,11 +178,11 @@ export default function CameraScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Camera
+      <CameraView
         ref={cameraRef}
         style={styles.camera}
-        type={CAMERA_TYPE.back}
-        flashMode={flashMode}
+        facing={CAMERA_TYPE.back}
+        flash={flashMode}
       >
         {showGuides && (
           <View style={styles.guides}>
@@ -275,7 +268,7 @@ export default function CameraScreen({ navigation }) {
             <View style={styles.placeholder} />
           )}
         </View>
-      </Camera>
+      </CameraView>
     </View>
   );
 }
