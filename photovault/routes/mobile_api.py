@@ -199,42 +199,73 @@ def get_profile(current_user):
 @mobile_api_bp.route('/photos', methods=['GET'])
 @token_required
 def get_photos(current_user):
-    """Get photos for mobile app gallery with pagination and filtering"""
+    """Get photos for mobile app gallery - REWRITTEN WITH DEBUG LOGGING"""
+    logger.info("="*80)
+    logger.info(f"📸 GALLERY API CALLED - User: {current_user.username} (ID: {current_user.id})")
+    logger.info("="*80)
+    
     try:
+        # Parse parameters
         page = max(1, request.args.get('page', 1, type=int))
         per_page = max(1, min(100, request.args.get('limit', 20, type=int)))
         filter_type = request.args.get('filter', 'all')
         
-        logger.info(f"Fetching photos for user {current_user.id}, filter: {filter_type}, page: {page}")
+        logger.info(f"📋 Request params: page={page}, per_page={per_page}, filter={filter_type}")
         
-        # Start with base query
-        query = Photo.query.filter_by(user_id=current_user.id)
+        # Query all photos for this user (simplified - no filter first)
+        logger.info(f"🔍 Querying Photo table for user_id={current_user.id}")
         
-        # Apply filter
+        all_photos = Photo.query.filter_by(user_id=current_user.id).all()
+        logger.info(f"📊 Total photos in database for user: {len(all_photos)}")
+        
+        if len(all_photos) == 0:
+            logger.warning(f"⚠️  NO PHOTOS FOUND for user {current_user.id}")
+            logger.info(f"🔍 Debug: Checking if ANY photos exist in database...")
+            total_photos_all_users = Photo.query.count()
+            logger.info(f"📊 Total photos in entire database: {total_photos_all_users}")
+            
+            return jsonify({
+                'success': True,
+                'photos': [],
+                'page': page,
+                'per_page': per_page,
+                'total': 0,
+                'has_more': False,
+                'debug': {
+                    'user_id': current_user.id,
+                    'username': current_user.username,
+                    'total_photos_all_users': total_photos_all_users,
+                    'message': 'No photos found for this user'
+                }
+            })
+        
+        # Apply filter if needed
+        filtered_photos = all_photos
         if filter_type == 'enhanced':
-            query = query.filter(Photo.edited_filename.isnot(None))
+            filtered_photos = [p for p in all_photos if p.edited_filename is not None]
+            logger.info(f"🎨 Filter 'enhanced': {len(filtered_photos)} photos")
         elif filter_type == 'originals':
-            query = query.filter(Photo.edited_filename == None)
-        # 'all' returns everything, no additional filter needed
+            filtered_photos = [p for p in all_photos if p.edited_filename is None]
+            logger.info(f"📷 Filter 'originals': {len(filtered_photos)} photos")
+        else:
+            logger.info(f"📁 Filter 'all': {len(filtered_photos)} photos")
         
-        # Order by creation date
-        query = query.order_by(Photo.created_at.desc())
-        
-        # Get total count
-        total = query.count()
+        # Sort by creation date (newest first)
+        filtered_photos.sort(key=lambda x: x.created_at if x.created_at else datetime.min, reverse=True)
         
         # Manual pagination
+        total = len(filtered_photos)
         offset = (page - 1) * per_page
-        photos = query.limit(per_page).offset(offset).all()
+        paginated_photos = filtered_photos[offset:offset + per_page]
+        has_more = (offset + len(paginated_photos)) < total
         
-        has_more = (offset + len(photos)) < total
+        logger.info(f"📄 Pagination: showing {len(paginated_photos)} photos (offset={offset}, total={total})")
         
-        logger.info(f"Found {total} total photos, returning {len(photos)} items for page {page}")
-        
-        # Build photo list with URLs
+        # Build photo list
         photos_list = []
-        for photo in photos:
-            # Get thumbnail filename from path
+        for idx, photo in enumerate(paginated_photos):
+            logger.info(f"  📸 Photo {idx+1}: id={photo.id}, filename={photo.filename}")
+            
             thumbnail_filename = os.path.basename(photo.thumbnail_path) if photo.thumbnail_path else photo.filename
             
             photo_data = {
@@ -253,7 +284,6 @@ def get_photos(current_user):
                 'has_edited': photo.edited_filename is not None
             }
             
-            # Include edited version if available
             if photo.edited_filename:
                 photo_data['edited_url'] = url_for('gallery.uploaded_file',
                                                   user_id=current_user.id,
@@ -271,13 +301,24 @@ def get_photos(current_user):
             'has_more': has_more
         }
         
-        logger.info(f"Returning {len(photos_list)} photos to mobile app")
+        logger.info(f"✅ SUCCESS: Returning {len(photos_list)} photos to mobile app")
+        logger.info("="*80)
         
         return jsonify(response_data)
         
     except Exception as e:
-        logger.error(f"Error fetching photos for user {current_user.id}: {str(e)}", exc_info=True)
-        return jsonify({'error': str(e), 'success': False}), 500
+        logger.error(f"❌ GALLERY ERROR: {str(e)}", exc_info=True)
+        logger.error(f"❌ Error type: {type(e).__name__}")
+        logger.error(f"❌ User ID: {current_user.id}")
+        logger.error("="*80)
+        return jsonify({
+            'error': str(e), 
+            'success': False,
+            'debug': {
+                'error_type': type(e).__name__,
+                'user_id': current_user.id
+            }
+        }), 500
 
 @mobile_api_bp.route('/upload', methods=['POST'])
 @csrf.exempt
