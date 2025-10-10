@@ -218,3 +218,9 @@
 [x] 216. Add auth token to PhotoDetail - COMPLETED: Added AsyncStorage to load authToken and pass in Authorization header
 [x] 217. Add loading indicator - COMPLETED: Shows ActivityIndicator while image loads in PhotoDetail
 [x] 218. Restart Expo Server with PhotoDetail fix - COMPLETED: Server running with tunnel at exp://qakercs-anonymous-8081.exp.direct
+[x] 219. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 220. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
+[x] 221. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code ready
+[x] 222. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized and subscription plans updated
+    - Expo Server: Running with tunnel at exp://z6tzfxs-anonymous-8081.exp.direct and QR code displayed for testing
