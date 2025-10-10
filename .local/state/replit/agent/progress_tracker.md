@@ -127,3 +127,5 @@
 [x] 127. Fix iOS login issue - COMPLETED: Added /api/auth/login and /api/auth/register endpoints to mobile_api.py
 [x] 128. Fix User model initialization error - COMPLETED: Updated to use property assignment instead of constructor
 [x] 129. Restart PhotoVault Server with mobile auth endpoints - COMPLETED: Server running on port 5000 with mobile authentication
+[x] 130. Fix Expo Server module error - COMPLETED: Reinstalled expo package in StoryKeep-iOS directory
+[x] 131. Restart Expo Server to show QR code - COMPLETED: Server running with tunnel at exp://390pqgm-anonymous-8081.exp.direct and QR code displayed
