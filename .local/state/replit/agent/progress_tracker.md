@@ -166,3 +166,7 @@
 [x] 166. Add input validation to prevent negative offsets - COMPLETED: Added max(1, page) and capped per_page at 100
 [x] 167. Architect review of gallery fix - COMPLETED: Approved with input validation improvements applied
 [x] 168. Restart PhotoVault Server with gallery fix - COMPLETED: Server running with fixed pagination on local Replit
+[x] 169. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies (Flask and all requirements.txt packages)
+[x] 170. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
+[x] 171. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://2nchth8-anonymous-8081.exp.direct and QR code ready
+[x] 172. Final verification - COMPLETED: Both servers running successfully with no critical errors
