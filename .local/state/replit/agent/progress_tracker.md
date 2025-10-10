@@ -190,3 +190,5 @@
 [x] 190. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
 [x] 191. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://ljqf_ek-anonymous-8081.exp.direct and QR code ready
 [x] 192. Final verification - COMPLETED: Both servers running successfully with no critical errors
+[x] 193. Remove Gallery button from iOS app - COMPLETED: Removed Gallery tab from bottom navigation and GalleryScreen import
+[x] 194. Restart Expo Server with Gallery removal - COMPLETED: Server running with tunnel at exp://ljqf_ek-anonymous-8081.exp.direct and QR code ready

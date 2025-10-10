@@ -9,7 +9,6 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import CameraScreen from './src/screens/CameraScreen';
-import GalleryScreen from './src/screens/GalleryScreen';
 import PhotoDetailScreen from './src/screens/PhotoDetailScreen';
 import FamilyVaultsScreen from './src/screens/FamilyVaultsScreen';
 import VaultDetailScreen from './src/screens/VaultDetailScreen';
@@ -31,8 +30,6 @@ function MainTabs() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Camera') {
             iconName = focused ? 'camera' : 'camera-outline';
-          } else if (route.name === 'Gallery') {
-            iconName = focused ? 'images' : 'images-outline';
           } else if (route.name === 'Vaults') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Settings') {
@@ -48,7 +45,6 @@ function MainTabs() {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Camera" component={CameraScreen} />
-      <Tab.Screen name="Gallery" component={GalleryScreen} />
       <Tab.Screen name="Vaults" component={FamilyVaultsScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
