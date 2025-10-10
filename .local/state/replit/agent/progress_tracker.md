@@ -258,3 +258,9 @@
 [x] 252. Install expo-linear-gradient - COMPLETED: Added dependency for gradient background
 [x] 253. Architect review of splash screen - COMPLETED: Approved - animation timing, state management, and integration are correct
 [x] 254. Restart both workflows - COMPLETED: PhotoVault Server on port 5000, Expo Server with tunnel at exp://qurytmy-anonymous-8082.exp.direct
+[x] 255. Fix iOS vault details error - COMPLETED: Improved /api/family/vault/<vault_id> endpoint with better access checks
+[x] 256. Add VaultPhoto to top-level imports - COMPLETED: Cleaner code structure, removed local import
+[x] 257. Add debug logging to vault endpoint - COMPLETED: Emoji logging for easy troubleshooting
+[x] 258. Fix vault access logic - COMPLETED: Explicit creator and member checks instead of hasattr
+[x] 259. Restart PhotoVault Server with vault fix - COMPLETED: Server running successfully on port 5000
+[x] 260. Create comprehensive Railway deployment guide - COMPLETED: RAILWAY_IOS_FIXES_DEPLOY.md with both camera and vault fixes

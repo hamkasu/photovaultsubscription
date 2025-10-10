@@ -2,7 +2,7 @@
 Mobile API Routes for StoryKeep iOS/Android App
 """
 from flask import Blueprint, jsonify, request, current_app, url_for
-from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User
+from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User, VaultPhoto
 from photovault.extensions import db, csrf
 from photovault.utils.jwt_auth import token_required
 from werkzeug.utils import secure_filename
@@ -592,19 +592,29 @@ def get_family_vaults(current_user):
 def get_vault_detail(current_user, vault_id):
     """Get vault details for mobile app"""
     try:
-        from photovault.models import VaultPhoto
+        logger.info(f"📋 Fetching vault details for vault_id={vault_id}, user={current_user.id}")
         
         # Get vault
         vault = FamilyVault.query.get(vault_id)
         if not vault:
+            logger.error(f"❌ Vault {vault_id} not found")
             return jsonify({'error': 'Vault not found'}), 404
         
-        # Check if user has access
-        has_access = (vault.created_by == current_user.id or 
-                     vault.has_member(current_user.id) if hasattr(vault, 'has_member') else False)
+        # Check if user has access (creator or active member)
+        is_creator = vault.created_by == current_user.id
+        is_member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first() is not None
+        
+        has_access = is_creator or is_member
         
         if not has_access:
+            logger.error(f"❌ User {current_user.id} has no access to vault {vault_id}")
             return jsonify({'error': 'Access denied'}), 403
+        
+        logger.info(f"✅ User has access to vault (creator={is_creator}, member={is_member})")
         
         # Get vault photos
         vault_photos = VaultPhoto.query.filter_by(vault_id=vault_id).order_by(VaultPhoto.shared_at.desc()).all()
