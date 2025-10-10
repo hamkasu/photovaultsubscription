@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
 import { authAPI } from '../services/api';
 
 export default function LoginScreen({ navigation }) {
@@ -20,19 +21,56 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
+  const handleLogin = async (skipBiometricSave = false, credEmail = null, credPassword = null) => {
+    const loginEmail = credEmail || email;
+    const loginPassword = credPassword || password;
+    
+    if (!loginEmail || !loginPassword) {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(loginEmail, loginPassword);
       
       if (response.token) {
         await AsyncStorage.setItem('authToken', response.token);
         await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+        
+        // Save credentials securely for biometric login if not already saved
+        if (!skipBiometricSave) {
+          const biometricEnabled = await AsyncStorage.getItem('biometricEnabled');
+          if (biometricEnabled === 'true') {
+            await SecureStore.setItemAsync('userEmail', loginEmail);
+            await SecureStore.setItemAsync('userPassword', loginPassword);
+          } else {
+            // Ask user if they want to enable biometric login
+            const hasHardware = await LocalAuthentication.hasHardwareAsync();
+            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+            
+            if (hasHardware && isEnrolled) {
+              Alert.alert(
+                'Enable Biometric Login',
+                'Would you like to use Face ID/Touch ID for quick login?',
+                [
+                  {
+                    text: 'No',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Yes',
+                    onPress: async () => {
+                      await SecureStore.setItemAsync('userEmail', loginEmail);
+                      await SecureStore.setItemAsync('userPassword', loginPassword);
+                      await AsyncStorage.setItem('biometricEnabled', 'true');
+                    },
+                  },
+                ]
+              );
+            }
+          }
+        }
         
         navigation.reset({
           index: 0,
@@ -47,24 +85,41 @@ export default function LoginScreen({ navigation }) {
   };
 
   const checkBiometric = async () => {
-    const compatible = await LocalAuthentication.hasHardwareAsync();
-    const enrolled = await LocalAuthentication.isEnrolledAsync();
+    try {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      const biometricEnabled = await AsyncStorage.getItem('biometricEnabled');
 
-    if (compatible && enrolled) {
+      if (!compatible || !enrolled) {
+        Alert.alert('Not Available', 'Biometric authentication is not available on this device');
+        return;
+      }
+
+      if (biometricEnabled !== 'true') {
+        Alert.alert('Not Enabled', 'Please login with email and password first to enable biometric login');
+        return;
+      }
+
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Login with biometrics',
+        cancelLabel: 'Cancel',
+        fallbackLabel: 'Use Password',
       });
 
       if (result.success) {
-        const savedEmail = await AsyncStorage.getItem('savedEmail');
-        const savedPassword = await AsyncStorage.getItem('savedPassword');
+        const savedEmail = await SecureStore.getItemAsync('userEmail');
+        const savedPassword = await SecureStore.getItemAsync('userPassword');
         
         if (savedEmail && savedPassword) {
-          setEmail(savedEmail);
-          setPassword(savedPassword);
-          handleLogin();
+          // Pass credentials directly to avoid stale state closure issue
+          handleLogin(true, savedEmail, savedPassword);
+        } else {
+          Alert.alert('Error', 'No saved credentials found. Please login with email and password.');
         }
       }
+    } catch (error) {
+      console.error('Biometric error:', error);
+      Alert.alert('Error', 'Biometric authentication failed. Please try again.');
     }
   };
 
