@@ -62,8 +62,8 @@ export default function App() {
   useEffect(() => {
     checkAuthStatus();
     
-    // Listen for storage changes
-    const interval = setInterval(checkAuthStatus, 1000);
+    // Listen for storage changes more frequently
+    const interval = setInterval(checkAuthStatus, 300);
     return () => clearInterval(interval);
   }, []);
 
@@ -77,7 +77,9 @@ export default function App() {
     } catch (error) {
       console.error('Error checking auth status:', error);
     } finally {
-      setIsLoading(false);
+      if (isLoading) {
+        setIsLoading(false);
+      }
     }
   };
 

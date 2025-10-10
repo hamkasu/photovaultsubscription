@@ -136,3 +136,8 @@
 [x] 136. Restart Expo Server with all navigation fixes - COMPLETED: All RESET errors resolved, server running with QR code
 [x] 137. Fix Camera/Digitizer render error - COMPLETED: Fixed FlashMode undefined issue by using string constants instead of enum
 [x] 138. Restart Expo Server with Camera fix - COMPLETED: Digitizer/Camera now working without render errors
+[x] 139. Fix dashboard API response structure - COMPLETED: Changed to flat response matching iOS app expectations
+[x] 140. Add enhanced_photos count to dashboard - COMPLETED: Counts photos with edited_filename
+[x] 141. Fix storage_used format - COMPLETED: Returns number instead of string with "MB"
+[x] 142. Speed up logout navigation - COMPLETED: Auth check interval reduced from 1000ms to 300ms
+[x] 143. Restart both servers with dashboard fixes - COMPLETED: PhotoVault Server and Expo Server running with fixes

@@ -155,6 +155,11 @@ def get_dashboard(current_user):
         # Calculate photo statistics
         total_photos = Photo.query.filter_by(user_id=current_user.id).count()
         
+        # Count enhanced photos (photos with edited_filename)
+        enhanced_photos = Photo.query.filter_by(user_id=current_user.id).filter(
+            Photo.edited_filename.isnot(None)
+        ).count()
+        
         # Calculate total storage
         photos = Photo.query.filter_by(user_id=current_user.id).all()
         total_size_bytes = sum(photo.file_size or 0 for photo in photos)
@@ -162,18 +167,14 @@ def get_dashboard(current_user):
         
         # Get subscription info
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
+        subscription_plan = user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
         
         return jsonify({
-            'stats': {
-                'total_photos': total_photos,
-                'total_albums': 0,  # TODO: Implement albums
-                'storage_used': f'{total_size_mb} MB'
-            },
-            'user': {
-                'username': current_user.username,
-                'email': current_user.email,
-                'subscription_plan': user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
-            }
+            'total_photos': total_photos,
+            'enhanced_photos': enhanced_photos,
+            'albums': 0,  # TODO: Implement albums
+            'storage_used': total_size_mb,  # Return as number, not string
+            'subscription_plan': subscription_plan
         })
     except Exception as e:
         logger.error(f"Dashboard error: {str(e)}")
