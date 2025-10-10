@@ -145,3 +145,5 @@
 [x] 145. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
 [x] 146. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://3gpu3ju-anonymous-8081.exp.direct and QR code ready
 [x] 147. Final verification - COMPLETED: Both servers running successfully with no critical errors
+[x] 148. Fix iOS gallery empty issue on Railway - COMPLETED: Added filter parameter support and enhanced logging to /api/photos endpoint
+[x] 149. Restart PhotoVault Server with gallery fix - COMPLETED: Server running with improved photo fetching endpoint

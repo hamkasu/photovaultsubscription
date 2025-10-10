@@ -199,15 +199,30 @@ def get_profile(current_user):
 @mobile_api_bp.route('/photos', methods=['GET'])
 @token_required
 def get_photos(current_user):
-    """Get photos for mobile app gallery with pagination"""
+    """Get photos for mobile app gallery with pagination and filtering"""
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('limit', 20, type=int)
+        filter_type = request.args.get('filter', 'all')
         
-        # Query photos for current user
-        photos_query = Photo.query.filter_by(user_id=current_user.id)\
-            .order_by(Photo.created_at.desc())\
-            .paginate(page=page, per_page=per_page, error_out=False)
+        logger.info(f"Fetching photos for user {current_user.id}, filter: {filter_type}, page: {page}")
+        
+        # Start with base query
+        query = Photo.query.filter_by(user_id=current_user.id)
+        
+        # Apply filter
+        if filter_type == 'enhanced':
+            query = query.filter(Photo.edited_filename.isnot(None))
+        elif filter_type == 'originals':
+            query = query.filter(Photo.edited_filename.is_(None))
+        # 'all' returns everything, no additional filter needed
+        
+        # Order by creation date and paginate
+        photos_query = query.order_by(Photo.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        logger.info(f"Found {photos_query.total} total photos, returning {len(photos_query.items)} items")
         
         # Build photo list with URLs
         photos_list = []
@@ -226,7 +241,7 @@ def get_photos(current_user):
                                        user_id=current_user.id,
                                        filename=thumbnail_filename,
                                        _external=True),
-                'created_at': photo.created_at.isoformat(),
+                'created_at': photo.created_at.isoformat() if photo.created_at else None,
                 'file_size': photo.file_size,
                 'has_edited': photo.edited_filename is not None
             }
@@ -240,18 +255,22 @@ def get_photos(current_user):
             
             photos_list.append(photo_data)
         
-        return jsonify({
+        response_data = {
             'success': True,
             'photos': photos_list,
             'page': page,
             'per_page': per_page,
             'total': photos_query.total,
             'has_more': photos_query.has_next
-        })
+        }
+        
+        logger.info(f"Returning {len(photos_list)} photos to mobile app")
+        
+        return jsonify(response_data)
         
     except Exception as e:
-        logger.error(f"Error fetching photos: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error fetching photos for user {current_user.id}: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e), 'success': False}), 500
 
 @mobile_api_bp.route('/upload', methods=['POST'])
 @csrf.exempt
