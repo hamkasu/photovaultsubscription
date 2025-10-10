@@ -178,3 +178,7 @@
 [x] 178. Add debug info to API response - COMPLETED: Returns debug data showing user_id, username, total photos count
 [x] 179. Restart PhotoVault Server with new gallery code - COMPLETED: Server running with rewritten /api/photos endpoint
 [x] 180. Create deployment guide for Railway push - COMPLETED: Created PUSH_TO_RAILWAY.md with step-by-step instructions
+[x] 181. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 182. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 771 packages successfully
+[x] 183. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
+[x] 184. Final verification - COMPLETED: Both servers running successfully with no critical errors
