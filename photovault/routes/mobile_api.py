@@ -169,29 +169,44 @@ def get_dashboard(current_user):
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         subscription_plan = user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
         
-        # DIAGNOSTIC: Get one recent photo to test serialization
+        # Sort photos by creation date (newest first)
+        sorted_photos = sorted(photos, key=lambda p: p.created_at if p.created_at else datetime.min, reverse=True)
+        
+        # Get one recent photo for diagnostic
         recent_photo = None
-        if photos:
-            # Get the most recent photo
-            sorted_photos = sorted(photos, key=lambda p: p.created_at if p.created_at else datetime.min, reverse=True)
-            if sorted_photos:
-                photo = sorted_photos[0]
-                recent_photo = {
-                    'id': photo.id,
-                    'filename': photo.filename,
-                    'original_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
-                    'edited_url': f'/uploads/{current_user.id}/{photo.edited_filename}' if photo.edited_filename else None,
-                    'created_at': photo.created_at.isoformat() if photo.created_at else None
-                }
+        if sorted_photos:
+            photo = sorted_photos[0]
+            recent_photo = {
+                'id': photo.id,
+                'filename': photo.filename,
+                'original_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+                'edited_url': f'/uploads/{current_user.id}/{photo.edited_filename}' if photo.edited_filename else None,
+                'created_at': photo.created_at.isoformat() if photo.created_at else None
+            }
+        
+        # Return ALL photos using same pattern for Gallery to use
+        all_photos = []
+        for photo in sorted_photos:
+            all_photos.append({
+                'id': photo.id,
+                'filename': photo.filename,
+                'url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+                'original_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+                'edited_url': f'/uploads/{current_user.id}/{photo.edited_filename}' if photo.edited_filename else None,
+                'created_at': photo.created_at.isoformat() if photo.created_at else None,
+                'file_size': photo.file_size,
+                'has_edited': photo.edited_filename is not None
+            })
         
         return jsonify({
             'total_photos': total_photos,
             'enhanced_photos': enhanced_photos,
-            'albums': 0,  # TODO: Implement albums
-            'storage_used': total_size_mb,  # Return as number, not string
+            'albums': 0,
+            'storage_used': total_size_mb,
             'subscription_plan': subscription_plan,
-            'recent_photo': recent_photo,  # DIAGNOSTIC
-            'debug_photos_count': len(photos)  # DIAGNOSTIC
+            'recent_photo': recent_photo,
+            'all_photos': all_photos,  # ALL photos for gallery
+            'debug_photos_count': len(photos)
         })
     except Exception as e:
         logger.error(f"Dashboard error: {str(e)}")

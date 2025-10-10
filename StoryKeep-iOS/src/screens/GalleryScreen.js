@@ -32,7 +32,7 @@ export default function GalleryScreen({ navigation }) {
       const token = await AsyncStorage.getItem('authToken');
       setAuthToken(token);
       
-      // TEMPORARY FIX: Get image from dashboard since gallery endpoint is broken on Railway
+      // Get ALL photos from dashboard endpoint (same working pattern)
       const dashboardResponse = await fetch(`${BASE_URL}/api/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -40,17 +40,9 @@ export default function GalleryScreen({ navigation }) {
       });
       const dashboardData = await dashboardResponse.json();
       
-      // If dashboard has a recent photo, show it in gallery
-      if (dashboardData.recent_photo) {
-        const photo = {
-          id: dashboardData.recent_photo.id,
-          filename: dashboardData.recent_photo.filename,
-          url: dashboardData.recent_photo.original_url,
-          original_url: dashboardData.recent_photo.original_url,
-          edited_url: dashboardData.recent_photo.edited_url,
-          created_at: dashboardData.recent_photo.created_at
-        };
-        setPhotos([photo]);
+      // Use all_photos from dashboard (all 46 photos with working URLs)
+      if (dashboardData.all_photos && dashboardData.all_photos.length > 0) {
+        setPhotos(dashboardData.all_photos);
       } else {
         setPhotos([]);
       }

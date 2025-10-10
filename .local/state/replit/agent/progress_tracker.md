@@ -208,3 +208,6 @@
 [x] 206. Restart PhotoVault Server with gallery fix - COMPLETED: Server running on port 5000 with simplified gallery endpoint
 [x] 207. Make Gallery fetch from working dashboard endpoint - COMPLETED: Updated GalleryScreen.js to fetch image from /api/dashboard instead of broken /api/photos
 [x] 208. Restart Expo Server with gallery fix - COMPLETED: Server running with tunnel at exp://qakercs-anonymous-8081.exp.direct and QR code displayed
+[x] 209. Populate gallery with all photos using dashboard pattern - COMPLETED: Updated /api/dashboard to return all_photos array with all 46 photos
+[x] 210. Update Gallery to display all photos - COMPLETED: GalleryScreen.js now uses dashboardData.all_photos array
+[x] 211. Restart both servers with full gallery - COMPLETED: PhotoVault Server and Expo Server running with all photos endpoint
