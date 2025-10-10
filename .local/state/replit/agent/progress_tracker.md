@@ -114,3 +114,8 @@
 [x] 114. Install iOS app dependencies - COMPLETED: Installed 932 packages in StoryKeep-iOS directory
 [x] 115. Configure and start Expo Server workflow - COMPLETED: Metro bundler running with QR code ready
 [x] 116. Final verification - COMPLETED: Both PhotoVault Server (port 5000) and Expo Server running successfully
+[x] 117. Fix Expo Go SDK version mismatch - COMPLETED: Upgraded Expo from SDK 52 to SDK 54 to match Expo Go app
+[x] 118. Install @expo/ngrok for tunnel support - COMPLETED: Installed ngrok package for public tunnel access
+[x] 119. Configure Expo Server with tunnel mode - COMPLETED: Server running with tunnel at exp://lwlytji-anonymous-8081.exp.direct
+[x] 120. Update all Expo dependencies to SDK 54 - COMPLETED: All packages updated using legacy-peer-deps for compatibility
+[x] 121. Restart Expo Server with SDK 54 - COMPLETED: Metro bundler running successfully with new SDK version
