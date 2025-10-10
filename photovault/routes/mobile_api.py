@@ -179,8 +179,8 @@ def get_dashboard(current_user):
                 recent_photo = {
                     'id': photo.id,
                     'filename': photo.filename,
-                    'original_url': f'/uploads/{photo.filename}' if photo.filename else None,
-                    'edited_url': f'/uploads/{photo.edited_filename}' if photo.edited_filename else None,
+                    'original_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+                    'edited_url': f'/uploads/{current_user.id}/{photo.edited_filename}' if photo.edited_filename else None,
                     'created_at': photo.created_at.isoformat() if photo.created_at else None
                 }
         
