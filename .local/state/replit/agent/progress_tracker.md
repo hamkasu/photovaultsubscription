@@ -119,3 +119,5 @@
 [x] 119. Configure Expo Server with tunnel mode - COMPLETED: Server running with tunnel at exp://lwlytji-anonymous-8081.exp.direct
 [x] 120. Update all Expo dependencies to SDK 54 - COMPLETED: All packages updated using legacy-peer-deps for compatibility
 [x] 121. Restart Expo Server with SDK 54 - COMPLETED: Metro bundler running successfully with new SDK version
+[x] 122. Fix missing logo.png error - COMPLETED: Copied Calmic logo from static/img to StoryKeep-iOS/src/assets/logo.png
+[x] 123. Restart Expo Server with logo asset - COMPLETED: Server running with tunnel ready for testing
