@@ -6,6 +6,12 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 ## Recent Changes (October 2025)
 
 ### Latest (October 11, 2025)
+- **Voice Memo iOS Fix**: Fixed voice recording failures on iOS Railway deployment
+  - Added `audio/m4a` and `audio/x-m4a` to allowed audio formats (iOS uses m4a format)
+  - Changed all voice memo endpoints from `@login_required` to `@hybrid_auth` for JWT support
+  - Endpoints fixed: POST /api/photos/<id>/voice-memos, GET /api/photos/<id>/voice-memos, GET /api/voice-memos/<id>, PUT /api/voice-memos/<id>, DELETE /api/voice-memos/<id>
+  - Voice memos now work with JWT authentication from iOS app
+  - **IMPORTANT**: Must deploy to Railway for iOS app to work (see VOICE_MEMO_RAILWAY_FIX.md)
 - **Environment Recovery**: Successfully recovered from system restart
   - Reinstalled all Python dependencies (Flask, SQLAlchemy, Pillow, OpenCV, etc.)
   - Installed Expo and 772 packages in StoryKeep-iOS directory

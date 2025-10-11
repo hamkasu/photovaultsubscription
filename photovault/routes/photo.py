@@ -30,6 +30,9 @@ from photovault.utils.file_handler import create_thumbnail
 # Import photo detection utilities
 from photovault.utils.photo_detection import detect_photos_in_image, extract_detected_photos
 
+# Import JWT authentication utilities
+from photovault.utils.jwt_auth import hybrid_auth
+
 # Create blueprint
 photo_bp = Blueprint('photo', __name__)
 
@@ -863,8 +866,8 @@ def bulk_delete_photos():
 # Voice Memo API Endpoints
 
 @photo_bp.route('/api/photos/<int:photo_id>/voice-memos', methods=['POST'])
-@login_required
-def upload_voice_memo(photo_id):
+@hybrid_auth
+def upload_voice_memo(current_user, photo_id):
     """Upload a voice memo for a photo"""
     try:
         from photovault.models import VoiceMemo
@@ -889,7 +892,7 @@ def upload_voice_memo(photo_id):
         content_type = audio_file.content_type.lower()
         base_type = content_type.split(';')[0].strip()  # Remove codec specifications
         
-        allowed_audio_types = {'audio/webm', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/mp4', 'audio/mpeg'}
+        allowed_audio_types = {'audio/webm', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/m4a', 'audio/x-m4a'}
         if base_type not in allowed_audio_types:
             return jsonify({'success': False, 'error': f'Invalid audio file type: {content_type}'}), 400
         
@@ -972,8 +975,8 @@ def upload_voice_memo(photo_id):
         return jsonify({'success': False, 'error': 'Failed to upload voice memo'}), 500
 
 @photo_bp.route('/api/photos/<int:photo_id>/voice-memos', methods=['GET'])
-@login_required
-def get_voice_memos(photo_id):
+@hybrid_auth
+def get_voice_memos(current_user, photo_id):
     """Get all voice memos for a photo"""
     try:
         from photovault.models import VoiceMemo
@@ -1012,8 +1015,8 @@ def get_voice_memos(photo_id):
         return jsonify({'success': False, 'error': 'Failed to get voice memos'}), 500
 
 @photo_bp.route('/api/voice-memos/<int:memo_id>', methods=['GET'])
-@login_required
-def serve_voice_memo(memo_id):
+@hybrid_auth
+def serve_voice_memo(current_user, memo_id):
     """Serve/download a voice memo file"""
     try:
         from photovault.models import VoiceMemo
@@ -1041,8 +1044,8 @@ def serve_voice_memo(memo_id):
         return jsonify({'success': False, 'error': 'Failed to serve voice memo'}), 500
 
 @photo_bp.route('/api/voice-memos/<int:memo_id>', methods=['PUT'])
-@login_required
-def update_voice_memo(memo_id):
+@hybrid_auth
+def update_voice_memo(current_user, memo_id):
     """Update voice memo metadata (title, transcript)"""
     try:
         from photovault.models import VoiceMemo
@@ -1086,8 +1089,8 @@ def update_voice_memo(memo_id):
         return jsonify({'success': False, 'error': 'Failed to update voice memo'}), 500
 
 @photo_bp.route('/api/voice-memos/<int:memo_id>', methods=['DELETE'])
-@login_required
-def delete_voice_memo(memo_id):
+@hybrid_auth
+def delete_voice_memo(current_user, memo_id):
     """Delete a voice memo"""
     try:
         from photovault.models import VoiceMemo
