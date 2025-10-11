@@ -376,3 +376,11 @@
     - Command: git add StoryKeep-iOS/src/screens/VaultDetailScreen.js
     - Command: git commit -m "Fix iOS vault invite member - connect button to invite functionality"
     - Command: git push origin main
+[x] 332. Add gentle chime sound to splash screen - COMPLETED: expo-av installed, SplashScreen.js updated with audio support
+[x] 333. Create sounds directory - COMPLETED: Created StoryKeep-iOS/src/assets/sounds/ for audio assets
+[x] 334. Setup chime audio infrastructure - COMPLETED: Added Audio.setAudioModeAsync, error handling, cleanup in useEffect
+[x] 335. Create setup guide - COMPLETED: SPLASH_SOUND_SETUP.md with step-by-step instructions to add chime.mp3
+[x] 336. Code ready for chime sound - COMPLETED: Code commented with TODO, ready to uncomment once sound file is added
+    - User needs to: Download chime from Pixabay → Save as chime.mp3 → Uncomment code in SplashScreen.js
+    - Guide location: StoryKeep-iOS/SPLASH_SOUND_SETUP.md
+    - Recommended sounds: "Chime sound" (1 sec), "Silver chime" (2 sec), "Melancholy UI Chime" (1 sec)

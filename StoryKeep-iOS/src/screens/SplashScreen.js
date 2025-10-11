@@ -29,22 +29,30 @@ export default function SplashScreen({ onFinish }) {
           staysActiveInBackground: false,
         });
 
-        // Create and play a gentle chime sound using a simple tone
-        // This creates a pleasant notification-like chime
-        const { sound: chimeSound } = await Audio.Sound.createAsync(
-          // Using a remote gentle chime sound (free, royalty-free)
-          { uri: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_d1718ab41b.mp3' },
-          { shouldPlay: true, volume: 0.5 }
-        );
-        sound = chimeSound;
+        // TODO: Add a custom chime sound
+        // To add a gentle chime:
+        // 1. Download a free chime from https://pixabay.com/sound-effects/search/chime/
+        //    Recommended: "Chime sound" (1 second) or "Silver chime" (2 seconds)
+        // 2. Save the .mp3 file as 'chime.mp3' in: StoryKeep-iOS/src/assets/sounds/
+        // 3. Uncomment the lines below:
+        
+        // const { sound: chimeSound } = await Audio.Sound.createAsync(
+        //   require('../assets/sounds/chime.mp3'),
+        //   { shouldPlay: true, volume: 0.5 }
+        // );
+        // sound = chimeSound;
+        
+        // For now, splash screen runs without sound to avoid errors
+        // Uncomment the above code once you add the sound file
+        
       } catch (error) {
         // Silently fail if audio can't play - don't block the splash screen
         console.log('Audio playback failed:', error);
       }
     };
 
-    // Play chime when splash screen appears
-    playChimeSound();
+    // Play chime when splash screen appears (currently disabled until sound file added)
+    // playChimeSound();
 
     // Start animations
     Animated.sequence([
