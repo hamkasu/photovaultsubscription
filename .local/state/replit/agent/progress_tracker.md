@@ -307,3 +307,21 @@
 [x] 285. Restart PhotoVault Server with add photo endpoint - COMPLETED: Server running successfully on port 5000
 [ ] 286. DEPLOY TO RAILWAY - Add photo to vault endpoint is local only, Railway needs this new endpoint
     - Command: git add photovault/routes/mobile_api.py && git commit -m "Add photo to vault endpoint for iOS app" && git push origin main
+[x] 287. Identify iOS vault invite issue - COMPLETED: User reports cannot invite people to Family Vault on Railway production app
+[x] 288. Diagnose missing invite endpoint - COMPLETED: /api/family/vault/<vault_id>/invite endpoint does not exist in mobile_api.py
+[x] 289. Add VaultInvitation to imports - COMPLETED: Imported VaultInvitation model in mobile_api.py
+[x] 290. Create invite member endpoint - COMPLETED: Built /api/family/vault/<vault_id>/invite with JWT auth, permission checks, validation
+[x] 291. Add permission validation - COMPLETED: Only vault creator or admin members can invite (checks user_role and created_by)
+[x] 292. Add duplicate prevention - COMPLETED: Prevents inviting existing members or sending duplicate pending invitations
+[x] 293. Add email integration - COMPLETED: Sends invitation email via SendGrid with fallback to console in development
+[x] 294. Fix VaultInvitation LSP error - COMPLETED: Changed to property assignment for SQLAlchemy 2.0 compatibility
+[x] 295. Architect review of invite endpoint - COMPLETED: PASSED - endpoint properly wired with JWT, permissions correct, error handling comprehensive
+[x] 296. Create Railway deployment guide - COMPLETED: Created RAILWAY_VAULT_INVITE_FIX.md with deployment steps and testing instructions
+[x] 297. Restart PhotoVault Server - COMPLETED: Server running successfully on port 5000 with new invite endpoint
+[ ] 298. DEPLOY TO RAILWAY - Invite member endpoint is local only, Railway needs this new endpoint for iOS app to work
+    - File changed: photovault/routes/mobile_api.py (added VaultInvitation import and invite endpoint)
+    - Deployment guide: RAILWAY_VAULT_INVITE_FIX.md
+    - Command: git add photovault/routes/mobile_api.py RAILWAY_VAULT_INVITE_FIX.md
+    - Command: git commit -m "Add mobile API endpoint for vault member invitations"
+    - Command: git push origin main
+    - Testing: Open iOS app, go to Family Vault, tap + button next to Members, enter email and role, send invitation
