@@ -269,3 +269,7 @@
 [x] 259. Add detailed error tracking and file size logging - COMPLETED: Logs show content-length, file size, and error types
 [x] 260. Create Railway deployment guide - COMPLETED: Created VOICE_MEMO_DIAGNOSTIC_FIX.md with testing instructions
 [x] 261. Restart PhotoVault Server with enhanced logging - COMPLETED: Server running with comprehensive voice memo diagnostics
+[x] 262. Add voice recording test to dashboard - COMPLETED: Integrated recording interface with start/stop/upload controls
+[x] 263. Add real-time status and file size display - COMPLETED: Shows recording duration, file size, and upload status
+[x] 264. Restart PhotoVault Server with dashboard test - COMPLETED: Server running with voice recording test on dashboard
+[x] 265. Identify iOS app 400 error on Railway - COMPLETED: Confirmed "Bad request" error from Expo logs
