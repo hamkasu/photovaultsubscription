@@ -39,7 +39,7 @@ class Config:
     # For Railway: Use mounted volume path if available (Railway Volumes)
     # Example: Set UPLOAD_FOLDER=/data/uploads in Railway environment
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size (for photos and voice memos)
     
     # Camera-specific settings
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}

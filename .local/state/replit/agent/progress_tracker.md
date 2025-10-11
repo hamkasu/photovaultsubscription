@@ -245,3 +245,9 @@
 [x] 239. Add enhanced logging - COMPLETED: Backend has emoji-based logging for easy debugging
 [x] 240. Restart both workflows - COMPLETED: PhotoVault Server and Expo Server running successfully
 [x] 241. Create comprehensive deployment guide - COMPLETED: Created VOICE_MEMO_COMPLETE_FIX.md with all changes
+[x] 242. Investigate "Bad request" error on Railway - COMPLETED: Found root cause - file size limit exceeded
+[x] 243. Identify file size limit issue - COMPLETED: MAX_CONTENT_LENGTH was 16MB, HIGH_QUALITY recordings exceeded this
+[x] 244. Increase backend file size limit - COMPLETED: Changed MAX_CONTENT_LENGTH to 50MB in config.py
+[x] 245. Reduce iOS recording quality - COMPLETED: Changed from HIGH_QUALITY to MEDIUM_QUALITY for smaller files
+[x] 246. Restart both workflows - COMPLETED: PhotoVault and Expo servers running successfully
+[x] 247. Create file size fix deployment guide - COMPLETED: Created VOICE_MEMO_FILE_SIZE_FIX.md with complete explanation
