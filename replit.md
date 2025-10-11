@@ -6,12 +6,15 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 ## Recent Changes (October 2025)
 
 ### Latest (October 11, 2025)
-- **Voice Memo iOS Fix**: Fixed voice recording failures on iOS Railway deployment
-  - Added `audio/m4a` and `audio/x-m4a` to allowed audio formats (iOS uses m4a format)
-  - Changed all voice memo endpoints from `@login_required` to `@hybrid_auth` for JWT support
-  - Endpoints fixed: POST /api/photos/<id>/voice-memos, GET /api/photos/<id>/voice-memos, GET /api/voice-memos/<id>, PUT /api/voice-memos/<id>, DELETE /api/voice-memos/<id>
-  - Voice memos now work with JWT authentication from iOS app
-  - **IMPORTANT**: Must deploy to Railway for iOS app to work (see VOICE_MEMO_RAILWAY_FIX.md)
+- **Voice Memo Upload Fix**: Fixed voice memo upload failures on Railway deployment with comprehensive solution
+  - **Root Cause**: Expo SDK 54 deprecated FileSystem methods, causing runtime errors during file validation
+  - **SDK 54 Fix**: Changed to `import * as FileSystem from 'expo-file-system/legacy'` for compatibility
+  - **Railway Optimization**: Implemented custom 32kbps AAC compression (~0.24MB/min) to stay under 10MB proxy limit
+  - **File Size Validation**: Added 8MB pre-upload check with user-friendly error messages
+  - **Recording Quality**: Supports 30+ minute recordings with excellent voice clarity
+  - **Backend Auth**: All voice memo endpoints use `@hybrid_auth` for JWT support
+  - **Documentation**: Complete deployment guide in VOICE_MEMO_SIZE_FIX.md
+  - **IMPORTANT**: Must deploy to Railway for iOS app to work
 - **Environment Recovery**: Successfully recovered from system restart
   - Reinstalled all Python dependencies (Flask, SQLAlchemy, Pillow, OpenCV, etc.)
   - Installed Expo and 772 packages in StoryKeep-iOS directory

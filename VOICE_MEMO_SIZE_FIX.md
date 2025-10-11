@@ -5,6 +5,7 @@ Voice memo uploads were failing on Railway with **400 Bad Request** errors becau
 1. **Railway's nginx proxy has a default 10MB request body limit**
 2. Voice recordings at MEDIUM_QUALITY could easily exceed 10MB for recordings over 3 minutes
 3. No file size validation was performed before upload, leading to confusing errors
+4. **Expo SDK 54 Breaking Change**: `FileSystem.getInfoAsync()` was deprecated and throwing errors, preventing uploads
 
 ## Solutions Implemented ✅
 
@@ -24,7 +25,13 @@ Voice memo uploads were failing on Railway with **400 Bad Request** errors becau
 - **Limit**: 8MB (safely under Railway's 10MB proxy limit with 20% buffer)
 - **User Experience**: Shows helpful message: "Voice note is XMB. Please keep recordings under 8MB (about 30 minutes at current quality)"
 
-### 3. **Updated Gunicorn Configuration** (Backend)
+### 3. **Fixed Expo SDK 54 FileSystem Deprecation** (iOS App)
+**Changed**: Updated to use legacy FileSystem API
+- **File**: `StoryKeep-iOS/src/screens/PhotoDetailScreen.js` (line 19)
+- **Change**: `import * as FileSystem from 'expo-file-system/legacy'`
+- **Reason**: SDK 54 deprecated `getInfoAsync()` - legacy API provides compatibility
+
+### 4. **Updated Gunicorn Configuration** (Backend)
 **Changed**: Added request size limits to gunicorn
 - **File**: `railway.json` (line 7)
 - **Added flags**: `--limit-request-line 8190 --limit-request-field_size 8190`
@@ -34,6 +41,9 @@ Voice memo uploads were failing on Railway with **400 Bad Request** errors becau
 ### iOS App Changes
 ```javascript
 // StoryKeep-iOS/src/screens/PhotoDetailScreen.js
+
+// Line 19: Fix Expo SDK 54 FileSystem deprecation
+import * as FileSystem from 'expo-file-system/legacy';
 
 // Lines 162-187: Custom AAC compression configuration
 const { recording } = await Audio.Recording.createAsync({
