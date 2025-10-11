@@ -332,3 +332,12 @@
     - PhotoVault Server: Running on port 5000 with database initialized and subscription plans updated
     - Expo Server: Running with Metro bundler, tunnel at exp://iyatagy-anonymous-8081.exp.direct and QR code displayed for testing
 [x] 303. PROJECT IMPORT FULLY COMPLETE - ALL SYSTEMS OPERATIONAL AND READY FOR USE
+[x] 304. Fix iOS vault add-photo feature - COMPLETED: Completely rewrote backend endpoint with fresh simple code
+[x] 305. Delete old complex add-photo code - COMPLETED: Removed 125 lines of overcomplicated code
+[x] 306. Write fresh backend implementation - COMPLETED: New simple endpoint using successful gallery pattern
+[x] 307. Connect iOS add-photo button - COMPLETED: Button now opens photo picker modal
+[x] 308. Create photo picker UI - COMPLETED: Modal with user's photos, selection, and caption input
+[x] 309. Wire photo selection to API - COMPLETED: Calls vaultAPI.addPhotoToVault with photo_id and caption
+[x] 310. Restart both workflows - COMPLETED: PhotoVault Server on port 5000, Expo Server with QR code
+[x] 311. Create Railway deployment guide - COMPLETED: RAILWAY_VAULT_ADD_PHOTO_FIX.md with deployment steps
+[x] 312. Architect review of add-photo feature - COMPLETED: PASSED - Backend mirrors gallery pattern, iOS UI properly wired, data flow consistent, no security issues

@@ -802,90 +802,62 @@ def get_vault_detail(current_user, vault_id):
 @csrf.exempt
 @token_required
 def add_photo_to_vault(current_user, vault_id):
-    """Add a photo to family vault - Mobile API"""
+    """Add photo to vault - FRESH IMPLEMENTATION using working gallery pattern"""
+    logger.info(f"🎯 ADD PHOTO: vault={vault_id}, user={current_user.id}")
+    
     try:
-        logger.info(f"📸 ADD PHOTO TO VAULT REQUEST: vault_id={vault_id}, user_id={current_user.id}")
-        
-        # Get request data
+        # Get photo_id from request
         data = request.get_json()
-        if not data:
-            return jsonify({
-                'success': False,
-                'error': 'No data provided'
-            }), 400
+        photo_id = data.get('photo_id') if data else None
+        caption = data.get('caption', '') if data else ''
         
-        photo_id = data.get('photo_id')
-        caption = data.get('caption', '')
+        logger.info(f"📥 Request data: photo_id={photo_id}, caption={caption}")
         
         if not photo_id:
-            return jsonify({
-                'success': False,
-                'error': 'photo_id is required'
-            }), 400
+            logger.error("❌ No photo_id provided")
+            return jsonify({'success': False, 'error': 'photo_id required'}), 400
         
-        logger.info(f"📋 Data: photo_id={photo_id}, caption={caption}")
-        
-        # Step 1: Verify vault exists and user has access
-        vault = FamilyVault.query.get(vault_id)
+        # Get vault - simple query
+        vault = FamilyVault.query.filter_by(id=vault_id).first()
         if not vault:
-            logger.error(f"❌ VAULT NOT FOUND: vault_id={vault_id}")
-            return jsonify({
-                'success': False,
-                'error': 'Vault not found'
-            }), 404
+            logger.error(f"❌ Vault {vault_id} not found")
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
         
-        # Check access (creator or active member)
-        is_creator = vault.created_by == current_user.id
-        is_member = FamilyMember.query.filter_by(
+        # Check vault access - creator OR member
+        is_creator = (vault.created_by == current_user.id)
+        member = FamilyMember.query.filter_by(
             vault_id=vault_id,
             user_id=current_user.id,
             status='active'
-        ).first() is not None
-        
-        has_access = is_creator or is_member
-        
-        if not has_access:
-            logger.error(f"❌ ACCESS DENIED: user {current_user.id} cannot add photos to vault {vault_id}")
-            return jsonify({
-                'success': False,
-                'error': 'You do not have permission to add photos to this vault'
-            }), 403
-        
-        logger.info(f"✅ ACCESS GRANTED: is_creator={is_creator}, is_member={is_member}")
-        
-        # Step 2: Verify photo exists and belongs to user
-        photo = Photo.query.get(photo_id)
-        if not photo:
-            logger.error(f"❌ PHOTO NOT FOUND: photo_id={photo_id}")
-            return jsonify({
-                'success': False,
-                'error': 'Photo not found'
-            }), 404
-        
-        if photo.user_id != current_user.id:
-            logger.error(f"❌ PHOTO OWNERSHIP ERROR: photo {photo_id} belongs to user {photo.user_id}, not {current_user.id}")
-            return jsonify({
-                'success': False,
-                'error': 'You can only add your own photos to vaults'
-            }), 403
-        
-        logger.info(f"✅ PHOTO VERIFIED: id={photo.id}, filename={photo.filename}")
-        
-        # Step 3: Check if photo already in vault
-        existing = VaultPhoto.query.filter_by(
-            vault_id=vault_id,
-            photo_id=photo_id
         ).first()
         
+        if not is_creator and not member:
+            logger.error(f"❌ No access to vault {vault_id}")
+            return jsonify({'success': False, 'error': 'No vault access'}), 403
+        
+        # Get photo - use same pattern as gallery
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            logger.error(f"❌ Photo {photo_id} not found for user {current_user.id}")
+            return jsonify({'success': False, 'error': 'Photo not found'}), 404
+        
+        logger.info(f"✅ Photo found: {photo.filename}")
+        
+        # Check if already added
+        existing = VaultPhoto.query.filter_by(vault_id=vault_id, photo_id=photo_id).first()
         if existing:
-            logger.warning(f"⚠️ PHOTO ALREADY IN VAULT: vault_id={vault_id}, photo_id={photo_id}")
+            logger.info(f"⚠️ Already added, returning success")
             return jsonify({
                 'success': True,
-                'message': 'Photo is already in this vault',
-                'vault_photo_id': existing.id
+                'message': 'Photo already in vault',
+                'photo': {
+                    'id': photo.id,
+                    'original_url': f'/uploads/{current_user.id}/{photo.filename}',
+                    'caption': existing.caption
+                }
             }), 200
         
-        # Step 4: Add photo to vault
+        # Add to vault - fresh simple code
         vault_photo = VaultPhoto()
         vault_photo.vault_id = vault_id
         vault_photo.photo_id = photo_id
@@ -896,32 +868,26 @@ def add_photo_to_vault(current_user, vault_id):
         db.session.add(vault_photo)
         db.session.commit()
         
-        logger.info(f"✅ PHOTO ADDED TO VAULT: vault_photo_id={vault_photo.id}")
+        logger.info(f"✅ SUCCESS! Added photo {photo_id} to vault {vault_id}")
         
+        # Return photo info using same URL pattern as gallery
         return jsonify({
             'success': True,
-            'message': 'Photo added to vault successfully',
-            'vault_photo': {
-                'id': vault_photo.id,
-                'vault_id': vault_id,
-                'photo_id': photo_id,
-                'caption': caption,
-                'shared_at': vault_photo.shared_at.isoformat()
+            'message': 'Photo added to vault',
+            'photo': {
+                'id': photo.id,
+                'original_url': f'/uploads/{current_user.id}/{photo.filename}',
+                'edited_url': f'/uploads/{current_user.id}/{photo.edited_filename}' if photo.edited_filename else None,
+                'caption': caption
             }
         }), 201
         
     except Exception as e:
+        logger.error(f"💥 ERROR: {str(e)}")
         import traceback
-        error_trace = traceback.format_exc()
-        logger.error(f"💥 ADD PHOTO TO VAULT ERROR: {str(e)}")
-        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        traceback.print_exc()
         db.session.rollback()
-        
-        return jsonify({
-            'success': False,
-            'error': f'Failed to add photo to vault: {str(e)}',
-            'error_type': type(e).__name__
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @mobile_api_bp.route('/family/vault/<int:vault_id>/invite', methods=['POST'])
 @csrf.exempt
