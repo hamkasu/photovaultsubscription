@@ -2,7 +2,7 @@
 Mobile API Routes for StoryKeep iOS/Android App
 """
 from flask import Blueprint, jsonify, request, current_app, url_for
-from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User, VaultPhoto
+from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User, VaultPhoto, VaultInvitation
 from photovault.extensions import db, csrf
 from photovault.utils.jwt_auth import token_required
 from werkzeug.utils import secure_filename
@@ -920,6 +920,164 @@ def add_photo_to_vault(current_user, vault_id):
         return jsonify({
             'success': False,
             'error': f'Failed to add photo to vault: {str(e)}',
+            'error_type': type(e).__name__
+        }), 500
+
+@mobile_api_bp.route('/family/vault/<int:vault_id>/invite', methods=['POST'])
+@csrf.exempt
+@token_required
+def invite_member_to_vault(current_user, vault_id):
+    """Invite a member to family vault - Mobile API"""
+    try:
+        from photovault.forms import (
+            validate_email_for_invitation, validate_invitation_role,
+            generate_invitation_token, get_invitation_expiry
+        )
+        
+        logger.info(f"👥 INVITE MEMBER REQUEST: vault_id={vault_id}, user_id={current_user.id}")
+        
+        # Get request data
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        email = data.get('email', '').strip().lower()
+        role = data.get('role', 'member')
+        
+        logger.info(f"📋 Data: email={email}, role={role}")
+        
+        # Step 1: Verify vault exists
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            logger.error(f"❌ VAULT NOT FOUND: vault_id={vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Vault not found'
+            }), 404
+        
+        # Step 2: Check if user can manage vault (admin or creator)
+        user_role = vault.get_member_role(current_user.id)
+        is_creator = vault.created_by == current_user.id
+        
+        if user_role not in ['admin'] and not is_creator:
+            logger.error(f"❌ PERMISSION DENIED: user {current_user.id} cannot invite to vault {vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'You do not have permission to invite members'
+            }), 403
+        
+        logger.info(f"✅ PERMISSION GRANTED: is_creator={is_creator}, user_role={user_role}")
+        
+        # Step 3: Validate inputs
+        valid_email, email_msg = validate_email_for_invitation(email)
+        valid_role, role_msg = validate_invitation_role(role)
+        
+        if not valid_email:
+            logger.error(f"❌ INVALID EMAIL: {email_msg}")
+            return jsonify({
+                'success': False,
+                'error': email_msg
+            }), 400
+        
+        if not valid_role:
+            logger.error(f"❌ INVALID ROLE: {role_msg}")
+            return jsonify({
+                'success': False,
+                'error': role_msg
+            }), 400
+        
+        # Step 4: Check if user is already a member
+        existing_member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            status='active'
+        ).join(User, FamilyMember.user_id == User.id).filter(
+            User.email == email
+        ).first()
+        
+        if existing_member:
+            logger.warning(f"⚠️ USER ALREADY MEMBER: email={email}, vault_id={vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'This user is already a member of the vault'
+            }), 400
+        
+        # Step 5: Check if invitation already exists
+        existing_invitation = VaultInvitation.query.filter_by(
+            vault_id=vault_id,
+            email=email,
+            status='pending'
+        ).first()
+        
+        if existing_invitation:
+            logger.warning(f"⚠️ INVITATION ALREADY EXISTS: email={email}, vault_id={vault_id}")
+            return jsonify({
+                'success': False,
+                'error': 'An invitation has already been sent to this email'
+            }), 400
+        
+        # Step 6: Create invitation
+        invitation = VaultInvitation()
+        invitation.vault_id = vault_id
+        invitation.email = email
+        invitation.invited_by = current_user.id
+        invitation.role = role
+        invitation.invitation_token = generate_invitation_token()
+        invitation.expires_at = get_invitation_expiry()
+        
+        db.session.add(invitation)
+        db.session.commit()
+        
+        logger.info(f"✅ INVITATION CREATED: invitation_id={invitation.id}")
+        
+        # Step 7: Send invitation email
+        try:
+            from photovault.services.sendgrid_service import send_family_invitation_email
+            
+            email_sent = send_family_invitation_email(
+                email=email,
+                invitation_token=invitation.invitation_token,
+                vault_name=vault.name,
+                inviter_name=current_user.username
+            )
+            
+            if email_sent:
+                invitation.mark_as_sent()
+                db.session.commit()
+                logger.info(f"📧 INVITATION EMAIL SENT: email={email}")
+            else:
+                logger.warning(f"⚠️ EMAIL FAILED: email={email}")
+                
+        except Exception as e:
+            logger.error(f"❌ EMAIL ERROR: {str(e)}")
+        
+        # Return success even if email fails (invitation is created)
+        invitation_url = url_for('family.accept_invitation', token=invitation.invitation_token, _external=True)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Invitation sent to {email}',
+            'invitation': {
+                'id': invitation.id,
+                'email': email,
+                'role': role,
+                'invitation_url': invitation_url,
+                'expires_at': invitation.expires_at.isoformat() if invitation.expires_at else None
+            }
+        }), 201
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 INVITE MEMBER ERROR: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        db.session.rollback()
+        
+        return jsonify({
+            'success': False,
+            'error': f'Failed to send invitation: {str(e)}',
             'error_type': type(e).__name__
         }), 500
 
