@@ -8,6 +8,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { vaultAPI } from '../services/api';
@@ -16,6 +18,10 @@ export default function FamilyVaultsScreen({ navigation }) {
   const [vaults, setVaults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [newVaultName, setNewVaultName] = useState('');
+  const [newVaultDescription, setNewVaultDescription] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadVaults();
@@ -39,10 +45,47 @@ export default function FamilyVaultsScreen({ navigation }) {
     loadVaults();
   };
 
+  const handleCreateVault = async () => {
+    if (!newVaultName.trim()) {
+      Alert.alert('Error', 'Please enter a vault name');
+      return;
+    }
+
+    if (!newVaultDescription.trim()) {
+      Alert.alert('Error', 'Please enter a vault description');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const response = await vaultAPI.createVault(newVaultName.trim(), newVaultDescription.trim());
+      
+      if (response.success) {
+        Alert.alert(
+          'Success',
+          `Vault "${response.vault.name}" created!\n\nVault Code: ${response.vault.vault_code}\n\nShare this code with family members to invite them.`,
+          [{ text: 'OK', onPress: () => {
+            setCreateModalVisible(false);
+            setNewVaultName('');
+            setNewVaultDescription('');
+            loadVaults();
+          }}]
+        );
+      } else {
+        Alert.alert('Error', response.error || 'Failed to create vault');
+      }
+    } catch (error) {
+      console.error('Create vault error:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to create vault');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const renderVault = ({ item }) => (
     <TouchableOpacity
       style={styles.vaultCard}
-      onPress={() => navigation.navigate('VaultDetail', { vault: item })}
+      onPress={() => navigation.navigate('VaultDetail', { vaultId: item.id })}
     >
       <View style={styles.vaultIcon}>
         <Ionicons name="people" size={32} color="#E85D75" />
@@ -52,15 +95,13 @@ export default function FamilyVaultsScreen({ navigation }) {
         <Text style={styles.vaultDescription} numberOfLines={2}>
           {item.description || 'No description'}
         </Text>
-        <View style={styles.vaultStats}>
-          <View style={styles.stat}>
-            <Ionicons name="images" size={16} color="#666" />
-            <Text style={styles.statText}>{item.photos_count || 0} photos</Text>
-          </View>
-          <View style={styles.stat}>
-            <Ionicons name="people" size={16} color="#666" />
-            <Text style={styles.statText}>{item.members_count || 0} members</Text>
-          </View>
+        <View style={styles.vaultMeta}>
+          <Text style={styles.vaultCode}>Code: {item.vault_code}</Text>
+          {item.is_creator && (
+            <View style={styles.creatorBadge}>
+              <Text style={styles.creatorText}>Creator</Text>
+            </View>
+          )}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={24} color="#ccc" />
@@ -79,7 +120,10 @@ export default function FamilyVaultsScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Family Vaults</Text>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => setCreateModalVisible(true)}
+        >
           <Ionicons name="add-circle" size={32} color="#E85D75" />
         </TouchableOpacity>
       </View>
@@ -89,10 +133,13 @@ export default function FamilyVaultsScreen({ navigation }) {
           <Ionicons name="people-outline" size={80} color="#ccc" />
           <Text style={styles.emptyText}>No family vaults yet</Text>
           <Text style={styles.emptySubtext}>
-            Create or join a vault to share photos with family
+            Create a vault to share photos with family
           </Text>
-          <TouchableOpacity style={styles.createButton}>
-            <Text style={styles.createButtonText}>Create Vault</Text>
+          <TouchableOpacity 
+            style={styles.createButton}
+            onPress={() => setCreateModalVisible(true)}
+          >
+            <Text style={styles.createButtonText}>Create Your First Vault</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -106,6 +153,61 @@ export default function FamilyVaultsScreen({ navigation }) {
           }
         />
       )}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={createModalVisible}
+        onRequestClose={() => !creating && setCreateModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Family Vault</Text>
+              <TouchableOpacity 
+                onPress={() => !creating && setCreateModalVisible(false)}
+                disabled={creating}
+              >
+                <Ionicons name="close" size={28} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Vault Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g., Family Memories 2024"
+                value={newVaultName}
+                onChangeText={setNewVaultName}
+                editable={!creating}
+              />
+
+              <Text style={styles.inputLabel}>Description</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Describe what this vault is for..."
+                value={newVaultDescription}
+                onChangeText={setNewVaultDescription}
+                multiline
+                numberOfLines={4}
+                editable={!creating}
+              />
+
+              <TouchableOpacity 
+                style={[styles.submitButton, creating && styles.submitButtonDisabled]}
+                onPress={handleCreateVault}
+                disabled={creating}
+              >
+                {creating ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Create Vault</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -148,6 +250,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   vaultIcon: {
     width: 60,
@@ -172,18 +279,26 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
   },
-  vaultStats: {
-    flexDirection: 'row',
-    gap: 15,
-  },
-  stat: {
+  vaultMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
-  statText: {
+  vaultCode: {
     fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
+    color: '#999',
+    fontFamily: 'monospace',
+  },
+  creatorBadge: {
+    backgroundColor: '#E85D75',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  creatorText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   emptyContainer: {
     flex: 1,
@@ -212,6 +327,67 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    marginTop: 15,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  submitButton: {
+    backgroundColor: '#E85D75',
+    padding: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 25,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
