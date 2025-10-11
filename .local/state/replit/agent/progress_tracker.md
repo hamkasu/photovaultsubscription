@@ -292,6 +292,12 @@
     - Better error messages will help diagnose Railway-specific issues
     - Command: git add photovault/routes/mobile_api.py && git commit -m "Rewrite vault endpoint with robust error handling" && git push origin main
 [x] 278. Vault works on iOS Railway - COMPLETED: User confirmed vault is now working after deployment or graceful error handling
+[x] 279. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt (Flask and all packages)
+[x] 280. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 772 packages successfully
+[x] 281. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://voyyyla-anonymous-8081.exp.direct and QR code ready
+[x] 282. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized and subscription plans updated
+    - Expo Server: Running with Metro bundler, tunnel at exp://voyyyla-anonymous-8081.exp.direct and QR code displayed for testing
 [x] 279. Identify new issue - add photos to vault - COMPLETED: iOS app's addPhotoToVault feature does not work on Railway
 [x] 280. Diagnose missing endpoint - COMPLETED: /api/family/vault/<vault_id>/add-photo endpoint does not exist in mobile_api.py
 [x] 281. Create add photo to vault endpoint - COMPLETED: Built comprehensive endpoint with JWT auth, access checks, and validation
