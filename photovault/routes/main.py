@@ -485,3 +485,92 @@ def delete_person(person_id):
     except Exception as e:
         print(f"Delete person error: {str(e)}")
         return jsonify({'success': False, 'error': 'Error deleting person'}), 500
+
+@main_bp.route('/test-recording')
+@login_required
+def test_recording():
+    """Voice memo recording test page"""
+    try:
+        from photovault.models import Photo
+        
+        # Get user's first photo for testing, or create a test photo
+        photo = Photo.query.filter_by(user_id=current_user.id).first()
+        
+        if not photo:
+            # No photos - show message
+            return render_template('test_recording.html', photo=None)
+        
+        return render_template('test_recording.html', photo=photo)
+    except Exception as e:
+        print(f"Test recording error: {str(e)}")
+        flash('Error loading test recording page.', 'error')
+        return redirect(url_for('main.dashboard'))
+
+@main_bp.route('/test-recording/<int:photo_id>/upload', methods=['POST'])
+@login_required
+def test_recording_upload(photo_id):
+    """Upload test voice memo"""
+    try:
+        from photovault.models import Photo, VoiceMemo
+        from photovault.extensions import db
+        from werkzeug.utils import secure_filename
+        import os
+        from datetime import datetime
+        
+        # Verify photo ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            return jsonify({'success': False, 'error': 'Photo not found'}), 404
+        
+        # Get audio file
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+        
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'success': False, 'error': 'Empty filename'}), 400
+        
+        # Get duration from form
+        duration = request.form.get('duration', 0)
+        try:
+            duration = int(float(duration))
+        except:
+            duration = 0
+        
+        # Save the file
+        filename = secure_filename(f"voice_memo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.m4a")
+        upload_folder = os.path.join('photovault', 'static', 'uploads', str(current_user.id))
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        file_path = os.path.join(upload_folder, filename)
+        audio_file.save(file_path)
+        
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Create voice memo record
+        voice_memo = VoiceMemo()
+        voice_memo.photo_id = photo.id
+        voice_memo.filename = filename
+        voice_memo.duration = duration
+        voice_memo.file_size = file_size
+        voice_memo.created_at = datetime.utcnow()
+        
+        db.session.add(voice_memo)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Voice memo uploaded successfully!',
+            'voice_memo': {
+                'id': voice_memo.id,
+                'filename': voice_memo.filename,
+                'duration': voice_memo.duration,
+                'file_size_mb': round(file_size / 1024 / 1024, 2)
+            }
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
