@@ -173,13 +173,18 @@ export default function PhotoDetailScreen({ route, navigation }) {
 
     try {
       setIsRecording(false);
+      
+      // Get recording status to extract duration
+      const status = await recording.getStatusAsync();
+      const durationSeconds = status.durationMillis ? status.durationMillis / 1000 : 0;
+      
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
 
-      // Upload the recording
+      // Upload the recording with duration
       setLoading(true);
-      const response = await voiceMemoAPI.uploadVoiceMemo(photo.id, uri);
+      const response = await voiceMemoAPI.uploadVoiceMemo(photo.id, uri, durationSeconds);
       
       if (response.success) {
         Alert.alert('Success', 'Voice note recorded successfully');
@@ -187,7 +192,8 @@ export default function PhotoDetailScreen({ route, navigation }) {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to save voice note');
-      console.error(error);
+      console.error('Voice memo upload error:', error);
+      console.error('Error details:', error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -471,6 +477,9 @@ export default function PhotoDetailScreen({ route, navigation }) {
                     <Text style={styles.voiceMemoTime}>
                       {new Date(memo.created_at).toLocaleTimeString()}
                     </Text>
+                    <Text style={styles.voiceMemoDuration}>
+                      {memo.duration_formatted || '00:00'}
+                    </Text>
                   </View>
                   <TouchableOpacity
                     style={styles.deleteVoiceButton}
@@ -692,6 +701,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+  },
+  voiceMemoDuration: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#E85D75',
+    marginTop: 4,
   },
   deleteVoiceButton: {
     padding: 8,

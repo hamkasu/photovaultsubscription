@@ -151,13 +151,14 @@ export const voiceMemoAPI = {
     return response.data;
   },
   
-  uploadVoiceMemo: async (photoId, audioUri) => {
+  uploadVoiceMemo: async (photoId, audioUri, duration) => {
     const formData = new FormData();
     formData.append('audio', {
       uri: audioUri,
       type: 'audio/m4a',
       name: 'voice-memo.m4a',
     });
+    formData.append('duration', duration.toString());
     
     const response = await api.post(`/api/photos/${photoId}/voice-memos`, formData, {
       headers: {
