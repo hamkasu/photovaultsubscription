@@ -12,6 +12,10 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -287,66 +291,75 @@ export default function VaultDetailScreen({ route, navigation }) {
         transparent={true}
         onRequestClose={() => setShowPhotoPicker(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Photo</Text>
-              <TouchableOpacity onPress={() => setShowPhotoPicker(false)}>
-                <Ionicons name="close" size={28} color="#333" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Select Photo</Text>
+                  <TouchableOpacity onPress={() => setShowPhotoPicker(false)}>
+                    <Ionicons name="close" size={28} color="#333" />
+                  </TouchableOpacity>
+                </View>
 
-            <ScrollView style={styles.photoPickerScroll}>
-              <View style={styles.photoPickerGrid}>
-                {userPhotos.map((photo) => (
+                <ScrollView style={styles.photoPickerScroll}>
+                  <View style={styles.photoPickerGrid}>
+                    {userPhotos.map((photo) => (
+                      <TouchableOpacity
+                        key={photo.id}
+                        style={[
+                          styles.photoPickerItem,
+                          selectedPhoto?.id === photo.id && styles.photoPickerItemSelected
+                        ]}
+                        onPress={() => setSelectedPhoto(photo)}
+                      >
+                        <Image
+                          source={{ 
+                            uri: `${BASE_URL}${photo.original_url}`,
+                            headers: { 'Authorization': `Bearer ${authToken}` }
+                          }}
+                          style={styles.photoPickerImage}
+                        />
+                        {selectedPhoto?.id === photo.id && (
+                          <View style={styles.photoPickerCheck}>
+                            <Ionicons name="checkmark-circle" size={32} color="#E85D75" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+
+                <View style={styles.modalFooter}>
+                  <TextInput
+                    style={styles.captionInput}
+                    placeholder="Add caption (optional)"
+                    value={photoCaption}
+                    onChangeText={setPhotoCaption}
+                    multiline
+                    returnKeyType="done"
+                    blurOnSubmit={true}
+                  />
+                  
                   <TouchableOpacity
-                    key={photo.id}
-                    style={[
-                      styles.photoPickerItem,
-                      selectedPhoto?.id === photo.id && styles.photoPickerItemSelected
-                    ]}
-                    onPress={() => setSelectedPhoto(photo)}
+                    style={[styles.addButton, adding && styles.addButtonDisabled]}
+                    onPress={addPhotoToVault}
+                    disabled={adding || !selectedPhoto}
                   >
-                    <Image
-                      source={{ 
-                        uri: `${BASE_URL}${photo.original_url}`,
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                      }}
-                      style={styles.photoPickerImage}
-                    />
-                    {selectedPhoto?.id === photo.id && (
-                      <View style={styles.photoPickerCheck}>
-                        <Ionicons name="checkmark-circle" size={32} color="#E85D75" />
-                      </View>
+                    {adding ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.addButtonText}>Add to Vault</Text>
                     )}
                   </TouchableOpacity>
-                ))}
+                </View>
               </View>
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TextInput
-                style={styles.captionInput}
-                placeholder="Add caption (optional)"
-                value={photoCaption}
-                onChangeText={setPhotoCaption}
-                multiline
-              />
-              
-              <TouchableOpacity
-                style={[styles.addButton, adding && styles.addButtonDisabled]}
-                onPress={addPhotoToVault}
-                disabled={adding || !selectedPhoto}
-              >
-                {adding ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.addButtonText}>Add to Vault</Text>
-                )}
-              </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

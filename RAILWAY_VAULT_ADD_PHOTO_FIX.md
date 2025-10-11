@@ -1,8 +1,18 @@
 # Deploy Vault Add Photo Fix to Railway
 
+## ⚠️ CRITICAL: iOS App Uses Railway Production
+
+**Your iOS app is currently connected to:** `https://web-production-535bd.up.railway.app`
+
+This means changes made on local Replit **will NOT appear in the iOS app** until you deploy them to Railway!
+
 ## What Was Fixed
 
 **Problem:** iOS app's "Add Photos to Vault" feature did not work on Railway production - no error messages, silent failure.
+
+**Root Cause:** 
+1. Railway production has OLD broken code
+2. iOS app shows "Success" but photo doesn't appear because Railway doesn't have the new endpoint
 
 **Solution:** Completely rewrote `/api/family/vault/<vault_id>/add-photo` endpoint with fresh, simple code using the same successful pattern as the gallery endpoint.
 

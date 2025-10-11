@@ -341,3 +341,9 @@
 [x] 310. Restart both workflows - COMPLETED: PhotoVault Server on port 5000, Expo Server with QR code
 [x] 311. Create Railway deployment guide - COMPLETED: RAILWAY_VAULT_ADD_PHOTO_FIX.md with deployment steps
 [x] 312. Architect review of add-photo feature - COMPLETED: PASSED - Backend mirrors gallery pattern, iOS UI properly wired, data flow consistent, no security issues
+[x] 313. Fix keyboard covering caption input - COMPLETED: Added KeyboardAvoidingView and TouchableWithoutFeedback to dismiss keyboard
+[x] 314. Restart Expo Server with keyboard fix - COMPLETED: Server running with tunnel at exp://iyatagy-anonymous-8081.exp.direct
+[ ] 315. DEPLOY TO RAILWAY - iOS app shows "Success" but photo doesn't appear because Railway production has OLD code
+    - iOS app connects to: https://web-production-535bd.up.railway.app
+    - Replit local changes DO NOT affect iOS app until deployed to Railway
+    - Command: git add . && git commit -m "Fix vault add-photo with keyboard fix" && git push origin main
