@@ -546,46 +546,117 @@ def detect_and_extract_photos(current_user):
         db.session.rollback()
         return jsonify({'error': f'Photo detection failed: {str(e)}'}), 500
 
-@mobile_api_bp.route('/family/vaults', methods=['GET'])
+@mobile_api_bp.route('/family/vaults', methods=['GET', 'POST'])
+@csrf.exempt
 @token_required
-def get_family_vaults(current_user):
-    """Get user's family vaults for mobile app"""
-    try:
-        # Get vaults created by user
-        created_vaults = FamilyVault.query.filter_by(created_by=current_user.id).all()
-        
-        # Get vaults user is a member of
-        member_vaults = db.session.query(FamilyVault).join(FamilyMember).filter(
-            FamilyMember.user_id == current_user.id,
-            FamilyMember.status == 'active'
-        ).all()
-        
-        # Combine and deduplicate
-        all_vaults = list({v.id: v for v in created_vaults + member_vaults}.values())
-        
-        # Build response
-        vaults_list = []
-        for vault in all_vaults:
-            vault_data = {
-                'id': vault.id,
-                'name': vault.name,
-                'description': vault.description,
-                'vault_code': vault.vault_code,
-                'is_public': vault.is_public,
-                'created_at': vault.created_at.isoformat() if vault.created_at else None,
-                'is_creator': vault.created_by == current_user.id,
-                'member_role': vault.get_member_role(current_user.id) if hasattr(vault, 'get_member_role') else 'member'
-            }
-            vaults_list.append(vault_data)
-        
-        return jsonify({
-            'success': True,
-            'vaults': vaults_list
-        })
-        
-    except Exception as e:
-        logger.error(f"Error fetching family vaults: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+def family_vaults(current_user):
+    """Get user's family vaults or create new vault for mobile app"""
+    if request.method == 'GET':
+        try:
+            # Get vaults created by user
+            created_vaults = FamilyVault.query.filter_by(created_by=current_user.id).all()
+            
+            # Get vaults user is a member of
+            member_vaults = db.session.query(FamilyVault).join(FamilyMember).filter(
+                FamilyMember.user_id == current_user.id,
+                FamilyMember.status == 'active'
+            ).all()
+            
+            # Combine and deduplicate
+            all_vaults = list({v.id: v for v in created_vaults + member_vaults}.values())
+            
+            # Build response
+            vaults_list = []
+            for vault in all_vaults:
+                vault_data = {
+                    'id': vault.id,
+                    'name': vault.name,
+                    'description': vault.description,
+                    'vault_code': vault.vault_code,
+                    'is_public': vault.is_public,
+                    'created_at': vault.created_at.isoformat() if vault.created_at else None,
+                    'is_creator': vault.created_by == current_user.id,
+                    'member_role': vault.get_member_role(current_user.id) if hasattr(vault, 'get_member_role') else 'member'
+                }
+                vaults_list.append(vault_data)
+            
+            return jsonify({
+                'success': True,
+                'vaults': vaults_list
+            })
+            
+        except Exception as e:
+            logger.error(f"Error fetching family vaults: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    elif request.method == 'POST':
+        try:
+            from photovault.routes.family import validate_vault_name, validate_vault_description, generate_vault_code
+            
+            data = request.get_json()
+            if not data:
+                return jsonify({'error': 'No data provided'}), 400
+            
+            name = data.get('name', '').strip()
+            description = data.get('description', '').strip()
+            is_public = data.get('is_public', False)
+            
+            # Validate inputs
+            valid_name, name_msg = validate_vault_name(name)
+            valid_desc, desc_msg = validate_vault_description(description)
+            
+            if not valid_name:
+                return jsonify({'error': name_msg}), 400
+            
+            if not valid_desc:
+                return jsonify({'error': desc_msg}), 400
+            
+            # Generate unique vault code
+            vault_code = generate_vault_code()
+            while FamilyVault.query.filter_by(vault_code=vault_code).first():
+                vault_code = generate_vault_code()
+            
+            # Create vault
+            vault = FamilyVault()
+            vault.name = name
+            vault.description = description
+            vault.created_by = current_user.id
+            vault.vault_code = vault_code
+            vault.is_public = is_public
+            
+            db.session.add(vault)
+            db.session.flush()
+            
+            # Add creator as admin member
+            creator_member = FamilyMember()
+            creator_member.vault_id = vault.id
+            creator_member.user_id = current_user.id
+            creator_member.role = 'admin'
+            creator_member.status = 'active'
+            db.session.add(creator_member)
+            
+            db.session.commit()
+            
+            logger.info(f"✅ Vault created successfully: {vault.id} by user {current_user.username}")
+            
+            return jsonify({
+                'success': True,
+                'vault': {
+                    'id': vault.id,
+                    'name': vault.name,
+                    'description': vault.description,
+                    'vault_code': vault_code,
+                    'is_public': vault.is_public,
+                    'created_at': vault.created_at.isoformat() if vault.created_at else None
+                }
+            }), 201
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"❌ Error creating vault: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return jsonify({'error': 'Failed to create vault'}), 500
 
 @mobile_api_bp.route('/family/vault/<int:vault_id>', methods=['GET'])
 @token_required
