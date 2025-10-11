@@ -1285,9 +1285,17 @@ def upload_voice_memo(current_user, photo_id):
     from photovault.models import VoiceMemo
     
     try:
-        logger.info(f"🎤 Uploading voice memo for photo {photo_id} by user {current_user.id}")
+        logger.info(f"🎤 === VOICE MEMO UPLOAD START ===")
+        logger.info(f"📱 User ID: {current_user.id}, Photo ID: {photo_id}")
         logger.info(f"📦 Request files: {list(request.files.keys())}")
         logger.info(f"📦 Request form: {dict(request.form)}")
+        logger.info(f"📦 Request headers: {dict(request.headers)}")
+        logger.info(f"📦 Content-Length: {request.content_length}")
+        logger.info(f"📦 Content-Type: {request.content_type}")
+        
+        # Check file size limit
+        max_size = current_app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)
+        logger.info(f"⚙️ Max upload size: {max_size / 1024 / 1024:.2f} MB")
         
         # Verify photo ownership
         photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
@@ -1297,13 +1305,17 @@ def upload_voice_memo(current_user, photo_id):
         
         # Validate audio file
         if 'audio' not in request.files:
-            logger.error(f"❌ No audio file in request")
+            logger.error(f"❌ No audio file in request. Available keys: {list(request.files.keys())}")
             return jsonify({'success': False, 'error': 'No audio file provided'}), 400
         
         audio_file = request.files['audio']
         if not audio_file or not audio_file.filename:
             logger.error(f"❌ Empty audio file")
             return jsonify({'success': False, 'error': 'Empty audio file'}), 400
+        
+        # Log file details before saving
+        logger.info(f"📄 Audio file: {audio_file.filename}")
+        logger.info(f"📄 Content-Type: {audio_file.content_type}")
         
         # Get duration from form data (sent by iOS app)
         duration_str = request.form.get('duration', '0')
@@ -1323,12 +1335,14 @@ def upload_voice_memo(current_user, photo_id):
         # Create directory and save file
         voice_folder = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), 'voice_memos', str(current_user.id))
         os.makedirs(voice_folder, exist_ok=True)
+        logger.info(f"📁 Save directory: {voice_folder}")
         
         filepath = os.path.join(voice_folder, filename)
+        logger.info(f"💾 Saving to: {filepath}")
         audio_file.save(filepath)
         
         file_size = os.path.getsize(filepath)
-        logger.info(f"💾 Saved: {filename} ({file_size} bytes, {duration}s)")
+        logger.info(f"💾 Saved successfully: {filename} ({file_size} bytes / {file_size/1024/1024:.2f} MB, duration: {duration}s)")
         
         # Create database record
         memo = VoiceMemo()
@@ -1345,6 +1359,7 @@ def upload_voice_memo(current_user, photo_id):
         db.session.commit()
         
         logger.info(f"✅ Voice memo {memo.id} uploaded successfully")
+        logger.info(f"🎤 === VOICE MEMO UPLOAD COMPLETE ===")
         
         return jsonify({
             'success': True,
@@ -1354,15 +1369,63 @@ def upload_voice_memo(current_user, photo_id):
                 'filename': memo.filename,
                 'duration': memo.duration,
                 'duration_formatted': memo.duration_formatted,
-                'created_at': memo.created_at.isoformat()
+                'created_at': memo.created_at.isoformat(),
+                'file_size_mb': round(file_size / 1024 / 1024, 2)
             }
         }), 201
         
     except Exception as e:
-        logger.error(f"❌ Upload error: {str(e)}")
+        logger.error(f"❌ === VOICE MEMO UPLOAD FAILED ===")
+        logger.error(f"❌ Error type: {type(e).__name__}")
+        logger.error(f"❌ Error message: {str(e)}")
         import traceback
-        traceback.print_exc()
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
         db.session.rollback()
+        return jsonify({'success': False, 'error': str(e), 'error_type': type(e).__name__}), 500
+
+
+@mobile_api_bp.route('/voice-memo-test', methods=['GET'])
+@csrf.exempt
+@token_required
+def voice_memo_test(current_user):
+    """Diagnostic endpoint to test voice memo configuration"""
+    try:
+        logger.info(f"🔧 Voice memo diagnostic test for user {current_user.id}")
+        
+        # Get configuration
+        max_size = current_app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        
+        # Check directory permissions
+        voice_folder = os.path.join(upload_folder, 'voice_memos', str(current_user.id))
+        can_create_dir = False
+        try:
+            os.makedirs(voice_folder, exist_ok=True)
+            can_create_dir = True
+        except Exception as e:
+            logger.error(f"Cannot create directory: {e}")
+        
+        # Get first photo for testing
+        photo = Photo.query.filter_by(user_id=current_user.id).first()
+        
+        return jsonify({
+            'success': True,
+            'config': {
+                'max_upload_size_mb': round(max_size / 1024 / 1024, 2),
+                'upload_folder': upload_folder,
+                'voice_folder': voice_folder,
+                'can_create_directory': can_create_dir,
+                'has_photos': photo is not None,
+                'first_photo_id': photo.id if photo else None
+            },
+            'user': {
+                'id': current_user.id,
+                'username': current_user.username
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Diagnostic test error: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
