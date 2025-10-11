@@ -156,9 +156,32 @@ export default function PhotoDetailScreen({ route, navigation }) {
         playsInSilentModeIOS: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.MEDIUM_QUALITY
-      );
+      const { recording } = await Audio.Recording.createAsync({
+        ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        android: {
+          extension: '.m4a',
+          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+          audioEncoder: Audio.AndroidAudioEncoder.AAC,
+          sampleRate: 44100,
+          numberOfChannels: 1,
+          bitRate: 32000,
+        },
+        ios: {
+          extension: '.m4a',
+          outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+          audioQuality: Audio.IOSAudioQuality.LOW,
+          sampleRate: 22050,
+          numberOfChannels: 1,
+          bitRate: 32000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        web: {
+          mimeType: 'audio/webm',
+          bitsPerSecond: 32000,
+        },
+      });
       
       setRecording(recording);
       setIsRecording(true);
@@ -181,6 +204,19 @@ export default function PhotoDetailScreen({ route, navigation }) {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
+
+      // Check file size before upload (Railway has 10MB limit)
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      const fileSizeMB = fileInfo.size / (1024 * 1024);
+      
+      if (fileSizeMB > 8) {
+        Alert.alert(
+          'Recording Too Long',
+          `Voice note is ${fileSizeMB.toFixed(1)}MB. Please keep recordings under 8MB (about 30 minutes at current quality).`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
 
       // Upload the recording with duration
       setLoading(true);
