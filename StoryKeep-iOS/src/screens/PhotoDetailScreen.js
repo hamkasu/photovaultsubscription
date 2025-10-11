@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import { photoAPI, voiceMemoAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
@@ -26,9 +27,37 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [aiMetadata, setAIMetadata] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  
+  // Voice memo states
+  const [voiceMemos, setVoiceMemos] = useState([]);
+  const [recording, setRecording] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [playingSound, setPlayingSound] = useState(null);
+  const [playingMemoId, setPlayingMemoId] = useState(null);
 
   useEffect(() => {
     loadData();
+    loadVoiceMemos();
+    
+    // Cleanup on unmount
+    return () => {
+      if (playingSound) {
+        playingSound.stopAsync();
+        playingSound.unloadAsync();
+      }
+      // Clean up any temp voice memo files
+      FileSystem.readDirectoryAsync(FileSystem.cacheDirectory)
+        .then(files => {
+          const voiceFiles = files.filter(f => f.startsWith('voice_memo_'));
+          return Promise.all(
+            voiceFiles.map(f => 
+              FileSystem.deleteAsync(`${FileSystem.cacheDirectory}${f}`, { idempotent: true })
+                .catch(() => {})
+            )
+          );
+        })
+        .catch(() => {});
+    };
   }, []);
 
   const loadData = async () => {
@@ -102,6 +131,146 @@ export default function PhotoDetailScreen({ route, navigation }) {
     );
   };
 
+  // Voice memo functions
+  const loadVoiceMemos = async () => {
+    try {
+      const response = await voiceMemoAPI.getVoiceMemos(photo.id);
+      if (response.success) {
+        setVoiceMemos(response.voice_memos || []);
+      }
+    } catch (error) {
+      console.error('Error loading voice memos:', error);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert('Permission Required', 'Microphone access is needed to record voice notes');
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
+      setRecording(recording);
+      setIsRecording(true);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to start recording');
+      console.error(error);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    try {
+      setIsRecording(false);
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+
+      // Upload the recording
+      setLoading(true);
+      const response = await voiceMemoAPI.uploadVoiceMemo(photo.id, uri);
+      
+      if (response.success) {
+        Alert.alert('Success', 'Voice note recorded successfully');
+        loadVoiceMemos();
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save voice note');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const playVoiceMemo = async (memo) => {
+    try {
+      // Stop current playback if any
+      if (playingSound) {
+        await playingSound.stopAsync();
+        await playingSound.unloadAsync();
+        setPlayingSound(null);
+        setPlayingMemoId(null);
+      }
+
+      // If clicking the same memo, just stop
+      if (playingMemoId === memo.id) {
+        return;
+      }
+
+      // Download audio file with proper authentication to local temp file
+      const audioUrl = `${BASE_URL}/api/voice-memos/${memo.id}/audio`;
+      const token = await AsyncStorage.getItem('authToken');
+      const localUri = `${FileSystem.cacheDirectory}voice_memo_${memo.id}.m4a`;
+
+      // Download with authenticated headers
+      await FileSystem.downloadAsync(
+        audioUrl,
+        localUri,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      // Play from local file (no authentication needed)
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: localUri },
+        { shouldPlay: true }
+      );
+      
+      setPlayingSound(sound);
+      setPlayingMemoId(memo.id);
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          setPlayingMemoId(null);
+          sound.unloadAsync();
+          setPlayingSound(null);
+          // Clean up temp file
+          FileSystem.deleteAsync(localUri, { idempotent: true }).catch(() => {});
+        }
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to play voice note');
+      console.error(error);
+    }
+  };
+
+  const deleteVoiceMemoHandler = async (memoId) => {
+    Alert.alert(
+      'Delete Voice Note',
+      'Are you sure you want to delete this voice note?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await voiceMemoAPI.deleteVoiceMemo(memoId);
+              Alert.alert('Success', 'Voice note deleted');
+              loadVoiceMemos();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete voice note');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Use same URL pattern as Dashboard and Gallery
   const getImageUrl = (urlPath) => {
     if (!urlPath) return null;
@@ -135,7 +304,8 @@ export default function PhotoDetailScreen({ route, navigation }) {
                 Authorization: `Bearer ${authToken}`
               }
             }} 
-            style={styles.image} 
+            style={styles.image}
+            resizeMode="contain"
           />
         ) : (
           <View style={styles.image}>
@@ -251,6 +421,65 @@ export default function PhotoDetailScreen({ route, navigation }) {
               <Text style={styles.infoValue}>
                 {(photo.file_size / 1024 / 1024).toFixed(2)} MB
               </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.voiceContainer}>
+          <View style={styles.voiceHeader}>
+            <Text style={styles.voiceTitle}>Voice Notes</Text>
+            <TouchableOpacity
+              style={[styles.recordButton, isRecording && styles.recordingButton]}
+              onPress={isRecording ? stopRecording : startRecording}
+              disabled={loading}
+            >
+              <Ionicons 
+                name={isRecording ? 'stop-circle' : 'mic'} 
+                size={24} 
+                color="#fff" 
+              />
+              <Text style={styles.recordButtonText}>
+                {isRecording ? 'Stop' : 'Record'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {voiceMemos.length === 0 ? (
+            <View style={styles.emptyVoiceContainer}>
+              <Ionicons name="mic-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyVoiceText}>No voice notes yet</Text>
+              <Text style={styles.emptyVoiceSubtext}>Tap Record to add a voice note</Text>
+            </View>
+          ) : (
+            <View style={styles.voiceMemosList}>
+              {voiceMemos.map((memo) => (
+                <View key={memo.id} style={styles.voiceMemoCard}>
+                  <TouchableOpacity
+                    style={styles.playButton}
+                    onPress={() => playVoiceMemo(memo)}
+                  >
+                    <Ionicons
+                      name={playingMemoId === memo.id ? 'pause-circle' : 'play-circle'}
+                      size={40}
+                      color="#E85D75"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.voiceMemoInfo}>
+                    <Text style={styles.voiceMemoDate}>
+                      {new Date(memo.created_at).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.voiceMemoTime}>
+                      {new Date(memo.created_at).toLocaleTimeString()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteVoiceButton}
+                    onPress={() => deleteVoiceMemoHandler(memo.id)}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#999" />
+                  </TouchableOpacity>
+                </View>
+              ))}
             </View>
           )}
         </View>
@@ -386,5 +615,85 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     color: '#333',
+  },
+  voiceContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  voiceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  voiceTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  recordButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E85D75',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  recordingButton: {
+    backgroundColor: '#FF4444',
+  },
+  recordButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyVoiceContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyVoiceText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 15,
+  },
+  emptyVoiceSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 5,
+  },
+  voiceMemosList: {
+    gap: 12,
+  },
+  voiceMemoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    padding: 12,
+    borderRadius: 10,
+    gap: 12,
+  },
+  playButton: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  voiceMemoInfo: {
+    flex: 1,
+  },
+  voiceMemoDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  voiceMemoTime: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  deleteVoiceButton: {
+    padding: 8,
   },
 });

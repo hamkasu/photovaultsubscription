@@ -147,7 +147,7 @@ export const vaultAPI = {
 
 export const voiceMemoAPI = {
   getVoiceMemos: async (photoId) => {
-    const response = await api.get(`/api/voice-memos/${photoId}`);
+    const response = await api.get(`/api/photos/${photoId}/voice-memos`);
     return response.data;
   },
   
@@ -159,7 +159,7 @@ export const voiceMemoAPI = {
       name: 'voice-memo.m4a',
     });
     
-    const response = await api.post(`/api/voice-memos/${photoId}`, formData, {
+    const response = await api.post(`/api/photos/${photoId}/voice-memos`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -170,6 +170,10 @@ export const voiceMemoAPI = {
   deleteVoiceMemo: async (memoId) => {
     const response = await api.delete(`/api/voice-memos/${memoId}`);
     return response.data;
+  },
+  
+  getAudioUrl: (memoId) => {
+    return `${BASE_URL}/api/voice-memos/${memoId}/audio`;
   },
 };
 
