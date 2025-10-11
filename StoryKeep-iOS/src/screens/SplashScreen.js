@@ -36,11 +36,11 @@ export default function SplashScreen({ onFinish }) {
         // 2. Save the .mp3 file as 'chime.mp3' in: StoryKeep-iOS/src/assets/sounds/
         // 3. Uncomment the lines below:
         
-        // const { sound: chimeSound } = await Audio.Sound.createAsync(
-        //   require('../assets/sounds/chime.mp3'),
-        //   { shouldPlay: true, volume: 0.5 }
-        // );
-        // sound = chimeSound;
+        const { sound: chimeSound } = await Audio.Sound.createAsync(
+           require('../assets/sounds/chime.mp3'),
+           { shouldPlay: true, volume: 0.5 }
+         );
+         sound = chimeSound;
         
         // For now, splash screen runs without sound to avoid errors
         // Uncomment the above code once you add the sound file
@@ -52,7 +52,7 @@ export default function SplashScreen({ onFinish }) {
     };
 
     // Play chime when splash screen appears (currently disabled until sound file added)
-    // playChimeSound();
+    playChimeSound();
 
     // Start animations
     Animated.sequence([
