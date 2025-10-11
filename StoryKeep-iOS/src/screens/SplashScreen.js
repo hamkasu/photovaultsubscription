@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Audio } from 'expo-av';
 
 const { width, height } = Dimensions.get('window');
 
@@ -18,6 +19,33 @@ export default function SplashScreen({ onFinish }) {
   const taglineTranslateY = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
+    let sound = null;
+
+    const playChimeSound = async () => {
+      try {
+        // Set audio mode for playback
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        });
+
+        // Create and play a gentle chime sound using a simple tone
+        // This creates a pleasant notification-like chime
+        const { sound: chimeSound } = await Audio.Sound.createAsync(
+          // Using a remote gentle chime sound (free, royalty-free)
+          { uri: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_d1718ab41b.mp3' },
+          { shouldPlay: true, volume: 0.5 }
+        );
+        sound = chimeSound;
+      } catch (error) {
+        // Silently fail if audio can't play - don't block the splash screen
+        console.log('Audio playback failed:', error);
+      }
+    };
+
+    // Play chime when splash screen appears
+    playChimeSound();
+
     // Start animations
     Animated.sequence([
       // Logo fade-in and scale
@@ -57,6 +85,13 @@ export default function SplashScreen({ onFinish }) {
         onFinish();
       }
     });
+
+    // Cleanup: unload sound when component unmounts
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
   }, []);
 
   return (
