@@ -343,7 +343,16 @@
 [x] 312. Architect review of add-photo feature - COMPLETED: PASSED - Backend mirrors gallery pattern, iOS UI properly wired, data flow consistent, no security issues
 [x] 313. Fix keyboard covering caption input - COMPLETED: Added KeyboardAvoidingView and TouchableWithoutFeedback to dismiss keyboard
 [x] 314. Restart Expo Server with keyboard fix - COMPLETED: Server running with tunnel at exp://iyatagy-anonymous-8081.exp.direct
-[ ] 315. DEPLOY TO RAILWAY - iOS app shows "Success" but photo doesn't appear because Railway production has OLD code
+[x] 315. Fix keyboard covering caption - COMPLETED: Added KeyboardAvoidingView and TouchableWithoutFeedback
+[x] 316. Debug vault photo display issue - COMPLETED: Found 3 bugs in vault detail endpoint
+    - Bug 1: Used non-existent photo.thumbnail_filename (should be photo.filename)
+    - Bug 2: Missing caption field in response
+    - Bug 3: Missing original_url field
+[x] 317. Fix vault detail endpoint - COMPLETED: Fixed all 3 bugs at lines 717-729
+[x] 318. Restart PhotoVault Server - COMPLETED: Server running with fixes on port 5000
+[ ] 319. DEPLOY TO RAILWAY - CRITICAL! iOS app uses Railway production which has broken code
     - iOS app connects to: https://web-production-535bd.up.railway.app
-    - Replit local changes DO NOT affect iOS app until deployed to Railway
-    - Command: git add . && git commit -m "Fix vault add-photo with keyboard fix" && git push origin main
+    - Replit code is FIXED but Railway has OLD BROKEN code
+    - Command: git add photovault/routes/mobile_api.py StoryKeep-iOS/src/screens/VaultDetailScreen.js
+    - Command: git commit -m "Fix vault photo display - wrong field name and missing caption"
+    - Command: git push origin main

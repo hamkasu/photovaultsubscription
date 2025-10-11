@@ -712,13 +712,15 @@ def get_vault_detail(current_user, vault_id):
                     photo = Photo.query.get(vp.photo_id)
                     if photo:
                         photo_url = f"/uploads/{photo.user_id}/{photo.filename}" if photo.filename else None
-                        thumbnail_url = f"/uploads/{photo.user_id}/{photo.thumbnail_filename}" if photo.thumbnail_filename else None
+                        thumbnail_url = f"/uploads/{photo.user_id}/{photo.filename}" if photo.filename else None
                         
                         photos_list.append({
                             'id': photo.id,
                             'filename': photo.filename,
                             'url': photo_url,
+                            'original_url': photo_url,
                             'thumbnail_url': thumbnail_url,
+                            'caption': vp.caption if hasattr(vp, 'caption') else None,
                             'shared_at': vp.shared_at.isoformat() if vp.shared_at else None,
                             'user_id': photo.user_id
                         })
