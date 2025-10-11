@@ -60,7 +60,7 @@ export default function FamilyVaultsScreen({ navigation }) {
     try {
       const response = await vaultAPI.createVault(newVaultName.trim(), newVaultDescription.trim());
       
-      if (response.success) {
+      if (response.vault) {
         Alert.alert(
           'Success',
           `Vault "${response.vault.name}" created!\n\nVault Code: ${response.vault.vault_code}\n\nShare this code with family members to invite them.`,

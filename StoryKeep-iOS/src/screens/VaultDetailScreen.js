@@ -49,7 +49,7 @@ export default function VaultDetailScreen({ route, navigation }) {
     try {
       const response = await vaultAPI.getVaultDetail(vaultId);
       
-      if (response.success) {
+      if (response.vault) {
         setVault(response.vault);
         setPhotos(response.photos || []);
         setMembers(response.members || []);
