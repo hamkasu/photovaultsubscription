@@ -1233,6 +1233,7 @@ def colorize_photo_mobile(current_user, photo_id):
 
 # Voice Memo Endpoints for Mobile App
 @mobile_api_bp.route('/photos/<int:photo_id>/voice-memos', methods=['GET', 'POST'])
+@csrf.exempt
 @token_required
 def photo_voice_memos(current_user, photo_id):
     """Get or upload voice memos for a photo - Mobile API with JWT auth"""
@@ -1340,6 +1341,7 @@ def photo_voice_memos(current_user, photo_id):
 
 
 @mobile_api_bp.route('/voice-memos/<int:memo_id>', methods=['DELETE'])
+@csrf.exempt
 @token_required
 def delete_voice_memo(current_user, memo_id):
     """Delete a voice memo - Mobile API with JWT auth"""
@@ -1376,6 +1378,7 @@ def delete_voice_memo(current_user, memo_id):
 
 
 @mobile_api_bp.route('/voice-memos/<int:memo_id>/audio', methods=['GET'])
+@csrf.exempt
 @token_required
 def get_voice_memo_audio(current_user, memo_id):
     """Get voice memo audio file - Mobile API with JWT auth in headers"""
