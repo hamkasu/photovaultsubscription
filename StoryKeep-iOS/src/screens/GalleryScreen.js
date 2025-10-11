@@ -105,6 +105,7 @@ export default function GalleryScreen({ navigation }) {
               }
             }}
             style={styles.photoImage}
+            resizeMode="contain"
           />
         ) : (
           <View style={styles.photoImagePlaceholder}>
