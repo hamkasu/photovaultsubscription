@@ -38,6 +38,12 @@ export default function VaultDetailScreen({ route, navigation }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [photoCaption, setPhotoCaption] = useState('');
   const [adding, setAdding] = useState(false);
+  
+  // Invite member states
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('member');
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     loadAuthToken();
@@ -132,6 +138,42 @@ export default function VaultDetailScreen({ route, navigation }) {
       Alert.alert('Error', error.response?.data?.error || 'Failed to add photo to vault');
     } finally {
       setAdding(false);
+    }
+  };
+
+  const openInviteModal = () => {
+    setInviteEmail('');
+    setInviteRole('member');
+    setShowInviteModal(true);
+  };
+
+  const inviteMemberToVault = async () => {
+    if (!inviteEmail.trim()) {
+      Alert.alert('Error', 'Please enter an email address');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    setInviting(true);
+    try {
+      const response = await vaultAPI.inviteMember(vaultId, inviteEmail.trim(), inviteRole);
+      
+      Alert.alert('Success', `Invitation sent to ${inviteEmail}`);
+      setShowInviteModal(false);
+      setInviteEmail('');
+      setInviteRole('member');
+      loadVaultDetails(); // Refresh vault to see pending invitations
+    } catch (error) {
+      console.error('Invite member error:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to send invitation');
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -240,7 +282,7 @@ export default function VaultDetailScreen({ route, navigation }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Members</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={openInviteModal}>
               <Ionicons name="person-add" size={24} color="#E85D75" />
             </TouchableOpacity>
           </View>
@@ -353,6 +395,86 @@ export default function VaultDetailScreen({ route, navigation }) {
                       <ActivityIndicator color="#fff" />
                     ) : (
                       <Text style={styles.addButtonText}>Add to Vault</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Invite Member Modal */}
+      <Modal
+        visible={showInviteModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowInviteModal(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Invite Member</Text>
+                  <TouchableOpacity onPress={() => setShowInviteModal(false)}>
+                    <Ionicons name="close" size={28} color="#333" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.inviteForm}>
+                  <Text style={styles.inputLabel}>Email Address</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="member@example.com"
+                    value={inviteEmail}
+                    onChangeText={setInviteEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+
+                  <Text style={styles.inputLabel}>Role</Text>
+                  <View style={styles.roleSelector}>
+                    <TouchableOpacity
+                      style={[
+                        styles.roleOption,
+                        inviteRole === 'member' && styles.roleOptionSelected
+                      ]}
+                      onPress={() => setInviteRole('member')}
+                    >
+                      <Text style={[
+                        styles.roleOptionText,
+                        inviteRole === 'member' && styles.roleOptionTextSelected
+                      ]}>Member</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[
+                        styles.roleOption,
+                        inviteRole === 'admin' && styles.roleOptionSelected
+                      ]}
+                      onPress={() => setInviteRole('admin')}
+                    >
+                      <Text style={[
+                        styles.roleOptionText,
+                        inviteRole === 'admin' && styles.roleOptionTextSelected
+                      ]}>Admin</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.inviteButton, inviting && styles.inviteButtonDisabled]}
+                    onPress={inviteMemberToVault}
+                    disabled={inviting || !inviteEmail.trim()}
+                  >
+                    {inviting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.inviteButtonText}>Send Invitation</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -658,6 +780,64 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  inviteForm: {
+    padding: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    marginTop: 15,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  roleSelector: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  roleOption: {
+    flex: 1,
+    padding: 12,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  roleOptionSelected: {
+    borderColor: '#E85D75',
+    backgroundColor: '#FFE5EA',
+  },
+  roleOptionText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  roleOptionTextSelected: {
+    color: '#E85D75',
+    fontWeight: 'bold',
+  },
+  inviteButton: {
+    backgroundColor: '#E85D75',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  inviteButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  inviteButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
