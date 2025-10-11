@@ -14,6 +14,14 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
   - Upload service with progress tracking and batch upload support
   - JWT authentication with secure token management
   - React Navigation for seamless user experience
+- **Voice Memo Feature**: Complete voice memo recording and playback for photos
+  - Record voice notes using expo-av with .m4a format
+  - Secure playback with download-then-play pattern (no JWT exposure in URLs)
+  - List all voice memos with play/pause controls
+  - Delete voice memos with confirmation
+  - Automatic temp file cleanup to prevent cache buildup
+  - Mobile API endpoints: POST /api/photos/<photo_id>/voice-memos, DELETE /api/voice-memos/<memo_id>, GET /api/voice-memos/<memo_id>/audio
+- **Image Display Fix**: Updated gallery and photo detail screens to use resizeMode="contain" to show full images without cropping
 - **Colorized Filename Format**: Changed to `<username>.<date>.col.<random>` format for colorized images
 - **Cache-Busting Implementation**: Added timestamp-based cache busting to side-by-side comparison view to prevent browser caching issues
 - **Image Format Preservation**: Fixed Railway upload issue - images now preserve original format (PNG, JPG, GIF) instead of forcing JPEG conversion
