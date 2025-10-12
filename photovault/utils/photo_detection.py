@@ -29,6 +29,8 @@ class PhotoDetector:
         self.min_aspect_ratio = 0.3  # Minimum width/height ratio
         self.max_aspect_ratio = 3.0  # Maximum width/height ratio
         self.contour_area_threshold = 0.01  # Min contour area as fraction of image
+        self.enable_perspective_correction = True  # Enable perspective transformation for tilted photos
+        self.enable_edge_refinement = True  # Enable advanced edge refinement
         
     def detect_photos(self, image_path: str) -> List[Dict]:
         """
@@ -132,25 +134,33 @@ class PhotoDetector:
                     pass
     
     def _preprocess_image(self, image: np.ndarray) -> np.ndarray:
-        """Preprocess image for better edge detection"""
+        """Preprocess image for better edge detection with enhanced algorithms"""
         # Convert to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
-        # Apply Gaussian blur to reduce noise
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        # Apply bilateral filter to reduce noise while preserving edges
+        denoised = cv2.bilateralFilter(gray, 9, 75, 75)
+        
+        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) for better contrast
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(denoised)
         
         # Apply adaptive threshold for better edge detection
         adaptive = cv2.adaptiveThreshold(
-            blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+            enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
             cv2.THRESH_BINARY, 11, 2
         )
         
-        # Apply Canny edge detection
-        edges = cv2.Canny(adaptive, 50, 150, apertureSize=3)
+        # Apply Canny edge detection with optimized parameters
+        edges = cv2.Canny(enhanced, 30, 100, apertureSize=3, L2gradient=True)
         
-        # Apply morphological operations to close gaps
-        kernel = np.ones((3, 3), np.uint8)
-        edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+        # Apply morphological operations to close gaps and strengthen edges
+        kernel_close = np.ones((3, 3), np.uint8)
+        edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel_close)
+        
+        # Dilate slightly to connect nearby edges
+        kernel_dilate = np.ones((2, 2), np.uint8)
+        edges = cv2.dilate(edges, kernel_dilate, iterations=1)
         
         return edges
         
@@ -219,6 +229,111 @@ class PhotoDetector:
             
         return min(1.0, confidence)
     
+    def _get_photo_corners(self, contour) -> np.ndarray:
+        """
+        Approximate contour to get the 4 corners of the photo
+        Returns the 4 corner points for perspective transformation
+        """
+        # Approximate contour to polygon
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+        
+        # If we get a quadrilateral, use those points
+        if len(approx) == 4:
+            return approx.reshape(4, 2)
+        
+        # Otherwise, use the bounding rectangle corners
+        rect = cv2.minAreaRect(contour)
+        box = cv2.boxPoints(rect)
+        return np.int0(box)
+    
+    def _order_points(self, pts: np.ndarray) -> np.ndarray:
+        """
+        Order points in the order: top-left, top-right, bottom-right, bottom-left
+        """
+        # Sort by y-coordinate
+        sorted_pts = pts[np.argsort(pts[:, 1]), :]
+        
+        # Top two points
+        top_pts = sorted_pts[:2]
+        top_pts = top_pts[np.argsort(top_pts[:, 0]), :]
+        tl, tr = top_pts
+        
+        # Bottom two points
+        bottom_pts = sorted_pts[2:]
+        bottom_pts = bottom_pts[np.argsort(bottom_pts[:, 0]), :]
+        bl, br = bottom_pts
+        
+        return np.array([tl, tr, br, bl], dtype=np.float32)
+    
+    def _apply_perspective_transform(self, image: np.ndarray, corners: np.ndarray) -> np.ndarray:
+        """
+        Apply perspective transformation to get a rectangular crop of the photo
+        """
+        # Order the corners
+        ordered_corners = self._order_points(corners)
+        tl, tr, br, bl = ordered_corners
+        
+        # Calculate width of the new image
+        width_top = np.linalg.norm(tr - tl)
+        width_bottom = np.linalg.norm(br - bl)
+        max_width = int(max(width_top, width_bottom))
+        
+        # Calculate height of the new image
+        height_left = np.linalg.norm(bl - tl)
+        height_right = np.linalg.norm(br - tr)
+        max_height = int(max(height_left, height_right))
+        
+        # Destination points for the transform
+        dst_pts = np.array([
+            [0, 0],
+            [max_width - 1, 0],
+            [max_width - 1, max_height - 1],
+            [0, max_height - 1]
+        ], dtype=np.float32)
+        
+        # Calculate perspective transform matrix
+        matrix = cv2.getPerspectiveTransform(ordered_corners, dst_pts)
+        
+        # Apply the transformation
+        warped = cv2.warpPerspective(image, matrix, (max_width, max_height))
+        
+        return warped
+    
+    def _refine_edges(self, image: np.ndarray) -> np.ndarray:
+        """
+        Refine edges of extracted photo to remove artifacts and clean up borders
+        """
+        try:
+            # Convert to grayscale for processing
+            if len(image.shape) == 3:
+                gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = image
+            
+            # Apply bilateral filter to smooth while preserving edges
+            filtered = cv2.bilateralFilter(image, 9, 75, 75)
+            
+            # Detect and remove thin border artifacts
+            border_size = 2
+            h, w = image.shape[:2]
+            
+            # Create a mask for the valid region (excluding thin borders)
+            mask = np.zeros((h, w), dtype=np.uint8)
+            mask[border_size:h-border_size, border_size:w-border_size] = 255
+            
+            # Apply the mask to clean borders
+            result = cv2.bitwise_and(filtered, filtered, mask=mask)
+            
+            # Crop to remove any black borders
+            if border_size > 0 and h > 2*border_size and w > 2*border_size:
+                result = result[border_size:h-border_size, border_size:w-border_size]
+            
+            return result
+        except Exception as e:
+            logger.warning(f"Edge refinement failed: {e}, returning original")
+            return image
+    
     def extract_photos(self, image_path: str, output_dir: str, detected_photos: List[Dict]) -> List[Dict]:
         """
         Extract detected photos and save them as separate images
@@ -256,18 +371,39 @@ class PhotoDetector:
             
             for i, photo in enumerate(detected_photos):
                 try:
-                    # Extract region
+                    # Extract region with improved cropping
                     x, y, w, h = photo['x'], photo['y'], photo['width'], photo['height']
+                    contour = np.array(photo.get('contour', []), dtype=np.int32)
                     
-                    # Add some padding around the detected region
-                    padding = 10
-                    x_start = max(0, x - padding)
-                    y_start = max(0, y - padding)
-                    x_end = min(image.shape[1], x + w + padding)
-                    y_end = min(image.shape[0], y + h + padding)
+                    # Try perspective correction for cleaner crops
+                    extracted_region = None
+                    if self.enable_perspective_correction and len(contour) > 0:
+                        try:
+                            # Get the 4 corners of the photo
+                            corners = self._get_photo_corners(contour)
+                            
+                            # Apply perspective transformation for cleaner crop
+                            extracted_region = self._apply_perspective_transform(image, corners)
+                            logger.info(f"Applied perspective correction to photo {i+1}")
+                        except Exception as e:
+                            logger.warning(f"Perspective correction failed for photo {i+1}: {e}, using fallback")
+                            extracted_region = None
                     
-                    # Extract the region
-                    extracted_region = image[y_start:y_end, x_start:x_end]
+                    # Fallback to traditional extraction if perspective correction failed
+                    if extracted_region is None:
+                        # Calculate adaptive padding based on photo size
+                        padding = max(5, int(min(w, h) * 0.02))  # 2% of smallest dimension
+                        x_start = max(0, x - padding)
+                        y_start = max(0, y - padding)
+                        x_end = min(image.shape[1], x + w + padding)
+                        y_end = min(image.shape[0], y + h + padding)
+                        
+                        # Extract the region
+                        extracted_region = image[y_start:y_end, x_start:x_end]
+                    
+                    # Apply edge cleanup if enabled
+                    if self.enable_edge_refinement and extracted_region is not None:
+                        extracted_region = self._refine_edges(extracted_region)
                     
                     # Generate filename
                     output_filename = f"{base_filename}_photo_{i+1:02d}_conf{photo['confidence']:.2f}.jpg"
@@ -280,13 +416,17 @@ class PhotoDetector:
                         logger.error(f"Failed to save extracted photo: {output_path}")
                         continue
                     
+                    # Get final dimensions
+                    final_height, final_width = extracted_region.shape[:2]
+                    
                     extracted_info = {
                         'original_region': photo,
                         'filename': output_filename,
                         'file_path': output_path,
-                        'extracted_width': x_end - x_start,
-                        'extracted_height': y_end - y_start,
-                        'confidence': photo['confidence']
+                        'extracted_width': final_width,
+                        'extracted_height': final_height,
+                        'confidence': photo['confidence'],
+                        'perspective_corrected': self.enable_perspective_correction and len(contour) > 0
                     }
                     
                     extracted_photos.append(extracted_info)
