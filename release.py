@@ -221,6 +221,51 @@ def run_migrations():
             print(f"PhotoVault Release: Final verification failed: {str(final_error)}")
             return False
 
+def download_colorization_models():
+    """Download colorization models if not present"""
+    print("PhotoVault Release: Checking colorization models...")
+    
+    try:
+        from photovault.utils.download_models import download_colorization_models as download_models
+        
+        # Check if models already exist
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        models_dir = os.path.join(base_dir, 'photovault', 'utils', 'models', 'colorization')
+        
+        model_files = [
+            'colorization_deploy_v2.prototxt',
+            'colorization_release_v2.caffemodel',
+            'pts_in_hull.npy'
+        ]
+        
+        all_exist = all(os.path.exists(os.path.join(models_dir, f)) for f in model_files)
+        
+        if all_exist:
+            print("PhotoVault Release: Colorization models already exist - skipping download")
+            return True
+        
+        print("PhotoVault Release: Downloading colorization models (this may take a minute)...")
+        success = download_models()
+        
+        if success:
+            print("PhotoVault Release: Colorization models downloaded successfully")
+            # Show file sizes
+            for model_file in model_files:
+                filepath = os.path.join(models_dir, model_file)
+                if os.path.exists(filepath):
+                    size_mb = os.path.getsize(filepath) / (1024 * 1024)
+                    print(f"PhotoVault Release: ✓ {model_file} ({size_mb:.1f}MB)")
+            return True
+        else:
+            print("PhotoVault Release: Warning - Some models failed to download")
+            print("PhotoVault Release: Colorization will use fallback method")
+            return True  # Don't fail deployment
+            
+    except Exception as e:
+        print(f"PhotoVault Release: Warning - Model download error: {str(e)}")
+        print("PhotoVault Release: Colorization will use fallback method")
+        return True  # Don't fail deployment
+
 def verify_environment():
     """Verify critical environment variables are set"""
     print("PhotoVault Release: Verifying environment configuration...")
@@ -262,6 +307,9 @@ def main():
         print("PhotoVault Release: Dependencies not available - this is likely during build phase")
         print("PhotoVault Release: Migrations will run during application startup")
         return
+    
+    # Download colorization models (runs even without dependencies)
+    download_colorization_models()
     
     # Verify environment
     if not verify_environment():
