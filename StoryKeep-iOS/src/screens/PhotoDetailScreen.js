@@ -36,9 +36,14 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Existing voice memos states
+  const [existingVoiceMemos, setExistingVoiceMemos] = useState([]);
+  const [playingMemoId, setPlayingMemoId] = useState(null);
 
   useEffect(() => {
     loadData();
+    loadExistingVoiceMemos();
     
     // Cleanup on unmount
     return () => {
@@ -60,6 +65,102 @@ export default function PhotoDetailScreen({ route, navigation }) {
       setAIMetadata(response);
     } catch (error) {
       console.error('AI metadata error:', error);
+    }
+  };
+
+  const loadExistingVoiceMemos = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(`${BASE_URL}/api/photos/${photo.id}/voice-memos`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setExistingVoiceMemos(data.voice_memos || []);
+        console.log('📝 Loaded voice memos:', data.voice_memos?.length || 0);
+      }
+    } catch (error) {
+      console.error('❌ Error loading voice memos:', error);
+    }
+  };
+
+  const playExistingVoiceMemo = async (memoId) => {
+    try {
+      console.log('▶️ Playing voice memo:', memoId);
+      
+      // Stop any existing playback
+      if (sound) {
+        await sound.unloadAsync();
+        setSound(null);
+      }
+
+      const token = await AsyncStorage.getItem('authToken');
+      
+      // Download the audio file to a temporary location
+      const audioUrl = `${BASE_URL}/api/voice-memos/${memoId}/audio`;
+      const fileUri = FileSystem.documentDirectory + `voice_memo_${memoId}.m4a`;
+      
+      const downloadResult = await FileSystem.downloadAsync(
+        audioUrl,
+        fileUri,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      console.log('📥 Downloaded to:', downloadResult.uri);
+
+      // Set audio mode for playback
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        staysActiveInBackground: false,
+      });
+
+      // Play the downloaded file
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: downloadResult.uri },
+        { shouldPlay: true }
+      );
+      
+      setSound(newSound);
+      setPlayingMemoId(memoId);
+      
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          console.log('✅ Playback finished');
+          setPlayingMemoId(null);
+          // Clean up temp file
+          FileSystem.deleteAsync(downloadResult.uri, { idempotent: true }).catch(() => {});
+        }
+      });
+      
+      console.log('✅ Playing voice memo');
+    } catch (error) {
+      console.error('❌ Error playing voice memo:', error);
+      Alert.alert('Error', 'Failed to play voice note: ' + error.message);
+      setPlayingMemoId(null);
+    }
+  };
+
+  const stopExistingVoiceMemo = async () => {
+    try {
+      if (sound) {
+        console.log('⏹️ Stopping voice memo playback');
+        await sound.stopAsync();
+        await sound.unloadAsync();
+        setSound(null);
+        setPlayingMemoId(null);
+      }
+    } catch (error) {
+      console.error('❌ Error stopping playback:', error);
     }
   };
 
@@ -289,6 +390,9 @@ export default function PhotoDetailScreen({ route, navigation }) {
       }
       setIsPlaying(false);
       
+      // Reload voice memos to show the new one
+      await loadExistingVoiceMemos();
+      
       Alert.alert('Success', 'Voice note uploaded successfully!');
     } catch (error) {
       console.error('❌ Upload error:', error);
@@ -404,8 +508,52 @@ export default function PhotoDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
+        {existingVoiceMemos.length > 0 && (
+          <View style={styles.existingVoicesContainer}>
+            <Text style={styles.existingVoicesTitle}>
+              Voice Notes ({existingVoiceMemos.length})
+            </Text>
+            
+            {existingVoiceMemos.map((memo) => (
+              <View key={memo.id} style={styles.voiceMemoCard}>
+                <View style={styles.voiceMemoInfo}>
+                  <Text style={styles.voiceMemoTitle}>
+                    {memo.title || `Voice Note ${memo.id}`}
+                  </Text>
+                  <Text style={styles.voiceMemoMeta}>
+                    {memo.duration_formatted || `${memo.duration}s`} • {memo.file_size_mb} MB
+                  </Text>
+                  <Text style={styles.voiceMemoDate}>
+                    {new Date(memo.created_at).toLocaleString()}
+                  </Text>
+                </View>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.playButton,
+                    playingMemoId === memo.id && styles.playButtonActive
+                  ]}
+                  onPress={() => {
+                    if (playingMemoId === memo.id) {
+                      stopExistingVoiceMemo();
+                    } else {
+                      playExistingVoiceMemo(memo.id);
+                    }
+                  }}
+                >
+                  <Ionicons 
+                    name={playingMemoId === memo.id ? "stop" : "play"} 
+                    size={24} 
+                    color="#fff" 
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={styles.voiceContainer}>
-          <Text style={styles.voiceTitle}>Voice Note Debug</Text>
+          <Text style={styles.voiceTitle}>Record New Voice Note</Text>
           
           <View style={styles.debugControls}>
             {!isRecording && !recordedUri && (
@@ -775,5 +923,60 @@ const styles = StyleSheet.create({
   resetButtonText: {
     color: '#666',
     fontSize: 14,
+  },
+  existingVoicesContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    backgroundColor: '#f8f8f8',
+  },
+  existingVoicesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  voiceMemoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  voiceMemoInfo: {
+    flex: 1,
+    marginRight: 15,
+  },
+  voiceMemoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  voiceMemoMeta: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 2,
+  },
+  voiceMemoDate: {
+    fontSize: 12,
+    color: '#999',
+  },
+  playButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#E85D75',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playButtonActive: {
+    backgroundColor: '#FF6B6B',
   },
 });
