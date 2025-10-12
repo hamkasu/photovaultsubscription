@@ -152,6 +152,9 @@ def mobile_register():
 def get_dashboard(current_user):
     """Get dashboard statistics for mobile app"""
     try:
+        from photovault.models import VoiceMemo
+        from sqlalchemy import func
+        
         # Calculate photo statistics
         total_photos = Photo.query.filter_by(user_id=current_user.id).count()
         
@@ -168,6 +171,19 @@ def get_dashboard(current_user):
         # Get subscription info
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         subscription_plan = user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
+        
+        # Get voice memo counts for all photos efficiently (single query)
+        voice_memo_dict = {}
+        if photos:  # Only query if user has photos
+            voice_memo_counts = db.session.query(
+                VoiceMemo.photo_id,
+                func.count(VoiceMemo.id).label('count')
+            ).filter(
+                VoiceMemo.photo_id.in_([p.id for p in photos])
+            ).group_by(VoiceMemo.photo_id).all()
+            
+            # Create a dictionary for quick lookup
+            voice_memo_dict = {photo_id: count for photo_id, count in voice_memo_counts}
         
         # Sort photos by creation date (newest first)
         sorted_photos = sorted(photos, key=lambda p: p.created_at if p.created_at else datetime.min, reverse=True)
@@ -195,7 +211,8 @@ def get_dashboard(current_user):
                 'edited_url': f'/uploads/{current_user.id}/{photo.edited_filename}' if photo.edited_filename else None,
                 'created_at': photo.created_at.isoformat() if photo.created_at else None,
                 'file_size': photo.file_size,
-                'has_edited': photo.edited_filename is not None
+                'has_edited': photo.edited_filename is not None,
+                'voice_memo_count': voice_memo_dict.get(photo.id, 0)  # Add voice memo count
             })
         
         return jsonify({
