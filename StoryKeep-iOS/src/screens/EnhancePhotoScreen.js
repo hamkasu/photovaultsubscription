@@ -57,19 +57,25 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     }
   };
 
-  const handleColorize = async () => {
+  const handleColorize = async (useAI = false) => {
     setProcessing(true);
     try {
-      const response = await photoAPI.colorizePhoto(photo.id);
+      let response;
+      if (useAI) {
+        response = await photoAPI.colorizePhotoAI(photo.id);
+      } else {
+        response = await photoAPI.colorizePhoto(photo.id, 'auto');
+      }
 
-      Alert.alert('Success', 'Photo colorized successfully!', [
+      Alert.alert('Success', `Photo colorized successfully using ${useAI ? 'AI' : 'DNN'}!`, [
         {
           text: 'View',
           onPress: () => navigation.goBack(),
         },
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to colorize photo');
+      const errorMsg = error.response?.data?.error || 'Failed to colorize photo';
+      Alert.alert('Error', errorMsg);
       console.error(error);
     } finally {
       setProcessing(false);
@@ -175,10 +181,18 @@ export default function EnhancePhotoScreen({ route, navigation }) {
 
           <EnhancementOption
             icon="color-palette"
-            title="Colorize"
-            description="Add color to black & white photos"
-            onPress={handleColorize}
+            title="Colorize (DNN)"
+            description="Add color using DNN algorithm"
+            onPress={() => handleColorize(false)}
             color="#4CAF50"
+          />
+
+          <EnhancementOption
+            icon="sparkles-outline"
+            title="Colorize (AI)"
+            description="Add color using AI-powered algorithm"
+            onPress={() => handleColorize(true)}
+            color="#9C27B0"
           />
 
           <EnhancementOption
