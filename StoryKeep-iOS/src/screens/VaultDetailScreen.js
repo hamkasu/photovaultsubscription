@@ -16,11 +16,15 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { vaultAPI } from '../services/api';
 
+const { width } = Dimensions.get('window');
+const COLUMN_COUNT = 3;
+const ITEM_WIDTH = (width - 6) / COLUMN_COUNT; // 2px gap between items
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export default function VaultDetailScreen({ route, navigation }) {
@@ -31,6 +35,7 @@ export default function VaultDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  const [activeTab, setActiveTab] = useState('photos'); // 'photos' or 'members'
   
   // Photo picker states
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
@@ -177,6 +182,20 @@ export default function VaultDetailScreen({ route, navigation }) {
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
+  };
+
   const renderPhoto = ({ item }) => (
     <TouchableOpacity
       style={styles.photoCard}
@@ -190,12 +209,20 @@ export default function VaultDetailScreen({ route, navigation }) {
           }
         }}
         style={styles.photoImage}
+        resizeMode="cover"
       />
-      {item.caption && (
-        <View style={styles.captionOverlay}>
-          <Text style={styles.captionText} numberOfLines={2}>
-            {item.caption}
-          </Text>
+      
+      {/* Bottom gradient overlay */}
+      <View style={styles.bottomOverlay}>
+        <Text style={styles.photoDate} numberOfLines={1}>
+          {item.caption || formatDate(item.created_at)}
+        </Text>
+      </View>
+
+      {/* Enhanced badge */}
+      {item.edited_url && (
+        <View style={styles.enhancedBadge}>
+          <Ionicons name="sparkles" size={14} color="#fff" />
         </View>
       )}
     </TouchableOpacity>
@@ -242,89 +269,94 @@ export default function VaultDetailScreen({ route, navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color="#333" />
+          <Ionicons name="arrow-back" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{vault.name}</Text>
         <TouchableOpacity>
-          <Ionicons name="share-outline" size={28} color="#333" />
+          <Ionicons name="share-outline" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View style={styles.vaultInfo}>
-          <Text style={styles.description}>{vault.description}</Text>
-          
-          <View style={styles.vaultCodeContainer}>
-            <Text style={styles.vaultCodeLabel}>Vault Code:</Text>
-            <View style={styles.vaultCodeBox}>
-              <Text style={styles.vaultCode}>{vault.vault_code}</Text>
-            </View>
-          </View>
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'photos' && styles.tabActive]}
+          onPress={() => setActiveTab('photos')}
+        >
+          <Text style={[styles.tabText, activeTab === 'photos' && styles.tabTextActive]}>
+            Photos
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'members' && styles.tabActive]}
+          onPress={() => setActiveTab('members')}
+        >
+          <Text style={[styles.tabText, activeTab === 'members' && styles.tabTextActive]}>
+            Members
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-          <View style={styles.stats}>
-            <View style={styles.statItem}>
-              <Ionicons name="images" size={24} color="#E85D75" />
-              <Text style={styles.statNumber}>{photos.length}</Text>
-              <Text style={styles.statLabel}>Photos</Text>
+      {activeTab === 'members' ? (
+        <ScrollView
+          style={styles.membersContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.membersList}>
+            <View style={styles.membersHeader}>
+              <Text style={styles.membersTitle}>Members</Text>
+              <TouchableOpacity onPress={openInviteModal}>
+                <Ionicons name="person-add" size={24} color="#E85D75" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.statItem}>
-              <Ionicons name="people" size={24} color="#E85D75" />
-              <Text style={styles.statNumber}>{members.length}</Text>
-              <Text style={styles.statLabel}>Members</Text>
-            </View>
+            
+            {members.length === 0 ? (
+              <View style={styles.emptyMembers}>
+                <Ionicons name="people-outline" size={60} color="#666" />
+                <Text style={styles.emptyText}>No members yet</Text>
+              </View>
+            ) : (
+              members.map((member) => (
+                <View key={member.id}>{renderMember({ item: member })}</View>
+              ))
+            )}
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Members</Text>
-            <TouchableOpacity onPress={openInviteModal}>
-              <Ionicons name="person-add" size={24} color="#E85D75" />
-            </TouchableOpacity>
-          </View>
-          
-          {members.length === 0 ? (
-            <View style={styles.emptySection}>
-              <Text style={styles.emptySectionText}>No members yet</Text>
-            </View>
-          ) : (
-            members.map((member) => (
-              <View key={member.id}>{renderMember({ item: member })}</View>
-            ))
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Photos</Text>
-            <TouchableOpacity onPress={openPhotoPicker}>
-              <Ionicons name="add-circle" size={28} color="#E85D75" />
-            </TouchableOpacity>
-          </View>
-          
+        </ScrollView>
+      ) : (
+        <View style={styles.photosContainer}>
           {photos.length === 0 ? (
             <View style={styles.emptyPhotos}>
-              <Ionicons name="images-outline" size={60} color="#ccc" />
+              <Ionicons name="images-outline" size={80} color="#666" />
               <Text style={styles.emptyText}>No photos yet</Text>
               <Text style={styles.emptySubtext}>
                 Add photos to share with family members
               </Text>
             </View>
           ) : (
-            <View style={styles.photoGrid}>
-              {photos.map((photo) => (
-                <View key={photo.id} style={styles.photoGridItem}>
-                  {renderPhoto({ item: photo })}
-                </View>
-              ))}
-            </View>
+            <FlatList
+              data={photos}
+              renderItem={renderPhoto}
+              keyExtractor={(item) => item.id.toString()}
+              numColumns={COLUMN_COUNT}
+              contentContainerStyle={styles.photoList}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+            />
           )}
+          
+          {/* Floating Add Button */}
+          <TouchableOpacity
+            style={styles.floatingAddButton}
+            onPress={openPhotoPicker}
+          >
+            <Ionicons name="add" size={32} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      )}
 
       {/* Photo Picker Modal */}
       <Modal
@@ -490,22 +522,24 @@ export default function VaultDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#000',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
+    backgroundColor: '#000',
   },
   errorText: {
     fontSize: 18,
-    color: '#666',
+    color: '#999',
     marginTop: 20,
     marginBottom: 20,
   },
@@ -526,106 +560,145 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     paddingTop: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: '#000',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     flex: 1,
     marginHorizontal: 15,
+    textAlign: 'center',
   },
-  vaultInfo: {
-    padding: 20,
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#000',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#222',
   },
-  description: {
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: '#E85D75',
+  },
+  tabText: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 20,
+    fontWeight: '500',
   },
-  vaultCodeContainer: {
-    flexDirection: 'row',
+  tabTextActive: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  photosContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  photoList: {
+    paddingBottom: 80,
+  },
+  photoCard: {
+    width: ITEM_WIDTH,
+    height: ITEM_WIDTH * 1.6, // Vertical aspect ratio like TikTok
+    margin: 1,
+    backgroundColor: '#1a1a1a',
+    position: 'relative',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bottomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 8,
+    paddingBottom: 6,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  photoDate: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  enhancedBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#E85D75',
+    borderRadius: 10,
+    padding: 3,
+  },
+  emptyPhotos: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 40,
   },
-  vaultCodeLabel: {
+  emptyText: {
+    fontSize: 18,
+    color: '#999',
+    marginTop: 20,
+  },
+  emptySubtext: {
     fontSize: 14,
     color: '#666',
-    marginRight: 10,
-  },
-  vaultCodeBox: {
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  vaultCode: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#E85D75',
-    fontFamily: 'monospace',
-  },
-  stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
     marginTop: 8,
+    textAlign: 'center',
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+  floatingAddButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E85D75',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  section: {
+  membersContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  membersList: {
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
-  sectionHeader: {
+  membersHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 20,
+  membersTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-  },
-  emptySection: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptySectionText: {
-    fontSize: 14,
-    color: '#999',
+    color: '#fff',
   },
   memberCard: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    backgroundColor: '#f9f9f9',
-    padding: 12,
+    backgroundColor: '#1a1a1a',
+    padding: 16,
     borderRadius: 12,
   },
   memberAvatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FFF0F3',
+    backgroundColor: '#2a2a2a',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -639,7 +712,7 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#fff',
   },
   memberRoleBadge: {
     backgroundColor: '#E85D75',
@@ -653,51 +726,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'capitalize',
   },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -5,
-  },
-  photoGridItem: {
-    width: '50%',
-    padding: 5,
-  },
-  photoCard: {
-    aspectRatio: 1,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
-  },
-  photoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  captionOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    padding: 8,
-  },
-  captionText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  emptyPhotos: {
+  emptyMembers: {
     alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 15,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-    textAlign: 'center',
+    padding: 60,
   },
   // Photo Picker Modal Styles
   modalContainer: {
@@ -750,10 +781,9 @@ const styles = StyleSheet.create({
   },
   photoPickerCheck: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -16 }, { translateY: -16 }],
   },
   modalFooter: {
     padding: 20,
@@ -766,33 +796,34 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
-    minHeight: 60,
     marginBottom: 15,
+    minHeight: 60,
     textAlignVertical: 'top',
   },
   addButton: {
     backgroundColor: '#E85D75',
-    padding: 15,
+    padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
   addButtonDisabled: {
-    backgroundColor: '#ccc',
+    opacity: 0.6,
   },
   addButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Invite Member Modal Styles
   inviteForm: {
     padding: 20,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
-    marginTop: 15,
+    marginTop: 12,
   },
   input: {
     borderWidth: 1,
@@ -800,7 +831,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
   },
   roleSelector: {
     flexDirection: 'row',
@@ -810,14 +840,14 @@ const styles = StyleSheet.create({
   roleOption: {
     flex: 1,
     padding: 12,
-    borderWidth: 2,
-    borderColor: '#ddd',
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
     alignItems: 'center',
   },
   roleOptionSelected: {
     borderColor: '#E85D75',
-    backgroundColor: '#FFE5EA',
+    backgroundColor: '#FFF0F3',
   },
   roleOptionText: {
     fontSize: 16,
@@ -829,13 +859,13 @@ const styles = StyleSheet.create({
   },
   inviteButton: {
     backgroundColor: '#E85D75',
-    padding: 15,
+    padding: 16,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
   },
   inviteButtonDisabled: {
-    backgroundColor: '#ccc',
+    opacity: 0.6,
   },
   inviteButtonText: {
     color: '#fff',
