@@ -2,7 +2,20 @@
 
 ## Overview
 
-StoryKeep is the mobile companion to PhotoVault, built with React Native and Expo. It provides a native iOS experience for photo digitization, enhancement, and family vault management.
+StoryKeep is the mobile companion to PhotoVault, built with React Native and Expo. It provides a native iOS experience specifically designed for **legacy photo digitization and restoration**, focusing on the essential tools needed to bring old physical photos back to life.
+
+## Design Philosophy: Mobile-First Legacy Photo Restoration
+
+**Mobile App (StoryKeep)** is optimized for the legacy photo digitization workflow:
+- **Camera-first**: Smart capture with edge detection for physical photos
+- **Quick restoration**: Essential tools (Sharpen, Colorize) for old photos
+- **Instant upload**: Fast processing and family sharing
+
+**Web Platform (PhotoVault)** provides the full editing suite:
+- All mobile features + advanced editing tools
+- Detailed adjustments (brightness, contrast, filters)
+- Batch processing and complex workflows
+- Face detection and social sharing
 
 ## Technology Stack
 
@@ -49,6 +62,25 @@ StoryKeep-iOS/
 │   └── assets/             # Images, fonts, icons
 └── ios/                    # Native iOS code (managed by Expo)
 ```
+
+## Core Features for Legacy Photo Restoration
+
+### Mobile-Only Features (StoryKeep)
+1. **Smart Camera** - Edge detection and auto-capture for physical photos
+2. **Photo Extraction** - Automatic detection and cropping
+3. **Sharpen** - Fix blurry or degraded old photos
+4. **Colorize (DNN)** - Fast colorization for B&W photos
+5. **Colorize (AI)** - Intelligent AI-powered colorization
+6. **Offline Queue** - Capture without internet, upload later
+7. **Family Vaults** - Share restored photos with family
+
+### Web-Only Features (PhotoVault)
+1. **Advanced Editing** - Full suite of adjustment tools
+2. **Filters & Effects** - Artistic enhancements
+3. **Face Detection** - Automatic person tagging
+4. **Batch Processing** - Edit multiple photos at once
+5. **Social Sharing** - Direct social media integration
+6. **Detailed Analytics** - Photo metadata and insights
 
 ## Key Features Implementation
 
@@ -191,37 +223,49 @@ export const detectAndExtractPhotos = async (imageUri) => {
 };
 ```
 
-### 3. Image Processing
+### 3. Image Processing (Legacy Photo Focus)
 
-#### Local Image Enhancement
+#### Sharpen Photo
 
 ```javascript
-// src/utils/imageProcessor.js
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+// src/services/api.js
+export const sharpenPhoto = async (photoId, intensity = 1.5) => {
+  const response = await api.post(`/api/photos/${photoId}/sharpen`, { intensity });
+  return response.data;
+};
 
-export const enhanceImage = async (imageUri, settings) => {
-  const actions = [];
-  
-  // Apply brightness
-  if (settings.brightness !== 1.0) {
-    actions.push({ brightness: settings.brightness });
+// Usage in EnhancePhotoScreen.js
+const handleSharpen = async () => {
+  setProcessing(true);
+  try {
+    await photoAPI.sharpenPhoto(photo.id, 1.5);
+    Alert.alert('Success', 'Photo sharpened successfully!');
+  } catch (error) {
+    Alert.alert('Error', 'Failed to sharpen photo');
+  } finally {
+    setProcessing(false);
   }
-  
-  // Apply contrast
-  if (settings.contrast !== 1.0) {
-    actions.push({ contrast: settings.contrast });
+};
+```
+
+#### Colorize Photo (DNN & AI)
+
+```javascript
+// DNN Colorization (Fast)
+const handleColorize = async (useAI = false) => {
+  setProcessing(true);
+  try {
+    if (useAI) {
+      await photoAPI.colorizePhotoAI(photo.id);
+    } else {
+      await photoAPI.colorizePhoto(photo.id, 'auto');
+    }
+    Alert.alert('Success', `Photo colorized using ${useAI ? 'AI' : 'DNN'}!`);
+  } catch (error) {
+    Alert.alert('Error', 'Failed to colorize photo');
+  } finally {
+    setProcessing(false);
   }
-  
-  // Resize if too large
-  actions.push({ resize: { width: 2048 } });
-  
-  const result = await manipulateAsync(
-    imageUri,
-    actions,
-    { compress: 0.8, format: SaveFormat.JPEG }
-  );
-  
-  return result.uri;
 };
 ```
 

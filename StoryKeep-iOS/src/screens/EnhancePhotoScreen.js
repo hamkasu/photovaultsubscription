@@ -36,21 +36,19 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     }
   };
 
-  const handleAutoEnhance = async () => {
+  const handleSharpen = async () => {
     setProcessing(true);
     try {
-      const response = await photoAPI.enhancePhoto(photo.id, {
-        auto_enhance: true,
-      });
+      const response = await photoAPI.sharpenPhoto(photo.id, 1.5);
 
-      Alert.alert('Success', 'Photo enhanced successfully!', [
+      Alert.alert('Success', 'Photo sharpened successfully!', [
         {
           text: 'View',
           onPress: () => navigation.goBack(),
         },
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to enhance photo');
+      Alert.alert('Error', 'Failed to sharpen photo');
       console.error(error);
     } finally {
       setProcessing(false);
@@ -169,20 +167,20 @@ export default function EnhancePhotoScreen({ route, navigation }) {
         )}
 
         <View style={styles.options}>
-          <Text style={styles.sectionTitle}>Enhancement Options</Text>
+          <Text style={styles.sectionTitle}>Legacy Photo Restoration</Text>
 
           <EnhancementOption
-            icon="sparkles"
-            title="Auto Enhance"
-            description="AI-powered automatic enhancement"
-            onPress={handleAutoEnhance}
-            color="#E85D75"
+            icon="brush"
+            title="Sharpen"
+            description="Fix blurry or degraded photos"
+            onPress={handleSharpen}
+            color="#FF9800"
           />
 
           <EnhancementOption
             icon="color-palette"
             title="Colorize (DNN)"
-            description="Add color using DNN algorithm"
+            description="Fast colorization using DNN"
             onPress={() => handleColorize(false)}
             color="#4CAF50"
           />
@@ -190,29 +188,8 @@ export default function EnhancePhotoScreen({ route, navigation }) {
           <EnhancementOption
             icon="sparkles-outline"
             title="Colorize (AI)"
-            description="Add color using AI-powered algorithm"
+            description="Intelligent AI-powered colorization"
             onPress={() => handleColorize(true)}
-            color="#9C27B0"
-          />
-
-          <EnhancementOption
-            icon="contrast"
-            title="Adjust Brightness"
-            description="Fine-tune brightness and contrast"
-            color="#2196F3"
-          />
-
-          <EnhancementOption
-            icon="brush"
-            title="Sharpen"
-            description="Increase image sharpness"
-            color="#FF9800"
-          />
-
-          <EnhancementOption
-            icon="water"
-            title="Denoise"
-            description="Remove grain and noise"
             color="#9C27B0"
           />
         </View>

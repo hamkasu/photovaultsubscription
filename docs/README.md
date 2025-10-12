@@ -26,11 +26,49 @@ photovault/
 └── tests/                  # Test suites
 ```
 
+## Design Philosophy: Mobile-First Legacy Photo Restoration
+
+PhotoVault/StoryKeep is designed with a clear platform split optimized for different use cases:
+
+### 📱 Mobile App (StoryKeep) - Legacy Photo Digitization
+**Purpose**: Quick digitization and restoration of old physical photos
+
+**Core Features**:
+- **Smart Camera**: Edge detection and auto-capture for physical photos
+- **Photo Extraction**: Automatic detection and cropping
+- **Sharpen**: Fix blurry or degraded old photos
+- **Colorize (DNN)**: Fast colorization for B&W photos
+- **Colorize (AI)**: Intelligent AI-powered colorization
+- **Offline Queue**: Capture without internet, upload later
+- **Family Vaults**: Share restored photos instantly
+
+**Why Mobile-First?**
+- Old photos are physical - users need a camera-first solution
+- Quick restoration tools (sharpen, colorize) for immediate results
+- Simple, focused UI for elderly users digitizing family memories
+
+### 💻 Web Platform (PhotoVault) - Advanced Photo Editing
+**Purpose**: Comprehensive photo management and advanced editing
+
+**All Mobile Features Plus**:
+- **Advanced Editing**: Full suite of adjustment tools (brightness, contrast, filters)
+- **Face Detection**: Automatic person tagging and recognition
+- **Batch Processing**: Edit multiple photos simultaneously
+- **Social Sharing**: Direct integration with social media platforms
+- **Voice Memos**: Attach audio recordings to photos
+- **Subscription Management**: Malaysian market-focused billing with SST compliance
+- **Detailed Analytics**: Photo metadata and insights
+
+**Why Web for Advanced Features?**
+- Larger screen for precise editing
+- More complex workflows benefit from desktop UI
+- Non-time-sensitive tasks done at home
+
 ## Key Features
 
 ### Web Platform (PhotoVault)
 - **Photo Management**: Upload, organize, and manage photo collections
-- **Advanced Editing**: Enhance, restore, sharpen, and colorize photos
+- **Advanced Editing**: Full editing suite with filters, adjustments, and effects
 - **AI Integration**: Google Gemini-powered photo analysis and colorization
 - **Family Vaults**: Shared photo collections with role-based access
 - **Voice Memos**: Attach audio recordings to photos
@@ -38,11 +76,12 @@ photovault/
 - **Social Sharing**: Direct integration with social media platforms
 - **Subscription Billing**: Malaysian market-focused pricing with SST compliance
 
-### Mobile App (StoryKeep)
-- **Smart Camera**: Edge detection, auto-capture, batch mode
+### Mobile App (StoryKeep) - Legacy Photo Focus
+- **Smart Camera**: Edge detection, auto-capture, batch mode for physical photos
 - **Photo Digitization**: Automatic photo detection and extraction
+- **Sharpen**: Fix blurry or degraded old photos
+- **Colorize (DNN & AI)**: Two colorization options for B&W photos
 - **Offline Support**: Local storage and background upload queue
-- **Image Enhancement**: One-tap auto-enhance, colorization, sharpening
 - **Gallery Management**: Filter, sort, and manage photo collections
 - **Family Vaults**: Access and manage shared family photos
 - **Secure Authentication**: JWT-based auth with biometric login support

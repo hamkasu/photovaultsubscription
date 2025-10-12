@@ -4,6 +4,44 @@
 
 PhotoVault/StoryKeep is built using a modern three-tier architecture with clear separation between presentation, business logic, and data layers. The system supports both web and mobile clients through a unified backend API.
 
+## Design Philosophy: Platform-Specific Feature Distribution
+
+### Mobile-First Legacy Photo Restoration (StoryKeep)
+
+The mobile app is laser-focused on **digitizing and restoring old physical photos**:
+
+**Use Case**: Elderly users digitizing family photo albums
+- Physical photos need to be captured with a camera
+- Quick fixes needed: sharpen blurry photos, colorize B&W photos
+- Simple, focused interface (3 buttons: Sharpen, Colorize DNN, Colorize AI)
+- Offline support for capturing photos without internet
+
+**Mobile-Only Features**:
+- Smart camera with edge detection
+- Photo detection and extraction
+- Sharpen (fix degraded photos)
+- Colorize DNN (fast colorization)
+- Colorize AI (intelligent colorization)
+- Offline upload queue
+
+### Web-Based Advanced Editing (PhotoVault)
+
+The web platform provides the **full photo editing suite**:
+
+**Use Case**: Detailed editing at home on a larger screen
+- All mobile features + advanced tools
+- Complex adjustments (brightness, contrast, filters, effects)
+- Face detection and person tagging
+- Batch processing
+- Social media integration
+- Subscription management
+
+**Why This Split?**
+- **Mobile = Capture & Quick Fix**: Users are physically holding old photos, need immediate digitization
+- **Web = Edit & Enhance**: Users have time for detailed editing on a desktop
+- **Better UX**: Focused mobile interface vs. comprehensive web tools
+- **Performance**: Heavy processing (face detection, batch operations) better on web
+
 ## Architecture Diagram
 
 ```
