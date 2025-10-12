@@ -9,10 +9,11 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
-import { photoAPI, voiceMemoAPI } from '../services/api';
+import { photoAPI, voiceMemoAPI, commentAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -41,9 +42,15 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [existingVoiceMemos, setExistingVoiceMemos] = useState([]);
   const [playingMemoId, setPlayingMemoId] = useState(null);
 
+  // Comments/Annotations states
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+
   useEffect(() => {
     loadData();
     loadExistingVoiceMemos();
+    loadComments();
     
     // Cleanup on unmount
     return () => {
@@ -162,6 +169,66 @@ export default function PhotoDetailScreen({ route, navigation }) {
     } catch (error) {
       console.error('❌ Error stopping playback:', error);
     }
+  };
+
+  const loadComments = async () => {
+    try {
+      setLoadingComments(true);
+      const response = await commentAPI.getComments(photo.id);
+      setComments(response.comments || []);
+      console.log('💬 Loaded comments:', response.comments?.length || 0);
+    } catch (error) {
+      console.error('❌ Error loading comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) {
+      Alert.alert('Error', 'Please enter a comment');
+      return;
+    }
+
+    try {
+      setLoadingComments(true);
+      const response = await commentAPI.addComment(photo.id, newComment.trim());
+      
+      if (response.success) {
+        setComments([response.comment, ...comments]);
+        setNewComment('');
+        Alert.alert('Success', 'Comment added successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error adding comment:', error);
+      Alert.alert('Error', 'Failed to add comment');
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleDeleteComment = (commentId) => {
+    Alert.alert(
+      'Delete Comment',
+      'Are you sure you want to delete this comment?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await commentAPI.deleteComment(commentId);
+              setComments(comments.filter(c => c.id !== commentId));
+              Alert.alert('Success', 'Comment deleted');
+            } catch (error) {
+              console.error('❌ Error deleting comment:', error);
+              Alert.alert('Error', 'Failed to delete comment');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleEnhance = () => {
@@ -637,6 +704,68 @@ export default function PhotoDetailScreen({ route, navigation }) {
           </View>
         </View>
 
+        {/* Annotations/Comments Section */}
+        <View style={styles.commentsContainer}>
+          <Text style={styles.commentsTitle}>Annotations</Text>
+          
+          {/* Add Comment Input */}
+          <View style={styles.addCommentContainer}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a note or comment..."
+              placeholderTextColor="#999"
+              value={newComment}
+              onChangeText={setNewComment}
+              multiline
+              numberOfLines={3}
+            />
+            <TouchableOpacity
+              style={styles.addCommentButton}
+              onPress={handleAddComment}
+              disabled={loadingComments || !newComment.trim()}
+            >
+              {loadingComments ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="add-circle" size={20} color="#fff" />
+                  <Text style={styles.addCommentButtonText}>Add</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Comments List */}
+          {comments.length > 0 ? (
+            <View style={styles.commentsList}>
+              <Text style={styles.commentsCount}>
+                {comments.length} {comments.length === 1 ? 'annotation' : 'annotations'}
+              </Text>
+              {comments.map((comment) => (
+                <View key={comment.id} style={styles.commentCard}>
+                  <View style={styles.commentHeader}>
+                    <View>
+                      <Text style={styles.commentUsername}>{comment.username}</Text>
+                      <Text style={styles.commentDate}>
+                        {new Date(comment.created_at).toLocaleString()}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteComment(comment.id)}
+                      style={styles.deleteCommentButton}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.commentText}>{comment.comment_text}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.noComments}>No annotations yet. Add one above!</Text>
+          )}
+        </View>
+
         {aiMetadata && (
           <View style={styles.metadataContainer}>
             <Text style={styles.metadataTitle}>AI Analysis</Text>
@@ -978,5 +1107,92 @@ const styles = StyleSheet.create({
   },
   playButtonActive: {
     backgroundColor: '#FF6B6B',
+  },
+  commentsContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  commentsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  addCommentContainer: {
+    marginBottom: 20,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    color: '#333',
+    backgroundColor: '#fff',
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 10,
+  },
+  addCommentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E85D75',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 8,
+  },
+  addCommentButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  commentsList: {
+    marginTop: 10,
+  },
+  commentsCount: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  commentCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  commentUsername: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  commentDate: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
+  },
+  deleteCommentButton: {
+    padding: 5,
+  },
+  commentText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  noComments: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 10,
+    fontStyle: 'italic',
   },
 });

@@ -178,4 +178,23 @@ export const voiceMemoAPI = {
   },
 };
 
+export const commentAPI = {
+  getComments: async (photoId) => {
+    const response = await api.get(`/api/photos/${photoId}/comments`);
+    return response.data;
+  },
+  
+  addComment: async (photoId, commentText) => {
+    const response = await api.post(`/api/photos/${photoId}/comments`, {
+      comment_text: commentText,
+    });
+    return response.data;
+  },
+  
+  deleteComment: async (commentId) => {
+    const response = await api.delete(`/api/comments/${commentId}`);
+    return response.data;
+  },
+};
+
 export default api;
