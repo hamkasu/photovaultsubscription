@@ -1269,6 +1269,113 @@ def colorize_photo_mobile(current_user, photo_id):
         return jsonify({'success': False, 'error': 'Colorization failed'}), 500
 
 
+@mobile_api_bp.route('/photos/<int:photo_id>/colorize-ai', methods=['POST'])
+@csrf.exempt
+@token_required
+def colorize_photo_ai_mobile(current_user, photo_id):
+    """
+    Mobile API endpoint to colorize a black and white photo using AI with JWT authentication
+    """
+    try:
+        from photovault.services.ai_service import get_ai_service
+        from photovault.services.app_storage_service import app_storage
+        import io
+        
+        # Check if AI service is available
+        ai_service = get_ai_service()
+        if not ai_service.is_available():
+            return jsonify({
+                'success': False,
+                'error': 'AI service not available. Please configure GEMINI_API_KEY.'
+            }), 503
+        
+        # Get the photo and verify ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        
+        # Check if file exists
+        if not os.path.exists(photo.file_path):
+            return jsonify({'success': False, 'error': 'Photo file not found'}), 404
+        
+        # Generate unique filename for colorized version
+        unique_id = str(uuid.uuid4())
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        file_extension = os.path.splitext(photo.filename)[1] or '.jpg'
+        colorized_filename = f"{current_user.id}_{unique_id}_colorized_ai_{timestamp}{file_extension}"
+        
+        # Create user folder
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        colorized_path = os.path.join(user_folder, colorized_filename)
+        
+        logger.info(f"🎨 AI Colorizing photo {photo_id} for user {current_user.id}")
+        
+        # Perform AI colorization
+        try:
+            result_path, metadata = ai_service.colorize_image_ai(photo.file_path, colorized_path)
+        except Exception as e:
+            logger.error(f"AI colorization failed: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'AI colorization failed: {str(e)}'
+            }), 500
+        
+        # Upload to App Storage if available
+        edited_path = colorized_path
+        if app_storage.is_available():
+            try:
+                with open(colorized_path, 'rb') as f:
+                    img_bytes = io.BytesIO(f.read())
+                    success, storage_path = app_storage.upload_file(img_bytes, colorized_filename, str(current_user.id))
+                    if success:
+                        edited_path = storage_path
+                        logger.info(f"AI colorized photo uploaded to App Storage: {storage_path}")
+                        # Clean up temp file
+                        try:
+                            os.remove(colorized_path)
+                        except:
+                            pass
+            except Exception as e:
+                logger.warning(f"App Storage upload failed, keeping local: {str(e)}")
+        
+        # Update photo record with colorized version
+        photo.edited_filename = colorized_filename
+        photo.edited_path = edited_path
+        photo.enhancement_metadata = {
+            'colorization': {
+                'method': metadata['method'],
+                'ai_guidance': metadata.get('ai_guidance', ''),
+                'model': metadata.get('model', 'gemini-2.0-flash-exp'),
+                'timestamp': str(datetime.now())
+            }
+        }
+        photo.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        logger.info(f"✅ Photo {photo_id} AI-colorized successfully using {metadata['method']}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo colorized successfully using AI',
+            'photo': {
+                'id': photo.id,
+                'filename': photo.filename,
+                'colorized_filename': colorized_filename,
+                'colorized_url': f'/uploads/{current_user.id}/{colorized_filename}',
+                'method_used': metadata['method'],
+                'ai_guidance': metadata.get('ai_guidance', '')
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"💥 Mobile AI colorize error for photo {photo_id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'AI Colorization failed'}), 500
+
+
 # ============================================================================
 # VOICE MEMO API - Rewritten for Mobile App with Duration Support
 # ============================================================================
