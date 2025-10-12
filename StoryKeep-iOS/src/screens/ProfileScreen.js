@@ -80,7 +80,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats?.enhanced_photos || 0}</Text>
-          <Text style={styles.statLabel}>Enhanced</Text>
+          <Text style={styles.statLabel}>Colorized</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats?.albums || 0}</Text>

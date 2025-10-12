@@ -66,7 +66,7 @@ export default function GalleryScreen({ navigation }) {
   const applyFilter = () => {
     let filtered = [...allPhotos];
     
-    if (filter === 'enhanced') {
+    if (filter === 'colorized') {
       filtered = allPhotos.filter(photo => photo.edited_url);
     } else if (filter === 'originals') {
       filtered = allPhotos.filter(photo => !photo.edited_url);
@@ -151,7 +151,7 @@ export default function GalleryScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* Top right badges */}
+        {/* Top right badges - Colorized */}
         {item.edited_url && (
           <View style={styles.enhancedBadge}>
             <Ionicons name="sparkles" size={14} color="#fff" />
@@ -216,7 +216,7 @@ export default function GalleryScreen({ navigation }) {
         <FilterButton label="AI" value="ai" />
         <FilterButton label="Uncolorized" value="uncolorized" />
         <FilterButton label="Originals" value="originals" />
-        <FilterButton label="Enhanced" value="enhanced" />
+        <FilterButton label="Colorized" value="colorized" />
       </View>
 
       {displayPhotos.length === 0 ? (

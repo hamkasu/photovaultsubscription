@@ -219,7 +219,7 @@ export default function VaultDetailScreen({ route, navigation }) {
         </Text>
       </View>
 
-      {/* Enhanced badge */}
+      {/* Colorized badge */}
       {item.edited_url && (
         <View style={styles.enhancedBadge}>
           <Ionicons name="sparkles" size={14} color="#fff" />

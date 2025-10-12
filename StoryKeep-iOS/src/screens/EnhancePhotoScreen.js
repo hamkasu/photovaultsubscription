@@ -172,7 +172,7 @@ export default function EnhancePhotoScreen({ route, navigation }) {
                   !showOriginal && styles.toggleTextActive,
                 ]}
               >
-                Enhanced
+                Colorized
               </Text>
             </TouchableOpacity>
           </View>

@@ -122,7 +122,7 @@ export default function DashboardScreen({ navigation }) {
         <View style={styles.statCard}>
           <Ionicons name="sparkles" size={32} color="#E85D75" />
           <Text style={styles.statNumber}>{stats?.enhanced_photos || 0}</Text>
-          <Text style={styles.statLabel}>Enhanced</Text>
+          <Text style={styles.statLabel}>Colorized</Text>
         </View>
 
         <View style={styles.statCard}>
