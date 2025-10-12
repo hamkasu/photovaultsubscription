@@ -449,3 +449,15 @@ Fixed the issue where the app didn't properly recognize black and white photos f
 - **Detection Method**: Compares RGB channels - if max difference < 30, it's grayscale (accounts for compression artifacts)
 - **Result**: Colorization buttons now properly enabled/disabled based on actual photo color content
 - **Ready to Deploy**: Local servers updated, needs Railway deployment for production
+
+[x] 338. Fix "View" button not showing colorized photo - COMPLETED: PhotoDetail now defaults to showing edited version when it exists
+[x] 339. Update PhotoDetailScreen default view - COMPLETED: Changed showOriginal initial state to !initialPhoto.edited_url
+[x] 340. Restart Expo Server with View fix - COMPLETED: Server running with updated PhotoDetail logic
+
+## ✅ COLORIZED PHOTO VIEW FIX COMPLETE
+Fixed the issue where clicking "View" after colorization didn't show the colorized photo:
+- **Root Cause**: PhotoDetailScreen defaulted to showing original photo (showOriginal = true)
+- **Solution**: Changed initial state to `useState(!initialPhoto.edited_url)` - shows edited version when available
+- **User Experience**: After colorization, clicking "View" now immediately shows the colorized result
+- **Toggle Still Works**: Users can still toggle between original and colorized using the toggle buttons
+- **Ready to Test**: Reload the iOS app to see colorized photos when clicking "View"

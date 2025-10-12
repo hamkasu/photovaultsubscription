@@ -24,7 +24,8 @@ const BASE_URL = 'https://web-production-535bd.up.railway.app';
 export default function PhotoDetailScreen({ route, navigation }) {
   const { photo: initialPhoto } = route.params;
   const [photo, setPhoto] = useState(initialPhoto);
-  const [showOriginal, setShowOriginal] = useState(true);
+  // Default to showing edited version if it exists, otherwise show original
+  const [showOriginal, setShowOriginal] = useState(!initialPhoto.edited_url);
   const [aiMetadata, setAIMetadata] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState(null);
