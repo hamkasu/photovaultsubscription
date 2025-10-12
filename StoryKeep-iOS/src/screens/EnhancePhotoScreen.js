@@ -40,11 +40,17 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     setProcessing(true);
     try {
       const response = await photoAPI.sharpenPhoto(photo.id, 1.5);
+      
+      // Fetch the updated photo data
+      const updatedPhoto = await photoAPI.getPhotoDetail(photo.id);
 
       Alert.alert('Success', 'Photo sharpened successfully!', [
         {
           text: 'View',
-          onPress: () => navigation.goBack(),
+          onPress: () => {
+            // Navigate back and replace the photo data
+            navigation.navigate('PhotoDetail', { photo: updatedPhoto, refresh: true });
+          },
         },
       ]);
     } catch (error) {
@@ -65,10 +71,16 @@ export default function EnhancePhotoScreen({ route, navigation }) {
         response = await photoAPI.colorizePhoto(photo.id, 'auto');
       }
 
+      // Fetch the updated photo data
+      const updatedPhoto = await photoAPI.getPhotoDetail(photo.id);
+
       Alert.alert('Success', `Photo colorized successfully using ${useAI ? 'AI' : 'DNN'}!`, [
         {
           text: 'View',
-          onPress: () => navigation.goBack(),
+          onPress: () => {
+            // Navigate back and replace the photo data
+            navigation.navigate('PhotoDetail', { photo: updatedPhoto, refresh: true });
+          },
         },
       ]);
     } catch (error) {
