@@ -875,6 +875,7 @@ def bulk_delete_photos():
 # Voice Memo API Endpoints
 
 @photo_bp.route('/api/photos/<int:photo_id>/voice-memos', methods=['POST'])
+@csrf.exempt
 @hybrid_auth
 def upload_voice_memo(current_user, photo_id):
     """Upload a voice memo for a photo"""
