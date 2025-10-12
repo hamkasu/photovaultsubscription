@@ -9,44 +9,39 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI } from '../services/api';
 
+const { width } = Dimensions.get('window');
+const COLUMN_COUNT = 3;
+const ITEM_WIDTH = (width - 6) / COLUMN_COUNT; // 2px gap between items
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export default function GalleryScreen({ navigation }) {
   const [allPhotos, setAllPhotos] = useState([]);
-  const [photos, setPhotos] = useState([]);
+  const [displayPhotos, setDisplayPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [authToken, setAuthToken] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     loadPhotos();
-  }, [filter]);
+  }, []);
 
   useEffect(() => {
-    updatePagePhotos();
-  }, [currentPage, allPhotos]);
-
-  const updatePagePhotos = () => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    setPhotos(allPhotos.slice(startIndex, endIndex));
-  };
+    applyFilter();
+  }, [filter, allPhotos]);
 
   const loadPhotos = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       setAuthToken(token);
       
-      // Get ALL photos from dashboard endpoint (same working pattern)
+      // Get ALL photos from dashboard endpoint
       const dashboardResponse = await fetch(`${BASE_URL}/api/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -54,17 +49,10 @@ export default function GalleryScreen({ navigation }) {
       });
       const dashboardData = await dashboardResponse.json();
       
-      // Use all_photos from dashboard
       if (dashboardData.all_photos && dashboardData.all_photos.length > 0) {
         setAllPhotos(dashboardData.all_photos);
-        const pages = Math.ceil(dashboardData.all_photos.length / ITEMS_PER_PAGE);
-        setTotalPages(pages);
-        setCurrentPage(1);
       } else {
         setAllPhotos([]);
-        setPhotos([]);
-        setTotalPages(1);
-        setCurrentPage(1);
       }
     } catch (error) {
       console.error('Gallery error:', error);
@@ -75,12 +63,38 @@ export default function GalleryScreen({ navigation }) {
     }
   };
 
+  const applyFilter = () => {
+    let filtered = [...allPhotos];
+    
+    if (filter === 'enhanced') {
+      filtered = allPhotos.filter(photo => photo.edited_url);
+    } else if (filter === 'originals') {
+      filtered = allPhotos.filter(photo => !photo.edited_url);
+    }
+    
+    setDisplayPhotos(filtered);
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     loadPhotos();
   };
 
-  const renderPhoto = ({ item }) => {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
+  };
+
+  const renderPhoto = ({ item, index }) => {
     // Get the image URL - prefer thumbnail, fallback to url or original_url
     const imageUrl = item.thumbnail_url || item.url || item.original_url;
     
@@ -105,21 +119,31 @@ export default function GalleryScreen({ navigation }) {
               }
             }}
             style={styles.photoImage}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         ) : (
           <View style={styles.photoImagePlaceholder}>
             <ActivityIndicator size="small" color="#E85D75" />
           </View>
         )}
+        
+        {/* Bottom gradient overlay */}
+        <View style={styles.bottomOverlay}>
+          <Text style={styles.photoDate} numberOfLines={1}>
+            {formatDate(item.created_at)}
+          </Text>
+        </View>
+
+        {/* Top right badges */}
         {item.edited_url && (
           <View style={styles.enhancedBadge}>
-            <Ionicons name="sparkles" size={16} color="#fff" />
+            <Ionicons name="sparkles" size={14} color="#fff" />
           </View>
         )}
+        
         {item.voice_memo_count > 0 && (
           <View style={styles.voiceBadge}>
-            <Ionicons name="mic" size={14} color="#fff" />
+            <Ionicons name="mic" size={12} color="#fff" />
             <Text style={styles.voiceBadgeText}>{item.voice_memo_count}</Text>
           </View>
         )}
@@ -158,9 +182,7 @@ export default function GalleryScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Gallery</Text>
-        <Text style={styles.count}>
-          {allPhotos.length} photos {totalPages > 1 ? `(Page ${currentPage} of ${totalPages})` : ''}
-        </Text>
+        <Text style={styles.count}>{displayPhotos.length} photos</Text>
       </View>
 
       <View style={styles.filterContainer}>
@@ -169,45 +191,7 @@ export default function GalleryScreen({ navigation }) {
         <FilterButton label="Enhanced" value="enhanced" />
       </View>
 
-      {totalPages > 1 && (
-        <View style={styles.paginationContainer}>
-          <TouchableOpacity
-            style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
-            onPress={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-          >
-            <Ionicons name="play-skip-back" size={20} color={currentPage === 1 ? '#ccc' : '#E85D75'} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
-            onPress={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? '#ccc' : '#E85D75'} />
-          </TouchableOpacity>
-
-          <Text style={styles.paginationText}>{currentPage} / {totalPages}</Text>
-
-          <TouchableOpacity
-            style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
-            onPress={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? '#ccc' : '#E85D75'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
-            onPress={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-          >
-            <Ionicons name="play-skip-forward" size={20} color={currentPage === totalPages ? '#ccc' : '#E85D75'} />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {photos.length === 0 ? (
+      {displayPhotos.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="images-outline" size={80} color="#ccc" />
           <Text style={styles.emptyText}>No photos yet</Text>
@@ -220,11 +204,12 @@ export default function GalleryScreen({ navigation }) {
         </View>
       ) : (
         <FlatList
-          data={photos}
+          data={displayPhotos}
           renderItem={renderPhoto}
           keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
+          numColumns={COLUMN_COUNT}
           contentContainerStyle={styles.photoList}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -237,40 +222,41 @@ export default function GalleryScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#000',
   },
   header: {
     padding: 20,
     paddingTop: 60,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#000',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
   },
   count: {
     fontSize: 14,
-    color: '#666',
+    color: '#999',
     marginTop: 4,
   },
   filterContainer: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#000',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#222',
   },
   filterButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#1a1a1a',
     marginRight: 10,
   },
   filterButtonActive: {
@@ -285,15 +271,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   photoList: {
-    padding: 10,
+    paddingBottom: 80,
   },
   photoCard: {
-    flex: 1,
-    margin: 5,
-    aspectRatio: 1,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
+    width: ITEM_WIDTH,
+    height: ITEM_WIDTH * 1.6, // Vertical aspect ratio like TikTok
+    margin: 1,
+    backgroundColor: '#1a1a1a',
+    position: 'relative',
   },
   photoImage: {
     width: '100%',
@@ -304,31 +289,46 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#1a1a1a',
+  },
+  bottomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 8,
+    paddingBottom: 6,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  photoDate: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '500',
   },
   enhancedBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 6,
+    right: 6,
     backgroundColor: '#E85D75',
-    borderRadius: 12,
-    padding: 4,
+    borderRadius: 10,
+    padding: 3,
   },
   voiceBadge: {
     position: 'absolute',
-    bottom: 8,
-    left: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    top: 6,
+    left: 6,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     flexDirection: 'row',
     alignItems: 'center',
   },
   voiceBadgeText: {
     color: '#fff',
-    fontSize: 12,
-    marginLeft: 4,
+    fontSize: 10,
+    marginLeft: 3,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: '#666',
+    color: '#999',
     marginTop: 20,
     marginBottom: 30,
   },
@@ -352,32 +352,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#f8f8f8',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    gap: 15,
-  },
-  paginationButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E85D75',
-  },
-  paginationButtonDisabled: {
-    borderColor: '#ddd',
-    backgroundColor: '#f5f5f5',
-  },
-  paginationText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginHorizontal: 10,
   },
 });
