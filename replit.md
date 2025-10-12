@@ -6,6 +6,13 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 ## Recent Changes (October 2025)
 
 ### Latest (October 12, 2025)
+- **Photo Annotations/Comments Feature**: Complete text annotation system for photos
+  - **Database Model**: PhotoComment table with user_id, photo_id, comment_text, timestamps
+  - **API Endpoints**: GET /api/photos/<photo_id>/comments, POST /api/photos/<photo_id>/comments, DELETE /api/comments/<comment_id>
+  - **JWT Authentication**: All endpoints use @csrf.exempt and @token_required decorators for mobile security
+  - **iOS UI Integration**: Comment section added below voice notes in PhotoDetailScreen with add/view/delete functionality
+  - **Migration**: Alembic migration created (20251012_082532_add_photo_comment_table.py) with proper indexes
+  - **User Experience**: Text input with submit button, comment list with timestamps, delete confirmation dialogs
 - **Voice Memo Badge Feature**: Added microphone badges to iOS gallery for photos with voice memos
   - **Backend**: Enhanced `/api/dashboard` endpoint to include `voice_memo_count` field for each photo
   - **Efficient Query**: Single SQL GROUP BY query with dictionary lookup (O(1) access, no N+1 queries)
