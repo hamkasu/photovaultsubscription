@@ -355,6 +355,52 @@ def get_photos(current_user):
         logger.error(f"Gallery error: {str(e)}")
         return jsonify({'error': str(e), 'success': False}), 500
 
+@mobile_api_bp.route('/photos/<int:photo_id>', methods=['GET'])
+@token_required
+def get_photo_detail(current_user, photo_id):
+    """Get single photo details for mobile app"""
+    try:
+        # Fetch the photo
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        
+        if not photo:
+            return jsonify({'error': 'Photo not found'}), 404
+        
+        # Build photo data - same format as get_photos
+        photo_data = {
+            'id': photo.id,
+            'filename': photo.filename,
+            'original_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+            'url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+            'thumbnail_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+            'created_at': photo.created_at.isoformat() if photo.created_at else None,
+            'file_size': photo.file_size,
+            'has_edited': photo.edited_filename is not None,
+            # Annotation data
+            'enhancement_metadata': photo.enhancement_metadata,
+            'processing_notes': photo.processing_notes,
+            'back_text': photo.back_text,
+            'date_text': photo.date_text,
+            'location_text': photo.location_text,
+            'occasion': photo.occasion,
+            'photo_date': photo.photo_date.isoformat() if photo.photo_date else None,
+            'condition': photo.condition,
+            'photo_source': photo.photo_source,
+            'needs_restoration': photo.needs_restoration,
+            'auto_enhanced': photo.auto_enhanced
+        }
+        
+        if photo.edited_filename:
+            photo_data['edited_url'] = f'/uploads/{current_user.id}/{photo.edited_filename}'
+        
+        logger.info(f"📸 Photo detail fetched: {photo.id} for user {current_user.username}")
+        
+        return jsonify(photo_data), 200
+        
+    except Exception as e:
+        logger.error(f"Photo detail error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @mobile_api_bp.route('/upload', methods=['POST'])
 @csrf.exempt
 @token_required
