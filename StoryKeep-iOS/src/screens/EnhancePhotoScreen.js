@@ -22,9 +22,12 @@ export default function EnhancePhotoScreen({ route, navigation }) {
   const [processing, setProcessing] = useState(false);
   const [showOriginal, setShowOriginal] = useState(true);
   const [authToken, setAuthToken] = useState(null);
+  const [isBlackAndWhite, setIsBlackAndWhite] = useState(null);
+  const [detectingColor, setDetectingColor] = useState(true);
 
   useEffect(() => {
     loadAuthToken();
+    detectImageColor();
   }, []);
 
   const loadAuthToken = async () => {
@@ -33,6 +36,38 @@ export default function EnhancePhotoScreen({ route, navigation }) {
       setAuthToken(token);
     } catch (error) {
       console.error('Failed to load auth token:', error);
+    }
+  };
+
+  const detectImageColor = async () => {
+    try {
+      setDetectingColor(true);
+      
+      // Check if photo already has colorization metadata
+      if (photo.enhancement_metadata?.colorization) {
+        // Already colorized - disable colorization buttons
+        setIsBlackAndWhite(false);
+        return;
+      }
+      
+      // Check if photo has been edited/colorized (has edited_url)
+      if (photo.edited_url) {
+        // Likely already colorized - disable colorization buttons
+        setIsBlackAndWhite(false);
+        return;
+      }
+      
+      // For photos without enhancement metadata or edited version,
+      // we assume they might be black & white and enable colorization
+      // This is a conservative approach - better to allow than block
+      setIsBlackAndWhite(true);
+      
+    } catch (error) {
+      console.error('Error detecting image color:', error);
+      // On error, enable colorization (conservative approach)
+      setIsBlackAndWhite(true);
+    } finally {
+      setDetectingColor(false);
     }
   };
 
@@ -92,20 +127,22 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     }
   };
 
-  const EnhancementOption = ({ icon, title, description, onPress, color }) => (
+  const EnhancementOption = ({ icon, title, description, onPress, color, disabled = false }) => (
     <TouchableOpacity
-      style={styles.option}
+      style={[styles.option, disabled && styles.optionDisabled]}
       onPress={onPress}
-      disabled={processing}
+      disabled={processing || disabled}
     >
       <View style={[styles.optionIcon, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={32} color={color} />
+        <Ionicons name={icon} size={32} color={disabled ? '#ccc' : color} />
       </View>
       <View style={styles.optionInfo}>
-        <Text style={styles.optionTitle}>{title}</Text>
-        <Text style={styles.optionDescription}>{description}</Text>
+        <Text style={[styles.optionTitle, disabled && styles.optionTitleDisabled]}>{title}</Text>
+        <Text style={[styles.optionDescription, disabled && styles.optionDescriptionDisabled]}>
+          {disabled ? 'Only for black & white photos' : description}
+        </Text>
       </View>
-      <Ionicons name="chevron-forward" size={24} color="#ccc" />
+      <Ionicons name="chevron-forward" size={24} color={disabled ? '#eee' : '#ccc'} />
     </TouchableOpacity>
   );
 
@@ -195,6 +232,7 @@ export default function EnhancePhotoScreen({ route, navigation }) {
             description="Fast colorization using DNN"
             onPress={() => handleColorize(false)}
             color="#4CAF50"
+            disabled={!isBlackAndWhite}
           />
 
           <EnhancementOption
@@ -203,6 +241,7 @@ export default function EnhancePhotoScreen({ route, navigation }) {
             description="Intelligent AI-powered colorization"
             onPress={() => handleColorize(true)}
             color="#9C27B0"
+            disabled={!isBlackAndWhite}
           />
         </View>
 
@@ -306,6 +345,17 @@ const styles = StyleSheet.create({
   optionDescription: {
     fontSize: 14,
     color: '#666',
+  },
+  optionDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#f0f0f0',
+  },
+  optionTitleDisabled: {
+    color: '#999',
+  },
+  optionDescriptionDisabled: {
+    color: '#aaa',
+    fontStyle: 'italic',
   },
   processingOverlay: {
     position: 'absolute',
