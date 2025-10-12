@@ -187,6 +187,15 @@ export default function PhotoDetailScreen({ route, navigation }) {
         await sound.unloadAsync();
       }
 
+      // Set audio mode for playback (works even in silent mode)
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        staysActiveInBackground: false,
+      });
+
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: recordedUri },
         { shouldPlay: true }
@@ -200,10 +209,10 @@ export default function PhotoDetailScreen({ route, navigation }) {
         }
       });
       
-      console.log('✅ Playing...');
+      console.log('✅ Playing with audio mode configured...');
     } catch (error) {
       console.error('❌ Playback error:', error);
-      Alert.alert('Error', 'Failed to play recording');
+      Alert.alert('Error', 'Failed to play recording: ' + error.message);
     }
   };
 

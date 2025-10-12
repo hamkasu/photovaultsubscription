@@ -286,3 +286,5 @@
 [x] 272. Add file size display after recording - COMPLETED: Shows file size in MB after stopping recording
 [x] 273. Add replay button functionality - COMPLETED: Replay button plays recorded audio from local file
 [x] 274. Restart Expo Server with debug voice note - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed
+[x] 275. Fix replay audio not working - COMPLETED: Added audio mode configuration for playback (playsInSilentModeIOS: true)
+[x] 276. Restart Expo Server with audio fix - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed
