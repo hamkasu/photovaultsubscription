@@ -2,7 +2,7 @@
 Mobile API Routes for StoryKeep iOS/Android App
 """
 from flask import Blueprint, jsonify, request, current_app, url_for
-from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User, VaultPhoto, VaultInvitation
+from photovault.models import Photo, UserSubscription, FamilyVault, FamilyMember, User, VaultPhoto, VaultInvitation, PhotoComment
 from photovault.extensions import db, csrf
 from photovault.utils.jwt_auth import token_required
 from werkzeug.utils import secure_filename
@@ -1548,6 +1548,138 @@ def delete_voice_memo(current_user, memo_id):
         return jsonify({
             'success': True,
             'message': 'Voice memo deleted'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Delete error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# PHOTO COMMENTS API ENDPOINTS
+# ============================================================================
+
+@mobile_api_bp.route('/photos/<int:photo_id>/comments', methods=['GET'])
+@csrf.exempt
+@token_required
+def get_photo_comments(current_user, photo_id):
+    """Get all comments for a photo"""
+    try:
+        logger.info(f"💬 Getting comments for photo {photo_id}")
+        
+        # Verify photo exists and user has access
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            logger.warning(f"❌ Photo {photo_id} not found for user {current_user.id}")
+            return jsonify({'success': False, 'error': 'Photo not found'}), 404
+        
+        # Get all comments for this photo
+        comments = PhotoComment.query.filter_by(photo_id=photo_id).order_by(PhotoComment.created_at.desc()).all()
+        
+        comments_data = [{
+            'id': comment.id,
+            'comment_text': comment.comment_text,
+            'user_id': comment.user_id,
+            'username': comment.user.username,
+            'created_at': comment.created_at.isoformat(),
+            'updated_at': comment.updated_at.isoformat()
+        } for comment in comments]
+        
+        logger.info(f"✅ Retrieved {len(comments_data)} comments for photo {photo_id}")
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo_id,
+            'comments': comments_data,
+            'total': len(comments_data)
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting comments: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@mobile_api_bp.route('/photos/<int:photo_id>/comments', methods=['POST'])
+@csrf.exempt
+@token_required
+def add_photo_comment(current_user, photo_id):
+    """Add a new comment to a photo"""
+    try:
+        logger.info(f"💬 Adding comment to photo {photo_id}")
+        
+        # Verify photo exists and user has access
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            logger.warning(f"❌ Photo {photo_id} not found for user {current_user.id}")
+            return jsonify({'success': False, 'error': 'Photo not found'}), 404
+        
+        # Get comment text from request
+        data = request.get_json()
+        comment_text = data.get('comment_text', '').strip()
+        
+        if not comment_text:
+            return jsonify({'success': False, 'error': 'Comment text is required'}), 400
+        
+        # Create new comment
+        new_comment = PhotoComment()
+        new_comment.photo_id = photo_id
+        new_comment.user_id = current_user.id
+        new_comment.comment_text = comment_text
+        
+        db.session.add(new_comment)
+        db.session.commit()
+        
+        logger.info(f"✅ Comment {new_comment.id} added to photo {photo_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Comment added successfully',
+            'comment': {
+                'id': new_comment.id,
+                'comment_text': new_comment.comment_text,
+                'user_id': new_comment.user_id,
+                'username': current_user.username,
+                'created_at': new_comment.created_at.isoformat(),
+                'updated_at': new_comment.updated_at.isoformat()
+            }
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"❌ Error adding comment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@mobile_api_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
+@csrf.exempt
+@token_required
+def delete_photo_comment(current_user, comment_id):
+    """Delete a comment"""
+    try:
+        logger.info(f"🗑️ Deleting comment {comment_id} for user {current_user.id}")
+        
+        # Verify ownership
+        comment = PhotoComment.query.filter_by(id=comment_id, user_id=current_user.id).first()
+        if not comment:
+            logger.warning(f"❌ Comment {comment_id} not found for user {current_user.id}")
+            return jsonify({'success': False, 'error': 'Comment not found'}), 404
+        
+        # Delete database record
+        db.session.delete(comment)
+        db.session.commit()
+        
+        logger.info(f"✅ Comment {comment_id} deleted")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Comment deleted successfully'
         }), 200
         
     except Exception as e:
