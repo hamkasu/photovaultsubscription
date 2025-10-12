@@ -28,35 +28,21 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   
-  // Voice memo states
-  const [voiceMemos, setVoiceMemos] = useState([]);
+  // Simple voice memo debug states
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [playingSound, setPlayingSound] = useState(null);
-  const [playingMemoId, setPlayingMemoId] = useState(null);
+  const [recordedUri, setRecordedUri] = useState(null);
+  const [fileSize, setFileSize] = useState(null);
+  const [sound, setSound] = useState(null);
 
   useEffect(() => {
     loadData();
-    loadVoiceMemos();
     
     // Cleanup on unmount
     return () => {
-      if (playingSound) {
-        playingSound.stopAsync();
-        playingSound.unloadAsync();
+      if (sound) {
+        sound.unloadAsync();
       }
-      // Clean up any temp voice memo files
-      FileSystem.readDirectoryAsync(FileSystem.cacheDirectory)
-        .then(files => {
-          const voiceFiles = files.filter(f => f.startsWith('voice_memo_'));
-          return Promise.all(
-            voiceFiles.map(f => 
-              FileSystem.deleteAsync(`${FileSystem.cacheDirectory}${f}`, { idempotent: true })
-                .catch(() => {})
-            )
-          );
-        })
-        .catch(() => {});
     };
   }, []);
 
@@ -131,23 +117,14 @@ export default function PhotoDetailScreen({ route, navigation }) {
     );
   };
 
-  // Voice memo functions
-  const loadVoiceMemos = async () => {
-    try {
-      const response = await voiceMemoAPI.getVoiceMemos(photo.id);
-      if (response.success) {
-        setVoiceMemos(response.voice_memos || []);
-      }
-    } catch (error) {
-      console.error('Error loading voice memos:', error);
-    }
-  };
-
+  // Simple debugging voice memo functions
   const startRecording = async () => {
     try {
+      console.log('🎤 Starting recording...');
+      
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== 'granted') {
-        Alert.alert('Permission Required', 'Microphone access is needed to record voice notes');
+        Alert.alert('Permission Required', 'Microphone access is needed');
         return;
       }
 
@@ -156,38 +133,18 @@ export default function PhotoDetailScreen({ route, navigation }) {
         playsInSilentModeIOS: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync({
-        ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
-        android: {
-          extension: '.m4a',
-          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
-          audioEncoder: Audio.AndroidAudioEncoder.AAC,
-          sampleRate: 44100,
-          numberOfChannels: 1,
-          bitRate: 32000,
-        },
-        ios: {
-          extension: '.m4a',
-          outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
-          audioQuality: Audio.IOSAudioQuality.LOW,
-          sampleRate: 22050,
-          numberOfChannels: 1,
-          bitRate: 32000,
-          linearPCMBitDepth: 16,
-          linearPCMIsBigEndian: false,
-          linearPCMIsFloat: false,
-        },
-        web: {
-          mimeType: 'audio/webm',
-          bitsPerSecond: 32000,
-        },
-      });
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
       
       setRecording(recording);
       setIsRecording(true);
+      setRecordedUri(null);
+      setFileSize(null);
+      console.log('✅ Recording started');
     } catch (error) {
+      console.error('❌ Recording start error:', error);
       Alert.alert('Error', 'Failed to start recording');
-      console.error(error);
     }
   };
 
@@ -195,122 +152,59 @@ export default function PhotoDetailScreen({ route, navigation }) {
     if (!recording) return;
 
     try {
+      console.log('⏹️ Stopping recording...');
       setIsRecording(false);
-      
-      // Get recording status to extract duration
-      const status = await recording.getStatusAsync();
-      const durationSeconds = status.durationMillis ? status.durationMillis / 1000 : 0;
       
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
+      setRecordedUri(uri);
 
-      // Check file size before upload (Railway has 10MB limit)
+      // Get file size
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      const fileSizeMB = fileInfo.size / (1024 * 1024);
+      const sizeMB = (fileInfo.size / (1024 * 1024)).toFixed(2);
+      setFileSize(`${sizeMB} MB`);
       
-      if (fileSizeMB > 8) {
-        Alert.alert(
-          'Recording Too Long',
-          `Voice note is ${fileSizeMB.toFixed(1)}MB. Please keep recordings under 8MB (about 30 minutes at current quality).`,
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Upload the recording with duration
-      setLoading(true);
-      const response = await voiceMemoAPI.uploadVoiceMemo(photo.id, uri, durationSeconds);
+      console.log('✅ Recording stopped');
+      console.log('📁 File URI:', uri);
+      console.log('📊 File size:', sizeMB, 'MB');
       
-      if (response.success) {
-        Alert.alert('Success', 'Voice note recorded successfully');
-        loadVoiceMemos();
-      }
+      Alert.alert('Recording Complete', `File size: ${sizeMB} MB`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save voice note');
-      console.error('Voice memo upload error:', error);
-      console.error('Error details:', error.response?.data);
-    } finally {
-      setLoading(false);
+      console.error('❌ Recording stop error:', error);
+      Alert.alert('Error', 'Failed to stop recording');
     }
   };
 
-  const playVoiceMemo = async (memo) => {
+  const playRecording = async () => {
+    if (!recordedUri) return;
+
     try {
-      // Stop current playback if any
-      if (playingSound) {
-        await playingSound.stopAsync();
-        await playingSound.unloadAsync();
-        setPlayingSound(null);
-        setPlayingMemoId(null);
-      }
-
-      // If clicking the same memo, just stop
-      if (playingMemoId === memo.id) {
-        return;
-      }
-
-      // Download audio file with proper authentication to local temp file
-      const audioUrl = `${BASE_URL}/api/voice-memos/${memo.id}/audio`;
-      const token = await AsyncStorage.getItem('authToken');
-      const localUri = `${FileSystem.cacheDirectory}voice_memo_${memo.id}.m4a`;
-
-      // Download with authenticated headers
-      await FileSystem.downloadAsync(
-        audioUrl,
-        localUri,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      console.log('▶️ Playing recording...');
       
-      // Play from local file (no authentication needed)
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: localUri },
+      // Stop any existing playback
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: recordedUri },
         { shouldPlay: true }
       );
       
-      setPlayingSound(sound);
-      setPlayingMemoId(memo.id);
-
-      sound.setOnPlaybackStatusUpdate((status) => {
+      setSound(newSound);
+      
+      newSound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
-          setPlayingMemoId(null);
-          sound.unloadAsync();
-          setPlayingSound(null);
-          // Clean up temp file
-          FileSystem.deleteAsync(localUri, { idempotent: true }).catch(() => {});
+          console.log('✅ Playback finished');
         }
       });
+      
+      console.log('✅ Playing...');
     } catch (error) {
-      Alert.alert('Error', 'Failed to play voice note');
-      console.error(error);
+      console.error('❌ Playback error:', error);
+      Alert.alert('Error', 'Failed to play recording');
     }
-  };
-
-  const deleteVoiceMemoHandler = async (memoId) => {
-    Alert.alert(
-      'Delete Voice Note',
-      'Are you sure you want to delete this voice note?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await voiceMemoAPI.deleteVoiceMemo(memoId);
-              Alert.alert('Success', 'Voice note deleted');
-              loadVoiceMemos();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete voice note');
-            }
-          },
-        },
-      ]
-    );
   };
 
   // Use same URL pattern as Dashboard and Gallery
@@ -468,65 +362,56 @@ export default function PhotoDetailScreen({ route, navigation }) {
         </View>
 
         <View style={styles.voiceContainer}>
-          <View style={styles.voiceHeader}>
-            <Text style={styles.voiceTitle}>Voice Notes</Text>
-            <TouchableOpacity
-              style={[styles.recordButton, isRecording && styles.recordingButton]}
-              onPress={isRecording ? stopRecording : startRecording}
-              disabled={loading}
-            >
-              <Ionicons 
-                name={isRecording ? 'stop-circle' : 'mic'} 
-                size={24} 
-                color="#fff" 
-              />
-              <Text style={styles.recordButtonText}>
-                {isRecording ? 'Stop' : 'Record'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.voiceTitle}>Voice Note Debug</Text>
+          
+          <View style={styles.debugControls}>
+            {!isRecording && !recordedUri && (
+              <TouchableOpacity
+                style={styles.startButton}
+                onPress={startRecording}
+              >
+                <Ionicons name="mic" size={32} color="#fff" />
+                <Text style={styles.buttonText}>Start Recording</Text>
+              </TouchableOpacity>
+            )}
 
-          {voiceMemos.length === 0 ? (
-            <View style={styles.emptyVoiceContainer}>
-              <Ionicons name="mic-outline" size={48} color="#ccc" />
-              <Text style={styles.emptyVoiceText}>No voice notes yet</Text>
-              <Text style={styles.emptyVoiceSubtext}>Tap Record to add a voice note</Text>
-            </View>
-          ) : (
-            <View style={styles.voiceMemosList}>
-              {voiceMemos.map((memo) => (
-                <View key={memo.id} style={styles.voiceMemoCard}>
-                  <TouchableOpacity
-                    style={styles.playButton}
-                    onPress={() => playVoiceMemo(memo)}
-                  >
-                    <Ionicons
-                      name={playingMemoId === memo.id ? 'pause-circle' : 'play-circle'}
-                      size={40}
-                      color="#E85D75"
-                    />
-                  </TouchableOpacity>
-                  <View style={styles.voiceMemoInfo}>
-                    <Text style={styles.voiceMemoDate}>
-                      {new Date(memo.created_at).toLocaleDateString()}
-                    </Text>
-                    <Text style={styles.voiceMemoTime}>
-                      {new Date(memo.created_at).toLocaleTimeString()}
-                    </Text>
-                    <Text style={styles.voiceMemoDuration}>
-                      {memo.duration_formatted || '00:00'}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.deleteVoiceButton}
-                    onPress={() => deleteVoiceMemoHandler(memo.id)}
-                  >
-                    <Ionicons name="trash-outline" size={20} color="#999" />
-                  </TouchableOpacity>
+            {isRecording && (
+              <TouchableOpacity
+                style={styles.stopButton}
+                onPress={stopRecording}
+              >
+                <Ionicons name="stop-circle" size={32} color="#fff" />
+                <Text style={styles.buttonText}>Stop Recording</Text>
+              </TouchableOpacity>
+            )}
+
+            {recordedUri && (
+              <View style={styles.recordingInfo}>
+                <View style={styles.fileSizeContainer}>
+                  <Text style={styles.fileSizeLabel}>File Size:</Text>
+                  <Text style={styles.fileSizeValue}>{fileSize}</Text>
                 </View>
-              ))}
-            </View>
-          )}
+                
+                <TouchableOpacity
+                  style={styles.replayButton}
+                  onPress={playRecording}
+                >
+                  <Ionicons name="play-circle" size={32} color="#fff" />
+                  <Text style={styles.buttonText}>Replay</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={() => {
+                    setRecordedUri(null);
+                    setFileSize(null);
+                  }}
+                >
+                  <Text style={styles.resetButtonText}>New Recording</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -666,85 +551,76 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#eee',
   },
-  voiceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   voiceTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 20,
   },
-  recordButton: {
+  debugControls: {
+    alignItems: 'center',
+    gap: 15,
+  },
+  startButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#E85D75',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 30,
+    gap: 10,
   },
-  recordingButton: {
-    backgroundColor: '#FF4444',
-  },
-  recordButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  emptyVoiceContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyVoiceText: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 15,
-  },
-  emptyVoiceSubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 5,
-  },
-  voiceMemosList: {
-    gap: 12,
-  },
-  voiceMemoCard: {
+  stopButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    padding: 12,
-    borderRadius: 10,
-    gap: 12,
+    backgroundColor: '#FF4444',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 30,
+    gap: 10,
   },
-  playButton: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recordingInfo: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 15,
+  },
+  fileSizeContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 10,
+    width: '100%',
     alignItems: 'center',
   },
-  voiceMemoInfo: {
-    flex: 1,
-  },
-  voiceMemoDate: {
+  fileSizeLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  voiceMemoTime: {
-    fontSize: 12,
     color: '#666',
-    marginTop: 2,
+    marginBottom: 5,
   },
-  voiceMemoDuration: {
-    fontSize: 14,
-    fontWeight: '600',
+  fileSizeValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#E85D75',
-    marginTop: 4,
   },
-  deleteVoiceButton: {
-    padding: 8,
+  replayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 30,
+    gap: 10,
+  },
+  resetButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  resetButtonText: {
+    color: '#666',
+    fontSize: 14,
   },
 });
