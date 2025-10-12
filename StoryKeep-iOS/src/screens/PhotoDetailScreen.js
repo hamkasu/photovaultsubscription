@@ -34,6 +34,7 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [recordedUri, setRecordedUri] = useState(null);
   const [fileSize, setFileSize] = useState(null);
   const [sound, setSound] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -202,10 +203,12 @@ export default function PhotoDetailScreen({ route, navigation }) {
       );
       
       setSound(newSound);
+      setIsPlaying(true);
       
       newSound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
           console.log('✅ Playback finished');
+          setIsPlaying(false);
         }
       });
       
@@ -213,6 +216,45 @@ export default function PhotoDetailScreen({ route, navigation }) {
     } catch (error) {
       console.error('❌ Playback error:', error);
       Alert.alert('Error', 'Failed to play recording: ' + error.message);
+      setIsPlaying(false);
+    }
+  };
+
+  const stopPlayback = async () => {
+    try {
+      if (sound) {
+        console.log('⏹️ Stopping playback...');
+        await sound.stopAsync();
+        await sound.unloadAsync();
+        setSound(null);
+        setIsPlaying(false);
+        console.log('✅ Playback stopped');
+      }
+    } catch (error) {
+      console.error('❌ Stop playback error:', error);
+    }
+  };
+
+  const uploadRecording = async () => {
+    if (!recordedUri) return;
+
+    try {
+      console.log('📤 Uploading recording...');
+      setLoading(true);
+
+      // Get recording duration
+      const fileInfo = await FileSystem.getInfoAsync(recordedUri);
+      const fileSizeMB = fileInfo.size / (1024 * 1024);
+      
+      // For now, just show success - will add actual upload later
+      Alert.alert('Ready to Upload', `File size: ${fileSizeMB.toFixed(2)} MB\nUpload functionality coming soon!`);
+      
+      console.log('✅ Ready for upload');
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      Alert.alert('Error', 'Failed to prepare upload: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -322,6 +364,91 @@ export default function PhotoDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.voiceContainer}>
+          <Text style={styles.voiceTitle}>Voice Note Debug</Text>
+          
+          <View style={styles.debugControls}>
+            {!isRecording && !recordedUri && (
+              <TouchableOpacity
+                style={styles.startButton}
+                onPress={startRecording}
+              >
+                <Ionicons name="mic" size={32} color="#fff" />
+                <Text style={styles.buttonText}>Start Recording</Text>
+              </TouchableOpacity>
+            )}
+
+            {isRecording && (
+              <TouchableOpacity
+                style={styles.stopButton}
+                onPress={stopRecording}
+              >
+                <Ionicons name="stop-circle" size={32} color="#fff" />
+                <Text style={styles.buttonText}>Stop Recording</Text>
+              </TouchableOpacity>
+            )}
+
+            {recordedUri && (
+              <View style={styles.recordingInfo}>
+                <View style={styles.fileSizeContainer}>
+                  <Text style={styles.fileSizeLabel}>File Size:</Text>
+                  <Text style={styles.fileSizeValue}>{fileSize}</Text>
+                </View>
+                
+                <View style={styles.playbackControls}>
+                  {!isPlaying ? (
+                    <TouchableOpacity
+                      style={styles.replayButton}
+                      onPress={playRecording}
+                    >
+                      <Ionicons name="play-circle" size={32} color="#fff" />
+                      <Text style={styles.buttonText}>Replay</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.stopPlaybackButton}
+                      onPress={stopPlayback}
+                    >
+                      <Ionicons name="stop-circle" size={32} color="#fff" />
+                      <Text style={styles.buttonText}>Stop</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    style={styles.uploadButton}
+                    onPress={uploadRecording}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <Ionicons name="cloud-upload" size={32} color="#fff" />
+                        <Text style={styles.buttonText}>Upload</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={() => {
+                    setRecordedUri(null);
+                    setFileSize(null);
+                    setIsPlaying(false);
+                    if (sound) {
+                      sound.unloadAsync();
+                      setSound(null);
+                    }
+                  }}
+                >
+                  <Text style={styles.resetButtonText}>New Recording</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+
         {aiMetadata && (
           <View style={styles.metadataContainer}>
             <Text style={styles.metadataTitle}>AI Analysis</Text>
@@ -368,59 +495,6 @@ export default function PhotoDetailScreen({ route, navigation }) {
               </Text>
             </View>
           )}
-        </View>
-
-        <View style={styles.voiceContainer}>
-          <Text style={styles.voiceTitle}>Voice Note Debug</Text>
-          
-          <View style={styles.debugControls}>
-            {!isRecording && !recordedUri && (
-              <TouchableOpacity
-                style={styles.startButton}
-                onPress={startRecording}
-              >
-                <Ionicons name="mic" size={32} color="#fff" />
-                <Text style={styles.buttonText}>Start Recording</Text>
-              </TouchableOpacity>
-            )}
-
-            {isRecording && (
-              <TouchableOpacity
-                style={styles.stopButton}
-                onPress={stopRecording}
-              >
-                <Ionicons name="stop-circle" size={32} color="#fff" />
-                <Text style={styles.buttonText}>Stop Recording</Text>
-              </TouchableOpacity>
-            )}
-
-            {recordedUri && (
-              <View style={styles.recordingInfo}>
-                <View style={styles.fileSizeContainer}>
-                  <Text style={styles.fileSizeLabel}>File Size:</Text>
-                  <Text style={styles.fileSizeValue}>{fileSize}</Text>
-                </View>
-                
-                <TouchableOpacity
-                  style={styles.replayButton}
-                  onPress={playRecording}
-                >
-                  <Ionicons name="play-circle" size={32} color="#fff" />
-                  <Text style={styles.buttonText}>Replay</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.resetButton}
-                  onPress={() => {
-                    setRecordedUri(null);
-                    setFileSize(null);
-                  }}
-                >
-                  <Text style={styles.resetButtonText}>New Recording</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
         </View>
       </ScrollView>
     </View>
@@ -615,11 +689,41 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#E85D75',
   },
+  playbackControls: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 10,
+    justifyContent: 'center',
+  },
   replayButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#4CAF50',
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    gap: 10,
+  },
+  stopPlaybackButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    gap: 10,
+  },
+  uploadButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 20,
     paddingVertical: 15,
     borderRadius: 30,
     gap: 10,

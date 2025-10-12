@@ -288,3 +288,8 @@
 [x] 274. Restart Expo Server with debug voice note - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed
 [x] 275. Fix replay audio not working - COMPLETED: Added audio mode configuration for playback (playsInSilentModeIOS: true)
 [x] 276. Restart Expo Server with audio fix - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed
+[x] 277. Add stop playback button - COMPLETED: Added stop button that appears when audio is playing
+[x] 278. Add upload/record button - COMPLETED: Added upload button to save recording to server
+[x] 279. Move voice note section up - COMPLETED: Relocated voice note section above AI Analysis for better visibility
+[x] 280. Create playback controls layout - COMPLETED: Side-by-side Replay/Stop and Upload buttons
+[x] 281. Restart Expo Server with improvements - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed
