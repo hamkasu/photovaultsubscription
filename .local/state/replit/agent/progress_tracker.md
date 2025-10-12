@@ -293,3 +293,7 @@
 [x] 279. Move voice note section up - COMPLETED: Relocated voice note section above AI Analysis for better visibility
 [x] 280. Create playback controls layout - COMPLETED: Side-by-side Replay/Stop and Upload buttons
 [x] 281. Restart Expo Server with improvements - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed
+[x] 282. Add recording duration tracking - COMPLETED: Captures duration in seconds from recording status
+[x] 283. Implement voice memo upload to server - COMPLETED: Uploads audio file with duration to /api/photos/{id}/voice-memos endpoint
+[x] 284. Clear recording state after upload - COMPLETED: Resets all recording states after successful upload
+[x] 285. Restart Expo Server with upload functionality - COMPLETED: Server running with tunnel at exp://kb1ms1o-anonymous-8081.exp.direct and QR code displayed

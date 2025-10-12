@@ -33,6 +33,7 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedUri, setRecordedUri] = useState(null);
   const [fileSize, setFileSize] = useState(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -156,10 +157,16 @@ export default function PhotoDetailScreen({ route, navigation }) {
       console.log('⏹️ Stopping recording...');
       setIsRecording(false);
       
+      // Get status before stopping to capture duration
+      const status = await recording.getStatusAsync();
+      const durationMillis = status.durationMillis || 0;
+      const durationSeconds = durationMillis / 1000;
+      
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
       setRecordedUri(uri);
+      setRecordingDuration(durationSeconds);
 
       // Get file size
       const fileInfo = await FileSystem.getInfoAsync(uri);
@@ -169,8 +176,9 @@ export default function PhotoDetailScreen({ route, navigation }) {
       console.log('✅ Recording stopped');
       console.log('📁 File URI:', uri);
       console.log('📊 File size:', sizeMB, 'MB');
+      console.log('⏱️ Duration:', durationSeconds.toFixed(2), 'seconds');
       
-      Alert.alert('Recording Complete', `File size: ${sizeMB} MB`);
+      Alert.alert('Recording Complete', `File size: ${sizeMB} MB\nDuration: ${durationSeconds.toFixed(1)}s`);
     } catch (error) {
       console.error('❌ Recording stop error:', error);
       Alert.alert('Error', 'Failed to stop recording');
@@ -242,17 +250,29 @@ export default function PhotoDetailScreen({ route, navigation }) {
       console.log('📤 Uploading recording...');
       setLoading(true);
 
-      // Get recording duration
-      const fileInfo = await FileSystem.getInfoAsync(recordedUri);
-      const fileSizeMB = fileInfo.size / (1024 * 1024);
+      // Upload to server
+      const response = await voiceMemoAPI.uploadVoiceMemo(
+        photo.id,
+        recordedUri,
+        recordingDuration
+      );
+
+      console.log('✅ Upload successful:', response);
       
-      // For now, just show success - will add actual upload later
-      Alert.alert('Ready to Upload', `File size: ${fileSizeMB.toFixed(2)} MB\nUpload functionality coming soon!`);
+      // Clear the recording state after successful upload
+      setRecordedUri(null);
+      setFileSize(null);
+      setRecordingDuration(0);
+      if (sound) {
+        await sound.unloadAsync();
+        setSound(null);
+      }
+      setIsPlaying(false);
       
-      console.log('✅ Ready for upload');
+      Alert.alert('Success', 'Voice note uploaded successfully!');
     } catch (error) {
       console.error('❌ Upload error:', error);
-      Alert.alert('Error', 'Failed to prepare upload: ' + error.message);
+      Alert.alert('Upload Failed', error.response?.data?.error || error.message || 'Failed to upload voice note');
     } finally {
       setLoading(false);
     }
