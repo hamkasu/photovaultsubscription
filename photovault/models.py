@@ -177,6 +177,29 @@ class VoiceMemo(db.Model):
         return f'<VoiceMemo {self.filename} for Photo {self.photo_id}>'
 
 
+class PhotoComment(db.Model):
+    """Photo comment/annotation model for text notes attached to photos"""
+    __tablename__ = 'photo_comment'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    photo_id = db.Column(db.Integer, db.ForeignKey('photo.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Comment content
+    comment_text = db.Column(db.Text, nullable=False)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    photo = db.relationship('Photo', backref='comments')
+    user = db.relationship('User', backref='photo_comments')
+    
+    def __repr__(self):
+        return f'<PhotoComment {self.id} for Photo {self.photo_id}>'
+
+
 # ============================================================================
 # BILLING MODELS - Malaysian Subscription System with SST Tax
 # ============================================================================
