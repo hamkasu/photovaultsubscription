@@ -158,10 +158,18 @@ export default function GalleryScreen({ navigation }) {
           </View>
         )}
         
+        {/* Top left badges */}
         {item.voice_memo_count > 0 && (
           <View style={styles.voiceBadge}>
             <Ionicons name="mic" size={12} color="#fff" />
             <Text style={styles.voiceBadgeText}>{item.voice_memo_count}</Text>
+          </View>
+        )}
+        
+        {item.comment_count > 0 && (
+          <View style={[styles.voiceBadge, { top: item.voice_memo_count > 0 ? 34 : 6 }]}>
+            <Ionicons name="chatbox" size={12} color="#fff" />
+            <Text style={styles.voiceBadgeText}>{item.comment_count}</Text>
           </View>
         )}
       </TouchableOpacity>

@@ -152,7 +152,7 @@ def mobile_register():
 def get_dashboard(current_user):
     """Get dashboard statistics for mobile app"""
     try:
-        from photovault.models import VoiceMemo
+        from photovault.models import VoiceMemo, PhotoComment
         from sqlalchemy import func
         
         # Calculate photo statistics
@@ -174,16 +174,31 @@ def get_dashboard(current_user):
         
         # Get voice memo counts for all photos efficiently (single query)
         voice_memo_dict = {}
+        comment_dict = {}
         if photos:  # Only query if user has photos
+            photo_ids = [p.id for p in photos]
+            
+            # Voice memo counts
             voice_memo_counts = db.session.query(
                 VoiceMemo.photo_id,
                 func.count(VoiceMemo.id).label('count')
             ).filter(
-                VoiceMemo.photo_id.in_([p.id for p in photos])
+                VoiceMemo.photo_id.in_(photo_ids)
             ).group_by(VoiceMemo.photo_id).all()
             
             # Create a dictionary for quick lookup
             voice_memo_dict = {photo_id: count for photo_id, count in voice_memo_counts}
+            
+            # Comment/annotation counts
+            comment_counts = db.session.query(
+                PhotoComment.photo_id,
+                func.count(PhotoComment.id).label('count')
+            ).filter(
+                PhotoComment.photo_id.in_(photo_ids)
+            ).group_by(PhotoComment.photo_id).all()
+            
+            # Create a dictionary for quick lookup
+            comment_dict = {photo_id: count for photo_id, count in comment_counts}
         
         # Sort photos by creation date (newest first)
         sorted_photos = sorted(photos, key=lambda p: p.created_at if p.created_at else datetime.min, reverse=True)
@@ -213,6 +228,7 @@ def get_dashboard(current_user):
                 'file_size': photo.file_size,
                 'has_edited': photo.edited_filename is not None,
                 'voice_memo_count': voice_memo_dict.get(photo.id, 0),
+                'comment_count': comment_dict.get(photo.id, 0),
                 # Annotation data for iOS app display
                 'enhancement_metadata': photo.enhancement_metadata,
                 'processing_notes': photo.processing_notes,
