@@ -1471,6 +1471,120 @@ def colorize_photo_ai_mobile(current_user, photo_id):
         return jsonify({'success': False, 'error': 'AI Colorization failed'}), 500
 
 
+@mobile_api_bp.route('/photos/<int:photo_id>/sharpen', methods=['POST'])
+@csrf.exempt
+@token_required
+def sharpen_photo_mobile(current_user, photo_id):
+    """
+    Mobile API endpoint to sharpen a photo with JWT authentication
+    """
+    try:
+        logger.info(f"🔧 SHARPEN REQUEST: photo_id={photo_id}, user={current_user.username}")
+        
+        from photovault.utils.image_enhancement import sharpen_image
+        import random
+        from datetime import datetime
+        
+        # Get the photo and verify ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            logger.warning(f"❌ Photo {photo_id} not found or access denied for user {current_user.id}")
+            return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        
+        logger.info(f"📸 Found photo: filename={photo.filename}, file_path={photo.file_path}")
+        
+        # Construct full file path
+        user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        if os.path.isabs(photo.file_path):
+            full_file_path = photo.file_path
+        else:
+            full_file_path = os.path.join(user_upload_dir, photo.file_path)
+        
+        logger.info(f"📂 Full file path: {full_file_path}")
+        
+        # Check if file exists
+        if not os.path.exists(full_file_path):
+            logger.error(f"❌ File not found on disk: {full_file_path}")
+            return jsonify({'success': False, 'error': 'Photo file not found'}), 404
+        
+        # Check image size
+        file_size = os.path.getsize(full_file_path)
+        file_size_mb = file_size / (1024 * 1024)
+        logger.info(f"📏 File size: {file_size_mb:.2f}MB")
+        
+        if file_size > 10 * 1024 * 1024:  # 10MB limit
+            logger.warning(f"⚠️ File too large: {file_size_mb:.2f}MB > 10MB limit")
+            return jsonify({
+                'success': False, 
+                'error': 'Image too large for sharpening. Please use smaller images (under 10MB).'
+            }), 400
+        
+        # Get sharpening parameters from request
+        data = request.get_json() or {}
+        intensity = float(data.get('intensity', 1.5))  # iOS sends 'intensity'
+        radius = float(data.get('radius', 2.0))
+        amount = intensity  # Map intensity to amount
+        threshold = int(data.get('threshold', 3))
+        method = data.get('method', 'unsharp')
+        
+        logger.info(f"⚙️ Sharpen settings: intensity={intensity}, radius={radius}, threshold={threshold}, method={method}")
+        
+        # Generate filename for sharpened version
+        from werkzeug.utils import secure_filename as sanitize_name
+        date = datetime.now().strftime('%Y%m%d')
+        random_number = random.randint(100000, 999999)
+        safe_username = sanitize_name(current_user.username)
+        sharpened_filename = f"{safe_username}.sharpened.{date}.{random_number}.jpg"
+        
+        logger.info(f"🎯 Sharpened filename: {sharpened_filename}")
+        
+        # Create user upload directory
+        os.makedirs(user_upload_dir, exist_ok=True)
+        
+        # Sharpened image path
+        sharpened_filepath = os.path.join(user_upload_dir, sharpened_filename)
+        
+        # Apply sharpening
+        logger.info(f"🔧 Applying sharpening...")
+        output_path, applied_settings = sharpen_image(
+            full_file_path, 
+            sharpened_filepath,
+            radius=radius,
+            amount=amount,
+            threshold=threshold,
+            method=method
+        )
+        
+        logger.info(f"✅ Sharpening complete: {output_path}, settings: {applied_settings}")
+        
+        # Update photo record with sharpened version
+        photo.edited_filename = sharpened_filename
+        photo.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        logger.info(f"💾 Database updated: photo {photo_id} sharpened successfully")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo sharpened successfully',
+            'photo': {
+                'id': photo.id,
+                'filename': photo.filename,
+                'sharpened_filename': sharpened_filename,
+                'sharpened_url': f'/uploads/{current_user.id}/{sharpened_filename}',
+                'settings_applied': applied_settings
+            }
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 SHARPEN ERROR for photo {photo_id}: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': f'Sharpening failed: {str(e)}'}), 500
+
+
 # ============================================================================
 # VOICE MEMO API - Rewritten for Mobile App with Duration Support
 # ============================================================================
