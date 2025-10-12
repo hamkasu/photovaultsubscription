@@ -766,6 +766,80 @@ export default function PhotoDetailScreen({ route, navigation }) {
           )}
         </View>
 
+        {/* Photo Metadata/Annotations from Railway */}
+        {(photo.processing_notes || photo.back_text || photo.date_text || photo.location_text || photo.occasion || photo.photo_date || photo.condition || photo.photo_source) && (
+          <View style={styles.metadataContainer}>
+            <Text style={styles.metadataTitle}>Photo Details</Text>
+            
+            {photo.processing_notes && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Processing Notes:</Text>
+                <Text style={styles.metadataValue}>{photo.processing_notes}</Text>
+              </View>
+            )}
+
+            {photo.photo_date && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Photo Date:</Text>
+                <Text style={styles.metadataValue}>{new Date(photo.photo_date).toLocaleDateString()}</Text>
+              </View>
+            )}
+
+            {photo.date_text && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Date Description:</Text>
+                <Text style={styles.metadataValue}>{photo.date_text}</Text>
+              </View>
+            )}
+
+            {photo.location_text && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Location:</Text>
+                <Text style={styles.metadataValue}>{photo.location_text}</Text>
+              </View>
+            )}
+
+            {photo.occasion && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Occasion:</Text>
+                <Text style={styles.metadataValue}>{photo.occasion}</Text>
+              </View>
+            )}
+
+            {photo.back_text && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Back of Photo Text:</Text>
+                <Text style={styles.metadataValue}>{photo.back_text}</Text>
+              </View>
+            )}
+
+            {photo.condition && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Condition:</Text>
+                <Text style={styles.metadataValue}>{photo.condition}</Text>
+              </View>
+            )}
+
+            {photo.photo_source && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Source:</Text>
+                <Text style={styles.metadataValue}>{photo.photo_source}</Text>
+              </View>
+            )}
+            
+            {photo.enhancement_metadata && (
+              <View style={styles.metadataSection}>
+                <Text style={styles.metadataLabel}>Enhancement:</Text>
+                <Text style={styles.metadataValue}>
+                  {photo.enhancement_metadata.colorization?.method === 'dnn' ? 'DNN Colorization' : 
+                   photo.enhancement_metadata.colorization?.method === 'ai_guided_dnn' ? 'AI-Guided Colorization' : 
+                   'Enhanced'}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {aiMetadata && (
           <View style={styles.metadataContainer}>
             <Text style={styles.metadataTitle}>AI Analysis</Text>

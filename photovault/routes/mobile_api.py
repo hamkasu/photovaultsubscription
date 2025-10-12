@@ -212,8 +212,19 @@ def get_dashboard(current_user):
                 'created_at': photo.created_at.isoformat() if photo.created_at else None,
                 'file_size': photo.file_size,
                 'has_edited': photo.edited_filename is not None,
-                'voice_memo_count': voice_memo_dict.get(photo.id, 0),  # Add voice memo count
-                'enhancement_metadata': photo.enhancement_metadata  # Add enhancement metadata for filtering
+                'voice_memo_count': voice_memo_dict.get(photo.id, 0),
+                # Annotation data for iOS app display
+                'enhancement_metadata': photo.enhancement_metadata,
+                'processing_notes': photo.processing_notes,
+                'back_text': photo.back_text,
+                'date_text': photo.date_text,
+                'location_text': photo.location_text,
+                'occasion': photo.occasion,
+                'photo_date': photo.photo_date.isoformat() if photo.photo_date else None,
+                'condition': photo.condition,
+                'photo_source': photo.photo_source,
+                'needs_restoration': photo.needs_restoration,
+                'auto_enhanced': photo.auto_enhanced
             })
         
         return jsonify({
@@ -295,7 +306,19 @@ def get_photos(current_user):
                 'thumbnail_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
                 'created_at': photo.created_at.isoformat() if photo.created_at else None,
                 'file_size': photo.file_size,
-                'has_edited': photo.edited_filename is not None
+                'has_edited': photo.edited_filename is not None,
+                # Annotation data for iOS app display
+                'enhancement_metadata': photo.enhancement_metadata,
+                'processing_notes': photo.processing_notes,
+                'back_text': photo.back_text,
+                'date_text': photo.date_text,
+                'location_text': photo.location_text,
+                'occasion': photo.occasion,
+                'photo_date': photo.photo_date.isoformat() if photo.photo_date else None,
+                'condition': photo.condition,
+                'photo_source': photo.photo_source,
+                'needs_restoration': photo.needs_restoration,
+                'auto_enhanced': photo.auto_enhanced
             }
             
             if photo.edited_filename:
