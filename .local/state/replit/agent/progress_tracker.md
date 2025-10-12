@@ -411,3 +411,16 @@ Fixed the issue where clicking "View" after colorization showed the old black & 
 - **Solution**: Fetch updated photo via photoAPI.getPhotoDetail() and navigate with new data
 - **Applied To**: Both handleColorize (DNN & AI) and handleSharpen for consistency
 - **Architect Reviewed**: Approved - API call and navigation pattern are correct
+
+[x] 325. Debug 404 error after View button fix - COMPLETED: Identified missing /api/photos/<photo_id> endpoint
+[x] 326. Add /api/photos/<photo_id> endpoint to mobile API - COMPLETED: Created endpoint with JWT auth and proper security
+[x] 327. Restart PhotoVault Server with new endpoint - COMPLETED: Server running on port 5000 with all endpoints
+[x] 328. Architect review of new endpoint - COMPLETED: Approved - security verified, data format correct
+
+## ✅ COLORIZATION VIEW BUTTON - COMPLETE FIX
+The 404 error has been resolved by adding the missing photo detail endpoint:
+- **Issue**: iOS app was calling `/api/photos/<photo_id>` which didn't exist (404 error)
+- **Solution**: Created new GET `/api/photos/<photo_id>` endpoint in mobile_api.py
+- **Security**: Endpoint checks user_id matches current_user (no cross-account access)
+- **Data Format**: Returns same format as gallery with original_url and edited_url
+- **Ready to Test**: Local server updated, needs Railway deployment for production
