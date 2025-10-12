@@ -111,6 +111,11 @@ export const photoAPI = {
     return response.data;
   },
   
+  checkGrayscale: async (photoId) => {
+    const response = await api.get(`/api/photos/${photoId}/check-grayscale`);
+    return response.data;
+  },
+  
   deletePhoto: async (photoId) => {
     const response = await api.delete(`/api/photos/${photoId}`);
     return response.data;

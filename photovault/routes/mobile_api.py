@@ -1471,6 +1471,52 @@ def colorize_photo_ai_mobile(current_user, photo_id):
         return jsonify({'success': False, 'error': 'AI Colorization failed'}), 500
 
 
+@mobile_api_bp.route('/photos/<int:photo_id>/check-grayscale', methods=['GET'])
+@csrf.exempt
+@token_required
+def check_grayscale_mobile(current_user, photo_id):
+    """
+    Mobile API endpoint to check if a photo is black and white (grayscale)
+    Returns True if photo is grayscale, False if it's already in color
+    """
+    try:
+        from photovault.utils.colorization import get_colorizer
+        
+        # Get the photo and verify ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            return jsonify({
+                'success': False,
+                'error': 'Photo not found or access denied'
+            }), 404
+        
+        # Check if file exists
+        if not os.path.exists(photo.file_path):
+            return jsonify({
+                'success': False,
+                'error': 'Photo file not found'
+            }), 404
+        
+        # Check if photo is grayscale using OpenCV
+        colorizer = get_colorizer()
+        is_grayscale = colorizer.is_grayscale(photo.file_path)
+        
+        logger.info(f"🔍 Grayscale check for photo {photo_id}: {is_grayscale}")
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo.id,
+            'is_grayscale': is_grayscale
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Grayscale check error for photo {photo_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to check photo color mode'
+        }), 500
+
+
 @mobile_api_bp.route('/photos/<int:photo_id>/sharpen', methods=['POST'])
 @csrf.exempt
 @token_required

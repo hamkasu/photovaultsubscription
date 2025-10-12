@@ -43,24 +43,17 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     try {
       setDetectingColor(true);
       
-      // Check if photo already has colorization metadata
-      if (photo.enhancement_metadata?.colorization) {
-        // Already colorized - disable colorization buttons
-        setIsBlackAndWhite(false);
-        return;
-      }
+      // Call the backend API to check if photo is grayscale
+      const response = await photoAPI.checkGrayscale(photo.id);
       
-      // Check if photo has been edited/colorized (has edited_url)
-      if (photo.edited_url) {
-        // Likely already colorized - disable colorization buttons
-        setIsBlackAndWhite(false);
-        return;
+      if (response.success) {
+        setIsBlackAndWhite(response.is_grayscale);
+        console.log(`Photo ${photo.id} grayscale check: ${response.is_grayscale}`);
+      } else {
+        // On error, enable colorization (conservative approach)
+        console.warn('Grayscale check failed, enabling colorization by default');
+        setIsBlackAndWhite(true);
       }
-      
-      // For photos without enhancement metadata or edited version,
-      // we assume they might be black & white and enable colorization
-      // This is a conservative approach - better to allow than block
-      setIsBlackAndWhite(true);
       
     } catch (error) {
       console.error('Error detecting image color:', error);

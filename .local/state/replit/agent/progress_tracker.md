@@ -434,3 +434,18 @@ The 404 error has been resolved by adding the missing photo detail endpoint:
     - Web interface: StoryKeep homepage loading correctly with branding
     - All features operational: Authentication, Dashboard, Gallery, Digitizer/Camera, Family Vaults, Voice Memos, Auto Enhance, Colorization
     - Environment fully restored and ready for development and testing
+
+[x] 333. Fix black and white photo detection - COMPLETED: Created /api/photos/<photo_id>/check-grayscale endpoint with JWT auth
+[x] 334. Add checkGrayscale API method to iOS app - COMPLETED: Added photoAPI.checkGrayscale() method in api.js
+[x] 335. Update EnhancePhotoScreen to use backend detection - COMPLETED: Replaced broken local logic with proper OpenCV-based API call
+[x] 336. Restart both workflows with grayscale fix - COMPLETED: PhotoVault Server and Expo Server running successfully
+[x] 337. Final verification - COMPLETED: Black and white detection now properly recognizes grayscale photos
+
+## ✅ BLACK AND WHITE PHOTO DETECTION FIX COMPLETE
+Fixed the issue where the app didn't properly recognize black and white photos for colorization:
+- **Root Cause**: iOS app wasn't actually checking if photos were grayscale - just making assumptions based on metadata
+- **Backend Solution**: Created `/api/photos/<photo_id>/check-grayscale` endpoint using OpenCV's color channel analysis
+- **iOS Solution**: Updated EnhancePhotoScreen to call backend API for accurate grayscale detection
+- **Detection Method**: Compares RGB channels - if max difference < 30, it's grayscale (accounts for compression artifacts)
+- **Result**: Colorization buttons now properly enabled/disabled based on actual photo color content
+- **Ready to Deploy**: Local servers updated, needs Railway deployment for production
