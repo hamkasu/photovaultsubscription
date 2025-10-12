@@ -6,6 +6,17 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 ## Recent Changes (October 2025)
 
 ### Latest (October 12, 2025)
+- **iOS Colorization Feature Complete**: Connected both colorization algorithms to mobile app
+  - **New Mobile Endpoint**: `/api/photos/<photo_id>/colorize-ai` with JWT authentication for AI-powered colorization
+  - **iOS API Updates**: Added `colorizePhotoAI()` method to support AI colorization alongside existing DNN method
+  - **Enhanced UI**: EnhancePhotoScreen now shows two clear options:
+    - "Colorize (DNN)" - Fast DNN-based colorization with green palette icon
+    - "Colorize (AI)" - AI-powered colorization with Gemini analysis and purple sparkles icon
+  - **Backend Integration**: AI endpoint uses Google Gemini (gemini-2.0-flash-exp) for intelligent color analysis
+  - **Railway Deployment**: Created RAILWAY_COLORIZATION_FIX.md deployment guide for production rollout
+  - **User Experience**: Users can now choose between fast DNN or intelligent AI colorization based on their needs
+
+### Previous (October 12, 2025)
 - **Photo Annotations/Comments Feature**: Complete text annotation system for photos
   - **Database Model**: PhotoComment table with user_id, photo_id, comment_text, timestamps
   - **API Endpoints**: GET /api/photos/<photo_id>/comments, POST /api/photos/<photo_id>/comments, DELETE /api/comments/<comment_id>
