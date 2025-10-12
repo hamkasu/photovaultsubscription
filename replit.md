@@ -6,6 +6,16 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 ## Recent Changes (October 2025)
 
 ### Latest (October 12, 2025)
+- **Mobile App Streamlined for Legacy Photo Restoration**: Simplified mobile interface to focus on core legacy photo digitization
+  - **EnhancePhotoScreen Simplified**: Removed auto-enhance, brightness, denoise options - kept only 3 essential tools
+  - **Three Core Features**: Sharpen (fix blurry photos), Colorize (DNN - fast), Colorize (AI - intelligent)
+  - **Added Sharpen API**: New `sharpenPhoto()` method with intensity control for mobile app
+  - **Design Philosophy Documented**: Clear platform split - mobile for legacy restoration, web for advanced editing
+  - **Updated Documentation**: README, ARCHITECTURE, and MOBILE_APP_GUIDE all explain the focused mobile approach
+  - **User Experience**: Elderly users digitizing family albums get simple, focused interface (3 buttons instead of 6+)
+  - **Web Platform**: All advanced features (filters, effects, batch processing) remain on web interface
+
+### Previous (October 12, 2025)
 - **Comprehensive Technical Documentation**: Created complete documentation suite for developers, stakeholders, and future reference
   - **README.md**: Main project overview with quick start, technology stack, and environment setup
   - **ARCHITECTURE.md**: System architecture diagrams, design patterns, data flow, security architecture, and scalability considerations
