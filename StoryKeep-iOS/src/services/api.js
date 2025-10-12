@@ -96,8 +96,13 @@ export const photoAPI = {
     return response.data;
   },
   
-  colorizePhoto: async (photoId) => {
-    const response = await api.post(`/api/photos/${photoId}/colorize`);
+  colorizePhoto: async (photoId, method = 'auto') => {
+    const response = await api.post(`/api/photos/${photoId}/colorize`, { method });
+    return response.data;
+  },
+  
+  colorizePhotoAI: async (photoId) => {
+    const response = await api.post(`/api/photos/${photoId}/colorize-ai`);
     return response.data;
   },
   
