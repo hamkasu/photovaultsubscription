@@ -5,7 +5,16 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 
 ## Recent Changes (October 2025)
 
-### Latest (October 11, 2025)
+### Latest (October 12, 2025)
+- **Voice Memo Badge Feature**: Added microphone badges to iOS gallery for photos with voice memos
+  - **Backend**: Enhanced `/api/dashboard` endpoint to include `voice_memo_count` field for each photo
+  - **Efficient Query**: Single SQL GROUP BY query with dictionary lookup (O(1) access, no N+1 queries)
+  - **Safety Check**: Added validation to handle users with zero photos gracefully
+  - **Frontend**: iOS app already had badge UI - just needed backend data
+  - **Visual Indicator**: Microphone icon 🎤 with count badge shows how many voice memos exist per photo
+  - **Documentation**: Complete Railway deployment guide in VOICE_MEMO_BADGE_DEPLOYMENT.md
+
+### Previous Updates (October 11, 2025)
 - **Voice Memo Upload Fix**: Fixed voice memo upload failures on Railway deployment with comprehensive solution
   - **Root Cause**: Expo SDK 54 deprecated FileSystem methods, causing runtime errors during file validation
   - **SDK 54 Fix**: Changed to `import * as FileSystem from 'expo-file-system/legacy'` for compatibility
