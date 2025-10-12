@@ -250,14 +250,34 @@ export default function PhotoDetailScreen({ route, navigation }) {
       console.log('📤 Uploading recording...');
       setLoading(true);
 
-      // Upload to server
-      const response = await voiceMemoAPI.uploadVoiceMemo(
-        photo.id,
-        recordedUri,
-        recordingDuration
-      );
+      // Use the same upload pattern as camera (working)
+      const formData = new FormData();
+      formData.append('audio', {
+        uri: recordedUri,
+        type: 'audio/m4a',
+        name: `voice-memo-${Date.now()}.m4a`,
+      });
+      formData.append('duration', recordingDuration.toString());
 
-      console.log('✅ Upload successful:', response);
+      // Get auth token
+      const token = await AsyncStorage.getItem('authToken');
+      
+      // Direct fetch upload like camera
+      const response = await fetch(`${BASE_URL}/api/photos/${photo.id}/voice-memos`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      console.log('✅ Upload successful:', data);
       
       // Clear the recording state after successful upload
       setRecordedUri(null);
@@ -272,7 +292,7 @@ export default function PhotoDetailScreen({ route, navigation }) {
       Alert.alert('Success', 'Voice note uploaded successfully!');
     } catch (error) {
       console.error('❌ Upload error:', error);
-      Alert.alert('Upload Failed', error.response?.data?.error || error.message || 'Failed to upload voice note');
+      Alert.alert('Upload Failed', error.message || 'Failed to upload voice note');
     } finally {
       setLoading(false);
     }
