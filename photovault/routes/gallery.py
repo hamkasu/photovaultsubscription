@@ -83,18 +83,35 @@ def dashboard():
 @gallery_bp.route('/photos')
 @login_required
 def photos():
-    """All photos page"""
+    """All photos page with optional colorization filter"""
     try:
         from photovault.models import Photo
         page = request.args.get('page', 1, type=int)
-        photos = Photo.query.filter_by(user_id=current_user.id)\
-                          .order_by(Photo.created_at.desc())\
-                          .paginate(page=page, per_page=20, error_out=False)
+        filter_type = request.args.get('filter', 'all')
+        
+        # Start with base query
+        query = Photo.query.filter_by(user_id=current_user.id)
+        
+        # Apply colorization filter
+        if filter_type == 'dnn':
+            # Photos colorized with DNN method
+            query = query.filter(Photo.enhancement_metadata['colorization']['method'].astext == 'dnn')
+        elif filter_type == 'ai':
+            # Photos colorized with AI method
+            query = query.filter(Photo.enhancement_metadata['colorization']['method'].astext == 'ai_guided_dnn')
+        elif filter_type == 'uncolorized':
+            # Photos without colorization
+            query = query.filter(Photo.enhancement_metadata.is_(None))
+        # else: show all photos (filter_type == 'all' or any other value)
+        
+        photos = query.order_by(Photo.created_at.desc())\
+                     .paginate(page=page, per_page=20, error_out=False)
     except Exception as e:
         photos = None
         flash('Photo database not ready yet.', 'info')
+        filter_type = 'all'
     
-    return render_template('gallery/photos.html', photos=photos, current_filter='all')
+    return render_template('gallery/photos.html', photos=photos, current_filter=filter_type)
 
 @gallery_bp.route('/albums')
 @login_required

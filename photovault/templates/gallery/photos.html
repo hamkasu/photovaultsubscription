@@ -63,6 +63,18 @@ CALMIC SDN BHD - "Committed to Excellence"
                    class="btn {{ 'btn-primary' if current_filter == 'all' else 'btn-outline-primary' }}">
                     <i class="bi bi-images"></i> All Photos
                 </a>
+                <a href="{{ url_for('gallery.photos') }}?filter=dnn" 
+                   class="btn {{ 'btn-primary' if current_filter == 'dnn' else 'btn-outline-primary' }}">
+                    <i class="bi bi-palette"></i> DNN Colorized
+                </a>
+                <a href="{{ url_for('gallery.photos') }}?filter=ai" 
+                   class="btn {{ 'btn-primary' if current_filter == 'ai' else 'btn-outline-primary' }}">
+                    <i class="bi bi-sparkles"></i> AI Colorized
+                </a>
+                <a href="{{ url_for('gallery.photos') }}?filter=uncolorized" 
+                   class="btn {{ 'btn-primary' if current_filter == 'uncolorized' else 'btn-outline-primary' }}">
+                    <i class="bi bi-circle"></i> Not Colorized
+                </a>
                 <a href="{{ url_for('gallery.originals') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-camera"></i> Original Only
                 </a>

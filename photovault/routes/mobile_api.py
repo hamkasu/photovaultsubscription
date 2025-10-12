@@ -212,7 +212,8 @@ def get_dashboard(current_user):
                 'created_at': photo.created_at.isoformat() if photo.created_at else None,
                 'file_size': photo.file_size,
                 'has_edited': photo.edited_filename is not None,
-                'voice_memo_count': voice_memo_dict.get(photo.id, 0)  # Add voice memo count
+                'voice_memo_count': voice_memo_dict.get(photo.id, 0),  # Add voice memo count
+                'enhancement_metadata': photo.enhancement_metadata  # Add enhancement metadata for filtering
             })
         
         return jsonify({
@@ -263,6 +264,15 @@ def get_photos(current_user):
             filtered_photos = [p for p in all_photos if p.edited_filename is not None]
         elif filter_type == 'originals':
             filtered_photos = [p for p in all_photos if p.edited_filename is None]
+        elif filter_type == 'dnn':
+            # Photos colorized with DNN method
+            filtered_photos = [p for p in all_photos if p.enhancement_metadata and p.enhancement_metadata.get('colorization', {}).get('method') == 'dnn']
+        elif filter_type == 'ai':
+            # Photos colorized with AI method
+            filtered_photos = [p for p in all_photos if p.enhancement_metadata and p.enhancement_metadata.get('colorization', {}).get('method') == 'ai_guided_dnn']
+        elif filter_type == 'uncolorized':
+            # Photos without colorization
+            filtered_photos = [p for p in all_photos if not p.enhancement_metadata]
         else:
             filtered_photos = all_photos
         

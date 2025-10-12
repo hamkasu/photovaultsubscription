@@ -70,6 +70,23 @@ export default function GalleryScreen({ navigation }) {
       filtered = allPhotos.filter(photo => photo.edited_url);
     } else if (filter === 'originals') {
       filtered = allPhotos.filter(photo => !photo.edited_url);
+    } else if (filter === 'dnn') {
+      // Photos colorized with DNN method
+      filtered = allPhotos.filter(photo => 
+        photo.enhancement_metadata && 
+        photo.enhancement_metadata.colorization &&
+        photo.enhancement_metadata.colorization.method === 'dnn'
+      );
+    } else if (filter === 'ai') {
+      // Photos colorized with AI method
+      filtered = allPhotos.filter(photo => 
+        photo.enhancement_metadata && 
+        photo.enhancement_metadata.colorization &&
+        photo.enhancement_metadata.colorization.method === 'ai_guided_dnn'
+      );
+    } else if (filter === 'uncolorized') {
+      // Photos without colorization
+      filtered = allPhotos.filter(photo => !photo.enhancement_metadata);
     }
     
     setDisplayPhotos(filtered);
@@ -187,6 +204,9 @@ export default function GalleryScreen({ navigation }) {
 
       <View style={styles.filterContainer}>
         <FilterButton label="All" value="all" />
+        <FilterButton label="DNN" value="dnn" />
+        <FilterButton label="AI" value="ai" />
+        <FilterButton label="Uncolorized" value="uncolorized" />
         <FilterButton label="Originals" value="originals" />
         <FilterButton label="Enhanced" value="enhanced" />
       </View>

@@ -124,6 +124,8 @@ class Photo(db.Model):
     auto_enhanced = db.Column(db.Boolean, nullable=False, default=False)
     processing_notes = db.Column(db.Text)
     edited_filename = db.Column(db.String(255))  # Stores the filename of the edited image
+    edited_path = db.Column(db.String(500))  # Stores the path of the edited image
+    enhancement_metadata = db.Column(db.JSON)  # Stores enhancement details (method, AI guidance, etc.)
     
     # Front/back pairing for photos with writing on back
     paired_photo_id = db.Column(db.Integer, db.ForeignKey('photo.id'))
