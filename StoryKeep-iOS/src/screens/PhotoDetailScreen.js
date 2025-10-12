@@ -542,8 +542,8 @@ export default function PhotoDetailScreen({ route, navigation }) {
                   }}
                 >
                   <Ionicons 
-                    name={playingMemoId === memo.id ? "stop" : "play"} 
-                    size={24} 
+                    name={playingMemoId === memo.id ? "stop-circle" : "play-circle"} 
+                    size={28} 
                     color="#fff" 
                   />
                 </TouchableOpacity>
