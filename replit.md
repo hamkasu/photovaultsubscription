@@ -6,6 +6,16 @@ StoryKeep (formerly PhotoVault) is a comprehensive photo management and enhancem
 ## Recent Changes (October 2025)
 
 ### Latest (October 12, 2025)
+- **Colorization Filter Feature**: Added ability to filter photos by colorization method across web and mobile
+  - **Database Schema**: Added `enhancement_metadata` (JSON) and `edited_path` columns to Photo model
+  - **Web Gallery Filters**: Added filter buttons for All, DNN Colorized, AI Colorized, and Not Colorized photos
+  - **Mobile API Enhancement**: Updated `/api/photos` endpoint to support colorization filters (dnn/ai/uncolorized)
+  - **iOS Filter UI**: Added 6 filter options in GalleryScreen (All, DNN, AI, Uncolorized, Originals, Enhanced)
+  - **Smart Filtering**: Backend uses PostgreSQL JSON queries for efficient filtering by enhancement_metadata
+  - **Deployment Guide**: Created COLORIZATION_FILTER_DEPLOYMENT.md with complete deployment instructions
+  - **User Benefit**: Users can now easily compare DNN vs AI colorization results and find uncolorized photos
+
+### Previous (October 12, 2025)
 - **iOS Colorization Feature Complete**: Connected both colorization algorithms to mobile app
   - **New Mobile Endpoint**: `/api/photos/<photo_id>/colorize-ai` with JWT authentication for AI-powered colorization
   - **iOS API Updates**: Added `colorizePhotoAI()` method to support AI colorization alongside existing DNN method

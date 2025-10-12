@@ -361,4 +361,19 @@ iOS app now has full access to both colorization algorithms:
 - **Colorize (DNN)**: Fast DNN-based colorization (green palette icon)
 - **Colorize (AI)**: AI-powered with Gemini analysis (purple sparkles icon)
 
+[x] 306. Add database schema for enhancement metadata - COMPLETED: Added edited_path and enhancement_metadata columns to Photo model
+[x] 307. Create database migration - COMPLETED: Created migration 20251012_105417_add_enhancement_metadata.py and applied to dev database
+[x] 308. Add web gallery filtering backend - COMPLETED: Updated /photos endpoint with filter parameter (all/dnn/ai/uncolorized)
+[x] 309. Add web gallery filter UI - COMPLETED: Added filter buttons to gallery page with active state highlighting
+[x] 310. Update mobile API for filtering - COMPLETED: Added filter support to /api/photos endpoint with enhancement_metadata in responses
+[x] 311. Add iOS gallery filter UI - COMPLETED: Added 6 filter buttons (All, DNN, AI, Uncolorized, Originals, Enhanced) to GalleryScreen
+[x] 312. Create deployment documentation - COMPLETED: Created COLORIZATION_FILTER_DEPLOYMENT.md with comprehensive deployment guide
+
+## ✅ COLORIZATION FILTER FEATURE COMPLETE
+Users can now filter photos by colorization method across web and mobile:
+- **Web Gallery**: Filter buttons for All, DNN Colorized, AI Colorized, Not Colorized
+- **iOS App**: 6 filter options including DNN, AI, Uncolorized
+- **Smart Backend**: PostgreSQL JSON queries for efficient filtering
+- **User Benefit**: Easy comparison of DNN vs AI results
+
 Next step: Deploy to Railway by pushing changes to GitHub
