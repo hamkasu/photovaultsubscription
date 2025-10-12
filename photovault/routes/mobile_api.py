@@ -1074,6 +1074,8 @@ def enhance_photo_mobile(current_user, photo_id):
     Mobile API endpoint to apply image enhancement with JWT authentication
     """
     try:
+        logger.info(f"✨ ENHANCE REQUEST: photo_id={photo_id}, user={current_user.username}")
+        
         from photovault.utils.image_enhancement import enhancer
         import random
         from datetime import datetime
@@ -1081,7 +1083,10 @@ def enhance_photo_mobile(current_user, photo_id):
         # Get the photo and verify ownership
         photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
         if not photo:
+            logger.warning(f"❌ Photo {photo_id} not found or access denied for user {current_user.id}")
             return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        
+        logger.info(f"📸 Found photo: filename={photo.filename}, file_path={photo.file_path}")
         
         # Construct full file path
         user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
@@ -1090,13 +1095,20 @@ def enhance_photo_mobile(current_user, photo_id):
         else:
             full_file_path = os.path.join(user_upload_dir, photo.file_path)
         
+        logger.info(f"📂 Full file path: {full_file_path}")
+        
         # Check if file exists
         if not os.path.exists(full_file_path):
+            logger.error(f"❌ File not found on disk: {full_file_path}")
             return jsonify({'success': False, 'error': 'Photo file not found'}), 404
         
         # Check image size
         file_size = os.path.getsize(full_file_path)
+        file_size_mb = file_size / (1024 * 1024)
+        logger.info(f"📏 File size: {file_size_mb:.2f}MB")
+        
         if file_size > 10 * 1024 * 1024:  # 10MB limit
+            logger.warning(f"⚠️ File too large: {file_size_mb:.2f}MB > 10MB limit")
             return jsonify({
                 'success': False, 
                 'error': 'Image too large for enhancement. Please use smaller images (under 10MB).'
@@ -1105,6 +1117,7 @@ def enhance_photo_mobile(current_user, photo_id):
         # Get enhancement settings from request
         data = request.get_json() or {}
         enhancement_settings = data.get('settings', {})
+        logger.info(f"⚙️ Enhancement settings: {enhancement_settings}")
         
         # Generate filename for enhanced version
         from werkzeug.utils import secure_filename as sanitize_name
@@ -1113,6 +1126,8 @@ def enhance_photo_mobile(current_user, photo_id):
         safe_username = sanitize_name(current_user.username)
         enhanced_filename = f"{safe_username}.enhanced.{date}.{random_number}.jpg"
         
+        logger.info(f"🎯 Enhanced filename: {enhanced_filename}")
+        
         # Create user upload directory
         os.makedirs(user_upload_dir, exist_ok=True)
         
@@ -1120,18 +1135,21 @@ def enhance_photo_mobile(current_user, photo_id):
         enhanced_filepath = os.path.join(user_upload_dir, enhanced_filename)
         
         # Apply enhancements
+        logger.info(f"🔧 Applying enhancements...")
         output_path, applied_settings = enhancer.auto_enhance_photo(
             full_file_path, 
             enhanced_filepath, 
             enhancement_settings
         )
         
+        logger.info(f"✅ Enhancement complete: {output_path}, settings: {applied_settings}")
+        
         # Update photo record with enhanced version
         photo.edited_filename = enhanced_filename
         photo.updated_at = datetime.utcnow()
         db.session.commit()
         
-        logger.info(f"Photo {photo_id} enhanced successfully for user {current_user.id}")
+        logger.info(f"💾 Database updated: photo {photo_id} enhanced successfully")
         
         return jsonify({
             'success': True,
@@ -1146,9 +1164,12 @@ def enhance_photo_mobile(current_user, photo_id):
         }), 200
         
     except Exception as e:
-        logger.error(f"Mobile enhance error for photo {photo_id}: {str(e)}")
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 ENHANCE ERROR for photo {photo_id}: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
         db.session.rollback()
-        return jsonify({'success': False, 'error': 'Enhancement failed'}), 500
+        return jsonify({'success': False, 'error': f'Enhancement failed: {str(e)}'}), 500
 
 @mobile_api_bp.route('/photos/<int:photo_id>/colorize', methods=['POST'])
 @csrf.exempt
