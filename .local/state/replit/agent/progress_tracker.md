@@ -399,3 +399,15 @@ The StoryKeep platform is correctly configured with intentional differences:
 - **Web Platform**: Full advanced editing suite with 20+ professional tools
 - **No deployment needed**: Current production state is correct
 - **Documentation**: PLATFORM_DIFFERENCES.md created for team reference
+
+[x] 321. Fix iOS "View" button after colorization - COMPLETED: Updated EnhancePhotoScreen to fetch refreshed photo data
+[x] 322. Fetch updated photo data after colorization/sharpening - COMPLETED: Added photoAPI.getPhotoDetail() call after successful processing
+[x] 323. Update navigation to show colorized image - COMPLETED: Navigate to PhotoDetail with updated photo object instead of goBack()
+[x] 324. Restart Expo Server with fix - COMPLETED: Server running at exp://gdmexb4-anonymous-8081.exp.direct
+
+## ✅ COLORIZATION VIEW BUTTON FIX COMPLETE
+Fixed the issue where clicking "View" after colorization showed the old black & white photo instead of the colorized version:
+- **Root Cause**: navigation.goBack() didn't refresh photo data on previous screen
+- **Solution**: Fetch updated photo via photoAPI.getPhotoDetail() and navigate with new data
+- **Applied To**: Both handleColorize (DNN & AI) and handleSharpen for consistency
+- **Architect Reviewed**: Approved - API call and navigation pattern are correct
