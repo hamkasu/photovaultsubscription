@@ -210,6 +210,12 @@
 [x] 241. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel at exp://xxnze50-anonymous-8081.exp.direct and QR code displayed
+[x] 246. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 247. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed 742 packages successfully
+[x] 248. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://ui57h10-anonymous-8081.exp.direct and QR code ready
+[x] 249. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized
+    - Expo Server: Running with tunnel at exp://ui57h10-anonymous-8081.exp.direct and QR code displayed
 [x] 242. Fix sharpen endpoint 400 error - COMPLETED: Increased file size limit from 10MB to 50MB (aligned with MAX_FILE_SIZE)
 [x] 243. Fix logout navigation - COMPLETED: Optimized auth check interval to 500ms (battery-friendly) with 600ms logout wait for smooth redirect
 [x] 244. Architect review and approval - COMPLETED: Passed review - fixes address issues without performance/battery concerns
