@@ -163,6 +163,11 @@ export const vaultAPI = {
     });
     return response.data;
   },
+  
+  removePhotoFromVault: async (vaultId, photoId) => {
+    const response = await api.delete(`/api/family/vault/${vaultId}/photos/${photoId}`);
+    return response.data;
+  },
 };
 
 export const voiceMemoAPI = {

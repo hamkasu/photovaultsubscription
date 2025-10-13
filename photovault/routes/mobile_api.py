@@ -1003,6 +1003,68 @@ def add_photo_to_vault(current_user, vault_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@mobile_api_bp.route('/family/vault/<int:vault_id>/photos/<int:photo_id>', methods=['DELETE'])
+@csrf.exempt
+@token_required
+def remove_photo_from_vault(current_user, vault_id, photo_id):
+    """Remove photo from vault - Mobile API"""
+    try:
+        logger.info(f"🗑️ REMOVE PHOTO FROM VAULT: vault_id={vault_id}, photo_id={photo_id}, user_id={current_user.id}")
+        
+        # Verify vault exists
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            logger.error(f"❌ Vault not found: {vault_id}")
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
+        
+        # Check if user is a member of the vault
+        member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        if not member:
+            logger.error(f"❌ User {current_user.id} is not a member of vault {vault_id}")
+            return jsonify({'success': False, 'error': 'You are not a member of this vault'}), 403
+        
+        # Find the vault photo
+        vault_photo = VaultPhoto.query.filter_by(
+            vault_id=vault_id,
+            photo_id=photo_id
+        ).first()
+        
+        if not vault_photo:
+            logger.error(f"❌ Photo {photo_id} not found in vault {vault_id}")
+            return jsonify({'success': False, 'error': 'Photo not found in vault'}), 404
+        
+        # Check permission: can delete if user is admin, creator, or the one who shared it
+        is_creator = vault.created_by == current_user.id
+        is_admin = member.role == 'admin'
+        is_sharer = vault_photo.shared_by == current_user.id
+        
+        if not (is_creator or is_admin or is_sharer):
+            logger.error(f"❌ User {current_user.id} does not have permission to remove photo {photo_id}")
+            return jsonify({'success': False, 'error': 'You do not have permission to remove this photo'}), 403
+        
+        # Delete the vault photo association
+        db.session.delete(vault_photo)
+        db.session.commit()
+        
+        logger.info(f"✅ Successfully removed photo {photo_id} from vault {vault_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo removed from vault'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"💥 ERROR removing photo from vault: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @mobile_api_bp.route('/family/vault/<int:vault_id>/invite', methods=['POST'])
 @csrf.exempt
 @token_required

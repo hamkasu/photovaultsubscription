@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { vaultAPI } from '../services/api';
 
 const { width } = Dimensions.get('window');
@@ -49,6 +50,14 @@ export default function VaultDetailScreen({ route, navigation }) {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [inviting, setInviting] = useState(false);
+  
+  // Multiple selection and delete states
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [deleting, setDeleting] = useState(false);
+  
+  // Camera library upload states
+  const [uploadingFromLibrary, setUploadingFromLibrary] = useState(false);
 
   useEffect(() => {
     loadAuthToken();
@@ -196,37 +205,172 @@ export default function VaultDetailScreen({ route, navigation }) {
     return `${Math.floor(diffDays / 365)}y ago`;
   };
 
-  const renderPhoto = ({ item }) => (
-    <TouchableOpacity
-      style={styles.photoCard}
-      onPress={() => navigation.navigate('PhotoDetail', { photoId: item.id })}
-    >
-      <Image
-        source={{ 
-          uri: `${BASE_URL}${item.thumbnail_url || item.original_url}`,
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedPhotos([]);
+  };
+
+  const togglePhotoSelection = (photoId) => {
+    if (selectedPhotos.includes(photoId)) {
+      setSelectedPhotos(selectedPhotos.filter(id => id !== photoId));
+    } else {
+      setSelectedPhotos([...selectedPhotos, photoId]);
+    }
+  };
+
+  const deleteSelectedPhotos = async () => {
+    if (selectedPhotos.length === 0) {
+      Alert.alert('No Photos Selected', 'Please select photos to delete');
+      return;
+    }
+
+    Alert.alert(
+      'Delete Photos',
+      `Are you sure you want to delete ${selectedPhotos.length} photo(s) from this vault?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              // Delete each selected photo from vault
+              for (const photoId of selectedPhotos) {
+                await vaultAPI.removePhotoFromVault(vaultId, photoId);
+              }
+              
+              Alert.alert('Success', `Deleted ${selectedPhotos.length} photo(s) from vault`);
+              setSelectionMode(false);
+              setSelectedPhotos([]);
+              loadVaultDetails();
+            } catch (error) {
+              console.error('Delete photos error:', error);
+              Alert.alert('Error', error.response?.data?.error || 'Failed to delete photos');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const uploadFromCameraLibrary = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photo library');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploadingFromLibrary(true);
+        
+        const formData = new FormData();
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        
+        formData.append('file', {
+          uri,
+          name: filename,
+          type,
+        });
+
+        const response = await fetch(`${BASE_URL}/api/upload`, {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.photo && data.photo.id) {
+          // Add the uploaded photo to vault
+          await vaultAPI.addPhotoToVault(vaultId, data.photo.id, '');
+          Alert.alert('Success', 'Photo uploaded and added to vault');
+          loadVaultDetails();
+        } else {
+          Alert.alert('Error', data.error || 'Failed to upload photo');
+        }
+      }
+    } catch (error) {
+      console.error('Camera library upload error:', error);
+      Alert.alert('Error', 'Failed to upload photo from library');
+    } finally {
+      setUploadingFromLibrary(false);
+    }
+  };
+
+  const renderPhoto = ({ item }) => {
+    const isSelected = selectedPhotos.includes(item.id);
+    
+    return (
+      <TouchableOpacity
+        style={styles.photoCard}
+        onPress={() => {
+          if (selectionMode) {
+            togglePhotoSelection(item.id);
+          } else {
+            navigation.navigate('PhotoDetail', { photoId: item.id });
           }
         }}
-        style={styles.photoImage}
-        resizeMode="cover"
-      />
-      
-      {/* Bottom gradient overlay */}
-      <View style={styles.bottomOverlay}>
-        <Text style={styles.photoDate} numberOfLines={1}>
-          {item.caption || formatDate(item.created_at)}
-        </Text>
-      </View>
-
-      {/* Colorized badge */}
-      {item.edited_url && (
-        <View style={styles.enhancedBadge}>
-          <Ionicons name="sparkles" size={14} color="#fff" />
+        onLongPress={() => {
+          if (!selectionMode) {
+            setSelectionMode(true);
+            setSelectedPhotos([item.id]);
+          }
+        }}
+      >
+        <Image
+          source={{ 
+            uri: `${BASE_URL}${item.thumbnail_url || item.original_url}`,
+            headers: {
+              'Authorization': `Bearer ${authToken}`
+            }
+          }}
+          style={styles.photoImage}
+          resizeMode="cover"
+        />
+        
+        {/* Bottom gradient overlay */}
+        <View style={styles.bottomOverlay}>
+          <Text style={styles.photoDate} numberOfLines={1}>
+            {item.caption || formatDate(item.created_at)}
+          </Text>
         </View>
-      )}
-    </TouchableOpacity>
-  );
+
+        {/* Colorized badge */}
+        {item.edited_url && (
+          <View style={styles.enhancedBadge}>
+            <Ionicons name="sparkles" size={14} color="#fff" />
+          </View>
+        )}
+
+        {/* Selection checkbox */}
+        {selectionMode && (
+          <View style={styles.selectionCheckbox}>
+            <Ionicons 
+              name={isSelected ? "checkmark-circle" : "ellipse-outline"} 
+              size={28} 
+              color={isSelected ? "#E85D75" : "#fff"} 
+            />
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const renderMember = ({ item }) => (
     <View style={styles.memberCard}>
@@ -268,13 +412,40 @@ export default function VaultDetailScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{vault.name}</Text>
-        <TouchableOpacity>
-          <Ionicons name="share-outline" size={28} color="#fff" />
-        </TouchableOpacity>
+        {selectionMode ? (
+          <>
+            <TouchableOpacity onPress={toggleSelectionMode}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {selectedPhotos.length} Selected
+            </Text>
+            <TouchableOpacity 
+              onPress={deleteSelectedPhotos}
+              disabled={deleting || selectedPhotos.length === 0}
+            >
+              {deleting ? (
+                <ActivityIndicator color="#E85D75" size="small" />
+              ) : (
+                <Ionicons 
+                  name="trash" 
+                  size={28} 
+                  color={selectedPhotos.length > 0 ? "#E85D75" : "#666"} 
+                />
+              )}
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={28} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>{vault.name}</Text>
+            <TouchableOpacity onPress={toggleSelectionMode}>
+              <Ionicons name="checkmark-circle-outline" size={28} color="#fff" />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       {/* Tab Navigation */}
@@ -348,13 +519,26 @@ export default function VaultDetailScreen({ route, navigation }) {
             />
           )}
           
-          {/* Floating Add Button */}
-          <TouchableOpacity
-            style={styles.floatingAddButton}
-            onPress={openPhotoPicker}
-          >
-            <Ionicons name="add" size={32} color="#fff" />
-          </TouchableOpacity>
+          {/* Floating Add Buttons */}
+          <View style={styles.floatingButtonsContainer}>
+            <TouchableOpacity
+              style={styles.floatingAddButton}
+              onPress={openPhotoPicker}
+            >
+              <Ionicons name="images" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.floatingAddButton, styles.floatingLibraryButton]}
+              onPress={uploadFromCameraLibrary}
+              disabled={uploadingFromLibrary}
+            >
+              {uploadingFromLibrary ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons name="camera" size={24} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -634,6 +818,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#E85D75',
     borderRadius: 10,
     padding: 3,
+  },
+  cancelText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  selectionCheckbox: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 14,
+  },
+  floatingButtonsContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    gap: 15,
+  },
+  floatingLibraryButton: {
+    marginTop: 15,
   },
   emptyPhotos: {
     flex: 1,
