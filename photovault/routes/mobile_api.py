@@ -14,6 +14,7 @@ from PIL import Image
 import logging
 import jwt
 import re
+import traceback
 
 logger = logging.getLogger(__name__)
 mobile_api_bp = Blueprint('mobile_api', __name__, url_prefix='/api')
@@ -287,10 +288,14 @@ def get_profile(current_user):
 def upload_profile_picture(current_user):
     """Upload or update user profile picture"""
     try:
+        logger.info(f"📸 Profile picture upload started for user: {current_user.username}")
+        
         if 'file' not in request.files:
+            logger.warning("❌ No file in request.files")
             return jsonify({'error': 'No file provided'}), 400
         
         file = request.files['file']
+        logger.info(f"✅ File received: {file.filename}")
         
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
@@ -302,6 +307,7 @@ def upload_profile_picture(current_user):
         file.seek(0, os.SEEK_END)
         file_size = file.tell()
         file.seek(0)
+        logger.info(f"📊 File size: {file_size / (1024*1024):.2f}MB")
         
         if file_size > MAX_FILE_SIZE:
             return jsonify({'error': f'File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB'}), 400
@@ -309,22 +315,29 @@ def upload_profile_picture(current_user):
         # Generate unique filename
         file_extension = file.filename.rsplit('.', 1)[1].lower()
         unique_filename = f"profile_{current_user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+        logger.info(f"📝 Generated filename: {unique_filename}")
         
         # Create user upload directory if it doesn't exist
         user_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        logger.info(f"📁 User folder: {user_folder}")
         os.makedirs(user_folder, exist_ok=True)
         
         # Save file
         file_path = os.path.join(user_folder, unique_filename)
+        logger.info(f"💾 Saving to: {file_path}")
         file.save(file_path)
+        logger.info("✅ File saved successfully")
         
         # Resize image to reasonable profile picture size (500x500)
         try:
+            logger.info("🖼️ Starting image resize...")
             img = Image.open(file_path)
             img.thumbnail((500, 500), Image.Resampling.LANCZOS)
             img.save(file_path, quality=90, optimize=True)
+            logger.info("✅ Image resized successfully")
         except Exception as img_error:
-            logger.error(f"Image resize error: {str(img_error)}")
+            logger.error(f"⚠️ Image resize error: {str(img_error)}")
+            logger.error(f"Resize traceback: {traceback.format_exc()}")
         
         # Delete old profile picture if exists
         if current_user.profile_picture:
@@ -332,16 +345,19 @@ def upload_profile_picture(current_user):
             if os.path.exists(old_file_path):
                 try:
                     os.remove(old_file_path)
+                    logger.info(f"🗑️ Deleted old profile picture: {current_user.profile_picture}")
                 except Exception as del_error:
-                    logger.error(f"Error deleting old profile picture: {str(del_error)}")
+                    logger.error(f"⚠️ Error deleting old profile picture: {str(del_error)}")
         
         # Update user's profile picture in database
+        logger.info(f"💾 Updating database with new profile picture...")
         current_user.profile_picture = unique_filename
         db.session.commit()
+        logger.info("✅ Database updated successfully")
         
         profile_picture_url = f'/uploads/{current_user.id}/{unique_filename}'
         
-        logger.info(f"Profile picture uploaded for user {current_user.username}: {unique_filename}")
+        logger.info(f"🎉 Profile picture upload complete for user {current_user.username}: {unique_filename}")
         
         return jsonify({
             'success': True,
@@ -351,8 +367,12 @@ def upload_profile_picture(current_user):
         
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Profile picture upload error: {str(e)}")
-        return jsonify({'error': 'Failed to upload profile picture'}), 500
+        error_traceback = traceback.format_exc()
+        logger.error(f"Profile picture upload error: {str(e)}\nTraceback:\n{error_traceback}")
+        return jsonify({
+            'error': 'Failed to upload profile picture',
+            'detail': str(e) if current_app.debug else None
+        }), 500
 
 @mobile_api_bp.route('/photos', methods=['GET'])
 @token_required
