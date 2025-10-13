@@ -229,18 +229,18 @@ def get_dashboard(current_user):
                 'has_edited': photo.edited_filename is not None,
                 'voice_memo_count': voice_memo_dict.get(photo.id, 0),
                 'comment_count': comment_dict.get(photo.id, 0),
-                # Annotation data for iOS app display
-                'enhancement_metadata': photo.enhancement_metadata,
-                'processing_notes': photo.processing_notes,
-                'back_text': photo.back_text,
-                'date_text': photo.date_text,
-                'location_text': photo.location_text,
-                'occasion': photo.occasion,
-                'photo_date': photo.photo_date.isoformat() if photo.photo_date else None,
-                'condition': photo.condition,
-                'photo_source': photo.photo_source,
-                'needs_restoration': photo.needs_restoration,
-                'auto_enhanced': photo.auto_enhanced
+                # Annotation data for iOS app display - use getattr for fields that may not exist
+                'enhancement_metadata': getattr(photo, 'enhancement_metadata', None),
+                'processing_notes': getattr(photo, 'processing_notes', None),
+                'back_text': getattr(photo, 'back_text', None),
+                'date_text': getattr(photo, 'date_text', None),
+                'location_text': getattr(photo, 'location_text', None),
+                'occasion': getattr(photo, 'occasion', None),
+                'photo_date': getattr(photo, 'photo_date', None).isoformat() if getattr(photo, 'photo_date', None) else None,
+                'condition': getattr(photo, 'condition', None),
+                'photo_source': getattr(photo, 'photo_source', None),
+                'needs_restoration': getattr(photo, 'needs_restoration', None),
+                'auto_enhanced': getattr(photo, 'auto_enhanced', False)
             })
         
         return jsonify({
@@ -264,10 +264,11 @@ def get_profile(current_user):
     try:
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         
-        # Build profile picture URL if exists
+        # Build profile picture URL if exists - use getattr for backward compatibility
         profile_picture_url = None
-        if current_user.profile_picture:
-            profile_picture_url = f'/uploads/{current_user.id}/{current_user.profile_picture}'
+        profile_picture = getattr(current_user, 'profile_picture', None)
+        if profile_picture:
+            profile_picture_url = f'/uploads/{current_user.id}/{profile_picture}'
         
         return jsonify({
             'username': current_user.username,
