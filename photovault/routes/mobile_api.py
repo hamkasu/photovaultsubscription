@@ -2206,10 +2206,10 @@ def delete_photo(current_user, photo_id):
         return jsonify({'success': False, 'error': f'Delete failed: {str(e)}'}), 500
 
 
-@mobile_api_bp.route('/photos/bulk-delete', methods=['POST'])
+@mobile_api_bp.route('/photos/bulk-delete-mobile', methods=['POST'])
 @csrf.exempt
 @token_required
-def bulk_delete_photos(current_user):
+def bulk_delete_photos_mobile(current_user):
     """Bulk delete multiple photos for mobile app"""
     try:
         data = request.get_json()

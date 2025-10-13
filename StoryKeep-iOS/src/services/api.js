@@ -122,7 +122,7 @@ export const photoAPI = {
   },
   
   bulkDeletePhotos: async (photoIds) => {
-    const response = await api.post('/api/photos/bulk-delete', { photo_ids: photoIds });
+    const response = await api.post('/api/photos/bulk-delete-mobile', { photo_ids: photoIds });
     return response.data;
   },
   
