@@ -11,6 +11,7 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { photoAPI } from '../services/api';
 
 const { width, height } = Dimensions.get('window');
@@ -158,6 +159,57 @@ export default function CameraScreen({ navigation }) {
     }
   };
 
+  const pickFromLibrary = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photo library');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: batchMode,
+        quality: 0.8,
+        allowsEditing: false,
+      });
+
+      if (!result.canceled) {
+        setProcessing(true);
+
+        if (batchMode && result.assets && result.assets.length > 0) {
+          for (const asset of result.assets) {
+            const enhancedPhoto = await ImageManipulator.manipulateAsync(
+              asset.uri,
+              [{ resize: { width: 1920 } }],
+              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+            );
+            await processAndUpload(enhancedPhoto.uri);
+          }
+          Alert.alert(
+            'Upload Complete',
+            `Successfully uploaded ${result.assets.length} photo(s)`,
+            [{ text: 'OK', onPress: () => navigation.navigate('Gallery') }]
+          );
+        } else if (result.assets && result.assets[0]) {
+          const enhancedPhoto = await ImageManipulator.manipulateAsync(
+            result.assets[0].uri,
+            [{ resize: { width: 1920 } }],
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+          );
+          await processAndUpload(enhancedPhoto.uri);
+        }
+
+        setProcessing(false);
+      }
+    } catch (error) {
+      console.error('Photo library error:', error);
+      Alert.alert('Error', 'Failed to pick photo from library');
+      setProcessing(false);
+    }
+  };
+
   if (!permission) {
     return <View style={styles.container} />;
   }
@@ -202,6 +254,18 @@ export default function CameraScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={pickFromLibrary}
+              disabled={processing}
+            >
+              <Ionicons
+                name="images"
+                size={28}
+                color={processing ? '#999' : '#fff'}
+              />
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => setShowGuides(!showGuides)}
