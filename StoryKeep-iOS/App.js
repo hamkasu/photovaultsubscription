@@ -64,8 +64,8 @@ export default function App() {
   useEffect(() => {
     checkAuthStatus();
     
-    // Listen for storage changes more frequently
-    const interval = setInterval(checkAuthStatus, 300);
+    // Check auth status periodically (500ms is responsive but not battery-draining)
+    const interval = setInterval(checkAuthStatus, 500);
     return () => clearInterval(interval);
   }, []);
 

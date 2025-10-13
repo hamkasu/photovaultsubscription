@@ -69,8 +69,8 @@ export default function DashboardScreen({ navigation }) {
               // Remove auth token first to trigger App.js auth check
               await AsyncStorage.removeItem('authToken');
               
-              // Wait briefly to ensure auth state change is detected
-              await new Promise(resolve => setTimeout(resolve, 100));
+              // Wait for auth state change to be detected (500ms interval in App.js)
+              await new Promise(resolve => setTimeout(resolve, 600));
               
               // Then clear remaining storage and biometric credentials
               await AsyncStorage.clear();

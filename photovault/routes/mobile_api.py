@@ -1558,11 +1558,11 @@ def sharpen_photo_mobile(current_user, photo_id):
         file_size_mb = file_size / (1024 * 1024)
         logger.info(f"📏 File size: {file_size_mb:.2f}MB")
         
-        if file_size > 10 * 1024 * 1024:  # 10MB limit
-            logger.warning(f"⚠️ File too large: {file_size_mb:.2f}MB > 10MB limit")
+        if file_size > 50 * 1024 * 1024:  # 50MB limit (same as MAX_FILE_SIZE)
+            logger.warning(f"⚠️ File too large: {file_size_mb:.2f}MB > 50MB limit")
             return jsonify({
                 'success': False, 
-                'error': 'Image too large for sharpening. Please use smaller images (under 10MB).'
+                'error': 'Image too large for sharpening. Please use smaller images (under 50MB).'
             }), 400
         
         # Get sharpening parameters from request
