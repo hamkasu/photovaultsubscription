@@ -20,6 +20,9 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)  # ← ADD THIS LINE
     is_admin = db.Column(db.Boolean, default=False)
     is_superuser = db.Column(db.Boolean, default=False)
+    profile_picture = db.Column(db.String(500))  # Profile picture filename
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     photos = db.relationship('Photo', backref='user', lazy='dynamic', cascade='all, delete-orphan')

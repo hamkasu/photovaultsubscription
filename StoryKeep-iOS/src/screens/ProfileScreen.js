@@ -7,15 +7,20 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { authAPI, dashboardAPI } from '../services/api';
 
 export default function ProfileScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+  const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
     loadProfileData();
@@ -23,19 +28,74 @@ export default function ProfileScreen({ navigation }) {
 
   const loadProfileData = async () => {
     try {
-      const [profile, dashStats, storedUser] = await Promise.all([
+      const [profile, dashStats, token] = await Promise.all([
         authAPI.getProfile(),
         dashboardAPI.getStats(),
-        AsyncStorage.getItem('userData'),
+        AsyncStorage.getItem('authToken'),
       ]);
 
-      setUserData(profile.user || JSON.parse(storedUser));
+      setUserData(profile);
       setStats(dashStats);
+      setAuthToken(token);
     } catch (error) {
       console.error('Profile error:', error);
       Alert.alert('Error', 'Failed to load profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need camera roll permissions to change your profile picture');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadProfilePicture(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const uploadProfilePicture = async (imageUri) => {
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      const filename = imageUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+      formData.append('file', {
+        uri: imageUri,
+        name: filename,
+        type,
+      });
+
+      const response = await authAPI.uploadProfilePicture(formData);
+
+      if (response.success) {
+        setUserData({ ...userData, profile_picture: response.profile_picture });
+        Alert.alert('Success', 'Profile picture updated successfully');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      Alert.alert('Error', 'Failed to upload profile picture');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -60,9 +120,34 @@ export default function ProfileScreen({ navigation }) {
       </View>
 
       <View style={styles.profileSection}>
-        <View style={styles.avatar}>
-          <Ionicons name="person" size={60} color="#E85D75" />
-        </View>
+        <TouchableOpacity 
+          style={styles.avatarContainer} 
+          onPress={handlePickImage}
+          disabled={uploading}
+        >
+          {userData?.profile_picture ? (
+            <Image
+              source={{ 
+                uri: `${BASE_URL}${userData.profile_picture}`,
+                headers: authToken ? {
+                  Authorization: `Bearer ${authToken}`,
+                } : {},
+              }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <Ionicons name="person" size={60} color="#E85D75" />
+            </View>
+          )}
+          <View style={styles.cameraIconContainer}>
+            {uploading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="camera" size={20} color="#fff" />
+            )}
+          </View>
+        </TouchableOpacity>
         <Text style={styles.username}>{userData?.username || 'User'}</Text>
         <Text style={styles.email}>{userData?.email || ''}</Text>
         {stats?.subscription_plan && (
@@ -172,6 +257,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 15,
+  },
   avatar: {
     width: 120,
     height: 120,
@@ -179,7 +268,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF0F3',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+  },
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#FFF0F3',
+  },
+  cameraIconContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E85D75',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
   },
   username: {
     fontSize: 24,

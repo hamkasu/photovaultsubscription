@@ -264,14 +264,94 @@ def get_profile(current_user):
     try:
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         
+        # Build profile picture URL if exists
+        profile_picture_url = None
+        if current_user.profile_picture:
+            profile_picture_url = f'/uploads/{current_user.id}/{current_user.profile_picture}'
+        
         return jsonify({
             'username': current_user.username,
             'email': current_user.email,
-            'subscription_plan': user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
+            'subscription_plan': user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free',
+            'profile_picture': profile_picture_url,
+            'created_at': current_user.created_at.isoformat() if current_user.created_at else None
         })
     except Exception as e:
         logger.error(f"Profile error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@mobile_api_bp.route('/auth/profile/picture', methods=['POST'])
+@csrf.exempt
+@token_required
+def upload_profile_picture(current_user):
+    """Upload or update user profile picture"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Allowed: png, jpg, jpeg, gif, bmp, webp'}), 400
+        
+        # Check file size
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        if file_size > MAX_FILE_SIZE:
+            return jsonify({'error': f'File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB'}), 400
+        
+        # Generate unique filename
+        file_extension = file.filename.rsplit('.', 1)[1].lower()
+        unique_filename = f"profile_{current_user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+        
+        # Create user upload directory if it doesn't exist
+        user_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        # Save file
+        file_path = os.path.join(user_folder, unique_filename)
+        file.save(file_path)
+        
+        # Resize image to reasonable profile picture size (500x500)
+        try:
+            img = Image.open(file_path)
+            img.thumbnail((500, 500), Image.Resampling.LANCZOS)
+            img.save(file_path, quality=90, optimize=True)
+        except Exception as img_error:
+            logger.error(f"Image resize error: {str(img_error)}")
+        
+        # Delete old profile picture if exists
+        if current_user.profile_picture:
+            old_file_path = os.path.join(user_folder, current_user.profile_picture)
+            if os.path.exists(old_file_path):
+                try:
+                    os.remove(old_file_path)
+                except Exception as del_error:
+                    logger.error(f"Error deleting old profile picture: {str(del_error)}")
+        
+        # Update user's profile picture in database
+        current_user.profile_picture = unique_filename
+        db.session.commit()
+        
+        profile_picture_url = f'/uploads/{current_user.id}/{unique_filename}'
+        
+        logger.info(f"Profile picture uploaded for user {current_user.username}: {unique_filename}")
+        
+        return jsonify({
+            'success': True,
+            'profile_picture': profile_picture_url,
+            'message': 'Profile picture updated successfully'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Profile picture upload error: {str(e)}")
+        return jsonify({'error': 'Failed to upload profile picture'}), 500
 
 @mobile_api_bp.route('/photos', methods=['GET'])
 @token_required

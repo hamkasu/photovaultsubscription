@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { dashboardAPI, photoAPI } from '../services/api';
+import { dashboardAPI, photoAPI, authAPI } from '../services/api';
 import api from '../services/api';
 
 export default function DashboardScreen({ navigation }) {
@@ -23,6 +23,7 @@ export default function DashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
     loadDashboardData();
@@ -30,16 +31,16 @@ export default function DashboardScreen({ navigation }) {
 
   const loadDashboardData = async () => {
     try {
-      const [statsData, photosData, userDataString, token] = await Promise.all([
+      const [statsData, photosData, profileData, token] = await Promise.all([
         dashboardAPI.getStats(),
         photoAPI.getPhotos('all'),
-        AsyncStorage.getItem('userData'),
+        authAPI.getProfile(),
         AsyncStorage.getItem('authToken'),
       ]);
 
       setStats(statsData);
       setRecentPhotos(photosData.photos?.slice(0, 6) || []);
-      setUserData(userDataString ? JSON.parse(userDataString) : null);
+      setUserData(profileData);
       setAuthToken(token);
     } catch (error) {
       console.error('Dashboard error:', error);
@@ -107,7 +108,19 @@ export default function DashboardScreen({ navigation }) {
             style={styles.profileButton}
             onPress={() => navigation.navigate('Profile')}
           >
-            <Ionicons name="person-circle" size={40} color="#E85D75" />
+            {userData?.profile_picture ? (
+              <Image
+                source={{ 
+                  uri: `${BASE_URL}${userData.profile_picture}`,
+                  headers: authToken ? {
+                    Authorization: `Bearer ${authToken}`,
+                  } : {},
+                }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <Ionicons name="person-circle" size={40} color="#E85D75" />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.logoutButton}
@@ -255,6 +268,12 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     marginRight: 10,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF0F3',
   },
   logoutButton: {
     padding: 5,
