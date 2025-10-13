@@ -28,16 +28,18 @@ export default function SettingsScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Clear all storage including biometric credentials
+              // Remove auth token first to trigger App.js auth check
+              await AsyncStorage.removeItem('authToken');
+              
+              // Wait briefly to ensure auth state change is detected
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              // Then clear remaining storage and biometric credentials
               await AsyncStorage.clear();
               await SecureStore.deleteItemAsync('userEmail').catch(() => {});
               await SecureStore.deleteItemAsync('userPassword').catch(() => {});
               
-              // Force navigation reset to login screen
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
+              // Navigation will be handled automatically by App.js when auth state changes
             } catch (error) {
               console.error('Logout error:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
