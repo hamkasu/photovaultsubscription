@@ -2142,3 +2142,122 @@ def delete_photo(current_user, photo_id):
         logger.error(f"📋 TRACEBACK:\n{error_trace}")
         db.session.rollback()
         return jsonify({'success': False, 'error': f'Delete failed: {str(e)}'}), 500
+
+
+@mobile_api_bp.route('/photos/bulk-delete', methods=['POST'])
+@csrf.exempt
+@token_required
+def bulk_delete_photos(current_user):
+    """Bulk delete multiple photos for mobile app"""
+    try:
+        data = request.get_json()
+        if not data or 'photo_ids' not in data:
+            return jsonify({'success': False, 'error': 'photo_ids required'}), 400
+        
+        photo_ids = data.get('photo_ids', [])
+        
+        if not isinstance(photo_ids, list) or len(photo_ids) == 0:
+            return jsonify({'success': False, 'error': 'photo_ids must be a non-empty array'}), 400
+        
+        logger.info(f"🗑️ BULK DELETE REQUEST: {len(photo_ids)} photos, user={current_user.username}")
+        logger.info(f"📋 Photo IDs: {photo_ids}")
+        
+        deleted_count = 0
+        failed_count = 0
+        errors = []
+        
+        user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        
+        for photo_id in photo_ids:
+            try:
+                # Get the photo and verify ownership
+                photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+                if not photo:
+                    logger.warning(f"❌ Photo {photo_id} not found or access denied")
+                    failed_count += 1
+                    errors.append(f"Photo {photo_id} not found")
+                    continue
+                
+                # Delete associated files
+                files_to_delete = []
+                
+                # Delete original file
+                if photo.file_path:
+                    if os.path.isabs(photo.file_path):
+                        full_path = photo.file_path
+                    else:
+                        full_path = os.path.join(user_upload_dir, photo.file_path)
+                    
+                    if os.path.exists(full_path):
+                        os.remove(full_path)
+                        files_to_delete.append('original')
+                
+                # Delete thumbnail
+                if photo.thumbnail_path and os.path.exists(photo.thumbnail_path):
+                    os.remove(photo.thumbnail_path)
+                    files_to_delete.append('thumbnail')
+                
+                # Delete edited version if exists
+                if photo.edited_filename:
+                    edited_path = os.path.join(user_upload_dir, photo.edited_filename)
+                    if os.path.exists(edited_path):
+                        os.remove(edited_path)
+                        files_to_delete.append('edited')
+                
+                # Delete associated data
+                from photovault.models import VoiceMemo, VaultPhoto, PhotoPerson, PhotoComment
+                
+                # Delete voice memos
+                voice_memos = VoiceMemo.query.filter_by(photo_id=photo.id).all()
+                for memo in voice_memos:
+                    if memo.file_path and os.path.exists(memo.file_path):
+                        os.remove(memo.file_path)
+                    db.session.delete(memo)
+                
+                # Delete vault photo associations
+                vault_photos = VaultPhoto.query.filter_by(photo_id=photo.id).all()
+                for vault_photo in vault_photos:
+                    db.session.delete(vault_photo)
+                
+                # Delete photo-person tags
+                photo_people = PhotoPerson.query.filter_by(photo_id=photo.id).all()
+                for photo_person in photo_people:
+                    db.session.delete(photo_person)
+                
+                # Delete comments
+                comments = PhotoComment.query.filter_by(photo_id=photo.id).all()
+                for comment in comments:
+                    db.session.delete(comment)
+                
+                # Delete photo record
+                db.session.delete(photo)
+                deleted_count += 1
+                
+                logger.info(f"✅ Photo {photo_id} deleted (files: {files_to_delete})")
+                
+            except Exception as e:
+                logger.error(f"❌ Error deleting photo {photo_id}: {str(e)}")
+                failed_count += 1
+                errors.append(f"Photo {photo_id}: {str(e)}")
+                continue
+        
+        # Commit all deletions
+        db.session.commit()
+        
+        logger.info(f"🎯 BULK DELETE COMPLETE: deleted={deleted_count}, failed={failed_count}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Deleted {deleted_count} photos',
+            'deleted_count': deleted_count,
+            'failed_count': failed_count,
+            'errors': errors if errors else None
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 BULK DELETE ERROR: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': f'Bulk delete failed: {str(e)}'}), 500

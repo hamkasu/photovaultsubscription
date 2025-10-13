@@ -121,6 +121,11 @@ export const photoAPI = {
     return response.data;
   },
   
+  bulkDeletePhotos: async (photoIds) => {
+    const response = await api.post('/api/photos/bulk-delete', { photo_ids: photoIds });
+    return response.data;
+  },
+  
   getAIMetadata: async (photoId) => {
     const response = await api.get(`/api/photos/${photoId}/ai-metadata`);
     return response.data;

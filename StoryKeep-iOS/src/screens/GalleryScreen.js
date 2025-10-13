@@ -27,6 +27,8 @@ export default function GalleryScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [authToken, setAuthToken] = useState(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
 
   useEffect(() => {
     loadPhotos();
@@ -97,6 +99,58 @@ export default function GalleryScreen({ navigation }) {
     loadPhotos();
   };
 
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedPhotos([]);
+  };
+
+  const togglePhotoSelection = (photoId) => {
+    if (selectedPhotos.includes(photoId)) {
+      setSelectedPhotos(selectedPhotos.filter(id => id !== photoId));
+    } else {
+      setSelectedPhotos([...selectedPhotos, photoId]);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedPhotos.length === 0) {
+      Alert.alert('No Selection', 'Please select photos to delete');
+      return;
+    }
+
+    Alert.alert(
+      'Delete Photos',
+      `Are you sure you want to delete ${selectedPhotos.length} photo(s)?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const result = await photoAPI.bulkDeletePhotos(selectedPhotos);
+              
+              Alert.alert(
+                'Success', 
+                result.message || `Deleted ${result.deleted_count} photos`,
+                [{ text: 'OK', onPress: () => {
+                  setSelectionMode(false);
+                  setSelectedPhotos([]);
+                  loadPhotos();
+                }}]
+              );
+            } catch (error) {
+              console.error('Bulk delete error:', error);
+              Alert.alert('Error', 'Failed to delete photos');
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -122,10 +176,18 @@ export default function GalleryScreen({ navigation }) {
         ? `${BASE_URL}${imageUrl}`
         : imageUrl;
 
+    const isSelected = selectedPhotos.includes(item.id);
+
     return (
       <TouchableOpacity
-        style={styles.photoCard}
-        onPress={() => navigation.navigate('PhotoDetail', { photo: item })}
+        style={[styles.photoCard, selectionMode && isSelected && styles.photoCardSelected]}
+        onPress={() => selectionMode ? togglePhotoSelection(item.id) : navigation.navigate('PhotoDetail', { photo: item })}
+        onLongPress={() => {
+          if (!selectionMode) {
+            setSelectionMode(true);
+            setSelectedPhotos([item.id]);
+          }
+        }}
       >
         {fullImageUrl && authToken ? (
           <Image
@@ -172,6 +234,15 @@ export default function GalleryScreen({ navigation }) {
             <Text style={styles.voiceBadgeText}>{item.comment_count}</Text>
           </View>
         )}
+
+        {/* Selection checkbox */}
+        {selectionMode && (
+          <View style={styles.checkboxContainer}>
+            <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+              {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
+            </View>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -206,8 +277,32 @@ export default function GalleryScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Gallery</Text>
-        <Text style={styles.count}>{displayPhotos.length} photos</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.title}>Gallery</Text>
+          <Text style={styles.count}>
+            {selectionMode 
+              ? `${selectedPhotos.length} selected` 
+              : `${displayPhotos.length} photos`}
+          </Text>
+        </View>
+        <View style={styles.headerRight}>
+          {selectionMode && selectedPhotos.length > 0 && (
+            <TouchableOpacity 
+              style={styles.deleteButton}
+              onPress={handleBulkDelete}
+            >
+              <Ionicons name="trash" size={24} color="#fff" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity 
+            style={styles.selectButton}
+            onPress={toggleSelectionMode}
+          >
+            <Text style={styles.selectButtonText}>
+              {selectionMode ? 'Cancel' : 'Select'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.filterContainer}>
@@ -259,9 +354,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     paddingTop: 60,
     backgroundColor: '#000',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
@@ -272,6 +377,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     marginTop: 4,
+  },
+  selectButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#E85D75',
+  },
+  selectButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ff3b30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -308,9 +433,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     position: 'relative',
   },
+  photoCardSelected: {
+    opacity: 0.7,
+    borderWidth: 3,
+    borderColor: '#E85D75',
+  },
   photoImage: {
     width: '100%',
     height: '100%',
+  },
+  checkboxContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#E85D75',
+    borderColor: '#E85D75',
   },
   photoImagePlaceholder: {
     width: '100%',
