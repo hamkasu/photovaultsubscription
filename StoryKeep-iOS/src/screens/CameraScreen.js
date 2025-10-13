@@ -91,10 +91,8 @@ export default function CameraScreen({ navigation }) {
     }
   };
 
-  const processAndUpload = async (photoUri) => {
+  const processAndUpload = async (photoUri, showAlerts = true) => {
     try {
-      setProcessing(true);
-
       const formData = new FormData();
       formData.append('image', {
         uri: photoUri,
@@ -104,24 +102,29 @@ export default function CameraScreen({ navigation }) {
 
       const response = await photoAPI.detectAndExtract(formData);
 
-      if (response.success) {
-        Alert.alert(
-          'Success',
-          `Photo uploaded! ${response.photos_extracted || 0} photo(s) extracted`,
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('Gallery'),
-            },
-          ]
-        );
-      } else {
-        Alert.alert('Upload Complete', 'Photo uploaded but no extraction needed');
+      if (showAlerts) {
+        if (response.success) {
+          Alert.alert(
+            'Success',
+            `Photo uploaded! ${response.photos_extracted || 0} photo(s) extracted`,
+            [
+              {
+                text: 'OK',
+                onPress: () => navigation.navigate('Gallery'),
+              },
+            ]
+          );
+        } else {
+          Alert.alert('Upload Complete', 'Photo uploaded but no extraction needed');
+        }
       }
+      
+      return response;
     } catch (error) {
-      Alert.alert('Upload Failed', error.response?.data?.message || 'Please try again');
-    } finally {
-      setProcessing(false);
+      if (showAlerts) {
+        Alert.alert('Upload Failed', error.response?.data?.message || 'Please try again');
+      }
+      throw error;
     }
   };
 
@@ -132,15 +135,17 @@ export default function CameraScreen({ navigation }) {
     }
 
     setProcessing(true);
+    let successCount = 0;
     
     try {
       for (const photo of capturedPhotos) {
-        await processAndUpload(photo.uri);
+        await processAndUpload(photo.uri, false);
+        successCount++;
       }
 
       Alert.alert(
         'Batch Complete',
-        `Successfully uploaded ${capturedPhotos.length} photos`,
+        `Successfully uploaded ${successCount} of ${capturedPhotos.length} photos`,
         [
           {
             text: 'OK',
@@ -153,7 +158,22 @@ export default function CameraScreen({ navigation }) {
         ]
       );
     } catch (error) {
-      Alert.alert('Batch Upload Failed', 'Some photos may not have uploaded');
+      Alert.alert(
+        'Batch Upload Error',
+        `Uploaded ${successCount} of ${capturedPhotos.length} photos. Some uploads failed.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              setCapturedPhotos([]);
+              setBatchMode(false);
+              if (successCount > 0) {
+                navigation.navigate('Gallery');
+              }
+            },
+          },
+        ]
+      );
     } finally {
       setProcessing(false);
     }
@@ -175,24 +195,26 @@ export default function CameraScreen({ navigation }) {
         allowsEditing: false,
       });
 
-      if (!result.canceled) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         setProcessing(true);
 
-        if (batchMode && result.assets && result.assets.length > 0) {
+        if (batchMode) {
+          const enhancedPhotos = [];
           for (const asset of result.assets) {
             const enhancedPhoto = await ImageManipulator.manipulateAsync(
               asset.uri,
               [{ resize: { width: 1920 } }],
               { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
             );
-            await processAndUpload(enhancedPhoto.uri);
+            enhancedPhotos.push(enhancedPhoto);
           }
+          
+          setCapturedPhotos([...capturedPhotos, ...enhancedPhotos]);
           Alert.alert(
-            'Upload Complete',
-            `Successfully uploaded ${result.assets.length} photo(s)`,
-            [{ text: 'OK', onPress: () => navigation.navigate('Gallery') }]
+            'Photos Added',
+            `${enhancedPhotos.length} photo(s) added to batch. Total: ${capturedPhotos.length + enhancedPhotos.length}`
           );
-        } else if (result.assets && result.assets[0]) {
+        } else {
           const enhancedPhoto = await ImageManipulator.manipulateAsync(
             result.assets[0].uri,
             [{ resize: { width: 1920 } }],

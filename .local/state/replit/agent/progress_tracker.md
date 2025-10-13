@@ -493,6 +493,27 @@ Fixed the issue where clicking "View" after colorization didn't show the coloriz
 
 ## ✅ ALL 344 TASKS COMPLETED - IMPORT MIGRATION COMPLETE
 The import has been successfully migrated to the Replit environment with all tasks marked as done [x]
+
+[x] 345. Add photo library upload feature to iOS app - COMPLETED: Installed expo-image-picker package
+[x] 346. Implement pickFromLibrary function with permissions - COMPLETED: Added library picker with media library permissions
+[x] 347. Add library icon button to Camera screen - COMPLETED: Added images icon in header for library access
+[x] 348. Fix batch mode integration - COMPLETED: Library photos now correctly added to capturedPhotos array
+[x] 349. Refactor processAndUpload for batch support - COMPLETED: Added showAlerts parameter to control alerts/navigation
+[x] 350. Fix finishBatch to prevent premature navigation - COMPLETED: Silent uploads with single alert and navigation at end
+[x] 351. Architect review and approval - COMPLETED: Passed review - batch uploads work correctly without interruptions
+[x] 352. Restart Expo Server with photo library feature - COMPLETED: Server running at exp://ffyv5nk-anonymous-8081.exp.direct with QR code
+
+## ✅ PHOTO LIBRARY UPLOAD FEATURE COMPLETE
+Users can now upload photos from their device photo library:
+- **Single Mode**: Select one photo from library → immediate upload with alert → navigate to Gallery
+- **Batch Mode**: Select multiple photos from library → add to batch → upload all at once
+- **Mixed Batches**: Combine camera captures and library selections in one batch
+- **Smart Upload**: Silent batch processing with single completion alert and navigation
+- **Error Handling**: Partial success reporting if some uploads fail
+- **Permissions**: Automatic media library permission request
+
+## ✅ ALL 352 TASKS COMPLETED
+The StoryKeep iOS app now has complete photo library upload functionality integrated with the existing Digitizer/Camera feature.
 - **Solution**: Changed initial state to `useState(!initialPhoto.edited_url)` - shows edited version when available
 - **User Experience**: After colorization, clicking "View" now immediately shows the colorized result
 - **Toggle Still Works**: Users can still toggle between original and colorized using the toggle buttons
