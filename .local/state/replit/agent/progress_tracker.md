@@ -222,6 +222,9 @@
 [x] 220. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 742 packages successfully
 [x] 221. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://2ol3whe-anonymous-8081.exp.direct and QR code ready
 [x] 222. Final verification - COMPLETED: Both servers running successfully with no critical errors
+[x] 223. Fix iOS delete photo error - COMPLETED: Added DELETE /api/photos/<id> endpoint to mobile_api.py with full cleanup (files, thumbnails, voice memos, vault photos, tags, comments)
+[x] 224. Investigate iOS sharpen photo error - COMPLETED: Sharpen endpoint exists in mobile_api.py at /api/photos/<id>/sharpen, may need testing on Railway
+[x] 225. Create Railway deployment guide - COMPLETED: Created DEPLOY_FIXES_TO_RAILWAY.md with deployment instructions
 [x] 219. Fix iOS gallery thumbnails cropping - COMPLETED: Updated GalleryScreen to use resizeMode="contain" for full image display without cropping
 [x] 220. Fix PhotoDetail image cropping - COMPLETED: Updated PhotoDetailScreen to use resizeMode="contain" for full image display
 [x] 221. Restart Expo Server with image cropping fix - COMPLETED: Server running with full images displayed correctly
