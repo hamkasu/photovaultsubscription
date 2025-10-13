@@ -2,28 +2,47 @@
 
 ## Issues Fixed
 1. ✅ **Delete Photo Feature** - Added DELETE `/api/photos/<id>` endpoint
-2. ⚠️ **Sharpen Photo Feature** - Endpoint exists, may need testing on Railway
+2. ✅ **Logout Feature** - Fixed logout to properly clear session and navigate
+3. ⚠️ **Sharpen Photo Feature** - Endpoint exists, may need testing on Railway
 
-## Changes Made
-- Added delete photo endpoint to `photovault/routes/mobile_api.py`
-- Endpoint handles complete photo deletion including:
-  - Original and edited files
-  - Thumbnails
-  - Associated voice memos
-  - Vault photo associations
-  - Photo-person tags
-  - Comments
+## Backend Changes (mobile_api.py)
+- Added delete photo endpoint with:
+  - Ownership verification
+  - Safe file deletion (original/thumbnail/edited)
+  - Complete cleanup of voice memos, vault associations, tags, comments
+  - Transaction rollback on errors
+
+## iOS App Changes
+- **DashboardScreen.js** - Improved logout flow
+- **SettingsScreen.js** - Improved logout flow
+- Logout now:
+  1. Removes authToken first to trigger auth check
+  2. Waits briefly for state change detection
+  3. Clears all remaining storage and biometric data
+  4. App.js automatically navigates to Login screen
 
 ## Deployment Steps
 
 ### 1. Commit Your Changes
 ```bash
+# Backend fix
 git add photovault/routes/mobile_api.py
-git commit -m "Add delete photo endpoint for iOS app
 
-- Added DELETE /api/photos/<id> endpoint in mobile_api.py
-- Handles complete photo deletion with all associations
-- Fixes iOS delete photo 400 error"
+# iOS fixes
+git add StoryKeep-iOS/src/screens/DashboardScreen.js
+git add StoryKeep-iOS/src/screens/SettingsScreen.js
+
+git commit -m "Fix iOS delete photo, logout, and investigate sharpen issues
+
+Backend:
+- Add DELETE /api/photos/<id> endpoint for mobile app
+- Complete deletion with ownership verification
+- Safe file operations with error handling
+
+iOS:
+- Fix logout to properly clear session
+- Improved navigation after logout
+- Better error handling"
 ```
 
 ### 2. Push to GitHub
@@ -39,10 +58,23 @@ Railway will automatically detect the push and deploy the changes.
 - Wait for "Deployed" status before testing
 
 ### 5. Test on iOS App
-1. Open StoryKeep app
-2. Go to a photo detail screen
-3. Test **Delete Photo** - should work now ✅
-4. Test **Sharpen Photo** - check if it works
+1. **Logout Test**:
+   - Tap Settings
+   - Tap Logout button
+   - Confirm logout
+   - Should navigate to Login screen ✅
+   
+2. **Delete Photo Test**:
+   - Login again
+   - Go to a photo detail screen
+   - Tap delete icon
+   - Confirm deletion
+   - Should delete photo successfully ✅
+   
+3. **Sharpen Photo Test**:
+   - Go to Enhance Photo screen
+   - Tap Sharpen button
+   - Check if it works or shows error
 
 ## Troubleshooting
 

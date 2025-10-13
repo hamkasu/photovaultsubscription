@@ -224,7 +224,9 @@
 [x] 222. Final verification - COMPLETED: Both servers running successfully with no critical errors
 [x] 223. Fix iOS delete photo error - COMPLETED: Added DELETE /api/photos/<id> endpoint to mobile_api.py with full cleanup (files, thumbnails, voice memos, vault photos, tags, comments)
 [x] 224. Investigate iOS sharpen photo error - COMPLETED: Sharpen endpoint exists in mobile_api.py at /api/photos/<id>/sharpen, may need testing on Railway
-[x] 225. Create Railway deployment guide - COMPLETED: Created DEPLOY_FIXES_TO_RAILWAY.md with deployment instructions
+[x] 225. Fix iOS logout issue - COMPLETED: Updated DashboardScreen.js and SettingsScreen.js to remove authToken first, wait for detection, then clear storage
+[x] 226. Create comprehensive Railway deployment guide - COMPLETED: Updated DEPLOY_FIXES_TO_RAILWAY.md with all three fixes and testing instructions
+[x] 227. Restart Expo Server with logout fix - COMPLETED: Server running with updated logout logic
 [x] 219. Fix iOS gallery thumbnails cropping - COMPLETED: Updated GalleryScreen to use resizeMode="contain" for full image display without cropping
 [x] 220. Fix PhotoDetail image cropping - COMPLETED: Updated PhotoDetailScreen to use resizeMode="contain" for full image display
 [x] 221. Restart Expo Server with image cropping fix - COMPLETED: Server running with full images displayed correctly
