@@ -216,6 +216,8 @@
 [x] 249. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel at exp://ui57h10-anonymous-8081.exp.direct and QR code displayed
+[x] 250. Fix iOS profile picture upload 500 error on Railway - COMPLETED: Created migration to add profile_picture column to User table
+[x] 251. Create deployment guide - COMPLETED: Created PROFILE_PICTURE_RAILWAY_FIX.md with migration and deployment instructions
 [x] 242. Fix sharpen endpoint 400 error - COMPLETED: Increased file size limit from 10MB to 50MB (aligned with MAX_FILE_SIZE)
 [x] 243. Fix logout navigation - COMPLETED: Optimized auth check interval to 500ms (battery-friendly) with 600ms logout wait for smooth redirect
 [x] 244. Architect review and approval - COMPLETED: Passed review - fixes address issues without performance/battery concerns
