@@ -33,11 +33,7 @@ export default function SettingsScreen({ navigation }) {
               await SecureStore.deleteItemAsync('userEmail').catch(() => {});
               await SecureStore.deleteItemAsync('userPassword').catch(() => {});
               
-              // Navigate directly to Login screen
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
+              // App.js will automatically detect token removal and navigate to Login
             } catch (error) {
               console.error('Logout error:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');

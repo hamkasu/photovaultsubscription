@@ -22,8 +22,10 @@ The iOS Digitizer App is a professional photo digitalization tool built with Rea
 - Server-side AI photo detection and extraction via `/api/detect-and-extract`.
 - Offline queue using AsyncStorage for capturing without internet.
 - Upload service with progress tracking and batch processing.
-- JWT authentication with secure token storage.
+- JWT authentication with secure token storage and automatic logout detection (500ms polling).
 - React Navigation for seamless user experience.
+- Family vault photo management with multi-select deletion and permission-based access control.
+- Device photo library upload via Expo ImagePicker for direct vault uploads.
 
 Voice memo recording and playback are supported using expo-av (.m4a format), with secure playback and automatic temp file cleanup.
 

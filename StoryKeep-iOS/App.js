@@ -73,9 +73,8 @@ export default function App() {
     try {
       const token = await AsyncStorage.getItem('authToken');
       const newAuthState = !!token;
-      if (newAuthState !== isAuthenticated) {
-        setIsAuthenticated(newAuthState);
-      }
+      // Always update state based on current token presence
+      setIsAuthenticated(newAuthState);
     } catch (error) {
       console.error('Error checking auth status:', error);
     } finally {

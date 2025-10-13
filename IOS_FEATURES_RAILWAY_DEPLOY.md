@@ -18,27 +18,35 @@
 - Supports image cropping and quality optimization
 
 ### 3. Logout Navigation Fix ✅
-- Logout now navigates directly to Login screen
-- No more waiting for auth state detection
-- Clears all credentials (AsyncStorage + SecureStore)
-- Uses `navigation.reset()` for immediate redirect
+- Logout clears all credentials (AsyncStorage + SecureStore)
+- App.js automatically detects token removal via 500ms polling
+- Navigates to Login screen within 500ms (nearly instant)
+- Fixed stale closure issue in auth detection
+- Clean logout without navigation errors
 
 ## 📋 Files Changed
 
 ### iOS App (Local Only - No Deploy Needed)
 1. `StoryKeep-iOS/src/screens/VaultDetailScreen.js`
    - Added selection mode state and UI
-   - Added `uploadFromCameraLibrary()` function
+   - Added `uploadFromCameraLibrary()` function with ImagePicker
    - Updated `renderPhoto()` to show checkboxes in selection mode
    - Added delete functionality with permission checks
 
 2. `StoryKeep-iOS/src/screens/DashboardScreen.js`
-   - Updated `handleLogout()` to use `navigation.reset()`
+   - Updated `handleLogout()` to clear credentials only
+   - Removed navigation.reset() (causes error)
 
 3. `StoryKeep-iOS/src/screens/SettingsScreen.js`
-   - Updated `handleLogout()` to use `navigation.reset()`
+   - Updated `handleLogout()` to clear credentials only
+   - Removed navigation.reset() (causes error)
 
-4. `StoryKeep-iOS/src/services/api.js`
+4. `StoryKeep-iOS/App.js`
+   - Fixed stale closure in `checkAuthStatus()`
+   - Now always updates state based on token presence
+   - Automatic logout detection works correctly
+
+5. `StoryKeep-iOS/src/services/api.js`
    - Added `removePhotoFromVault()` API method
 
 ### Backend (Requires Railway Deploy)
@@ -146,7 +154,8 @@ Railway will automatically deploy. Check the logs for:
 ### Logout stuck:
 - Clear app data and reinstall
 - Check AsyncStorage is being cleared
-- Verify navigation.reset() is called
+- Verify App.js polling is detecting token removal
+- Check console for any auth errors
 
 ## 📝 Notes
 
