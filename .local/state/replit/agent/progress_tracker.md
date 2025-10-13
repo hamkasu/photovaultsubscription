@@ -514,6 +514,28 @@ Users can now upload photos from their device photo library:
 
 ## ✅ ALL 352 TASKS COMPLETED
 The StoryKeep iOS app now has complete photo library upload functionality integrated with the existing Digitizer/Camera feature.
+
+[x] 353. Diagnose bulk delete error in iOS app on Railway - COMPLETED: Identified route conflict between web and mobile endpoints
+[x] 354. Fix route conflict for bulk delete - COMPLETED: Renamed mobile endpoint to /api/photos/bulk-delete-mobile
+[x] 355. Update iOS app to use new endpoint - COMPLETED: Changed API call to use /api/photos/bulk-delete-mobile
+[x] 356. Restart both servers - COMPLETED: PhotoVault Server and Expo Server running successfully
+[x] 357. Create Railway deployment guide - COMPLETED: Updated RAILWAY_BULK_DELETE_FIX.md with complete fix explanation
+[x] 358. Architect review and approval - COMPLETED: Passed review - route conflict resolved correctly
+
+## ✅ BULK DELETE ROUTE CONFLICT FIX COMPLETE
+Fixed the "Failed to delete photos" error in iOS app on Railway:
+- **Root Cause**: Route conflict - both web and mobile used same path `/api/photos/bulk-delete`
+- **Web Endpoint**: Uses session cookies (@login_required)
+- **Mobile Endpoint**: Uses JWT tokens (@token_required)
+- **The Issue**: Web endpoint registered first, caught mobile JWT requests, returned 400 error
+- **The Fix**: 
+  - Mobile endpoint renamed to `/api/photos/bulk-delete-mobile` ✅
+  - iOS app updated to call new endpoint ✅
+  - Both endpoints now coexist without conflict ✅
+- **Status**: Fixed locally, ready for Railway deployment
+
+## ✅ ALL 358 TASKS COMPLETED
+The StoryKeep platform now has both photo library upload and fixed bulk delete functionality ready for Railway deployment.
 - **Solution**: Changed initial state to `useState(!initialPhoto.edited_url)` - shows edited version when available
 - **User Experience**: After colorization, clicking "View" now immediately shows the colorized result
 - **Toggle Still Works**: Users can still toggle between original and colorized using the toggle buttons
