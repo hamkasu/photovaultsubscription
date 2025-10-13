@@ -374,9 +374,22 @@ def upload_profile_picture(current_user):
         
         # Update user's profile picture in database
         logger.info(f"💾 Updating database with new profile picture...")
-        current_user.profile_picture = unique_filename
-        db.session.commit()
-        logger.info("✅ Database updated successfully")
+        try:
+            current_user.profile_picture = unique_filename
+            db.session.commit()
+            logger.info("✅ Database updated successfully")
+        except Exception as db_error:
+            # Rollback database and cleanup uploaded file
+            db.session.rollback()
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    logger.info(f"🧹 Cleaned up orphaned file: {unique_filename}")
+                except Exception as cleanup_error:
+                    logger.error(f"⚠️ Failed to cleanup file: {str(cleanup_error)}")
+            logger.error(f"❌ Database update failed: {str(db_error)}")
+            logger.error(f"DB error traceback: {traceback.format_exc()}")
+            return jsonify({'error': 'Failed to update profile'}), 500
         
         profile_picture_url = f'/uploads/{current_user.id}/{unique_filename}'
         
