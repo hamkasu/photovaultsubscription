@@ -312,21 +312,44 @@ def upload_profile_picture(current_user):
         if file_size > MAX_FILE_SIZE:
             return jsonify({'error': f'File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB'}), 400
         
-        # Generate unique filename
-        file_extension = file.filename.rsplit('.', 1)[1].lower()
+        # Generate unique filename - safely extract extension
+        try:
+            file_extension = file.filename.rsplit('.', 1)[1].lower()
+        except IndexError:
+            logger.error(f"❌ Invalid filename format: {file.filename}")
+            return jsonify({'error': 'Invalid file format'}), 400
+            
         unique_filename = f"profile_{current_user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
         logger.info(f"📝 Generated filename: {unique_filename}")
         
         # Create user upload directory if it doesn't exist
-        user_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        upload_folder = current_app.config.get('UPLOAD_FOLDER')
+        if not upload_folder:
+            logger.error("❌ UPLOAD_FOLDER not configured!")
+            return jsonify({'error': 'Server configuration error'}), 500
+            
+        logger.info(f"📂 UPLOAD_FOLDER: {upload_folder}")
+        user_folder = os.path.join(upload_folder, str(current_user.id))
         logger.info(f"📁 User folder: {user_folder}")
-        os.makedirs(user_folder, exist_ok=True)
+        
+        try:
+            os.makedirs(user_folder, exist_ok=True)
+            logger.info(f"✅ Directory created/verified: {user_folder}")
+        except Exception as dir_error:
+            logger.error(f"❌ Failed to create directory: {str(dir_error)}")
+            return jsonify({'error': 'Failed to create upload directory'}), 500
         
         # Save file
         file_path = os.path.join(user_folder, unique_filename)
         logger.info(f"💾 Saving to: {file_path}")
-        file.save(file_path)
-        logger.info("✅ File saved successfully")
+        
+        try:
+            file.save(file_path)
+            logger.info("✅ File saved successfully")
+        except Exception as save_error:
+            logger.error(f"❌ Failed to save file: {str(save_error)}")
+            logger.error(f"Save error traceback: {traceback.format_exc()}")
+            return jsonify({'error': 'Failed to save file'}), 500
         
         # Resize image to reasonable profile picture size (500x500)
         try:
