@@ -210,6 +210,12 @@
 [x] 241. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel at exp://xxnze50-anonymous-8081.exp.direct and QR code displayed
+[x] 242. Fix sharpen endpoint 400 error - COMPLETED: Increased file size limit from 10MB to 50MB (aligned with MAX_FILE_SIZE)
+[x] 243. Fix logout navigation - COMPLETED: Optimized auth check interval to 500ms (battery-friendly) with 600ms logout wait for smooth redirect
+[x] 244. Architect review and approval - COMPLETED: Passed review - fixes address issues without performance/battery concerns
+[x] 245. Restart both workflows with fixes - COMPLETED: PhotoVault Server and Expo Server running successfully with updated code
+    - PhotoVault Server: Running on port 5000 with sharpen limit increased
+    - Expo Server: Running with tunnel at exp://xxnze50-anonymous-8081.exp.direct with optimized logout
 [x] 205. Fix iOS gallery using dashboard pattern - COMPLETED: Updated /api/photos to use exact same URL pattern as dashboard (/uploads/{user_id}/{filename})
 [x] 206. Restart PhotoVault Server with gallery fix - COMPLETED: Server running on port 5000 with simplified gallery endpoint
 [x] 207. Make Gallery fetch from working dashboard endpoint - COMPLETED: Updated GalleryScreen.js to fetch image from /api/dashboard instead of broken /api/photos
