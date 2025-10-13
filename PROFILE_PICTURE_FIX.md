@@ -3,30 +3,45 @@
 ## Problem
 Profile picture upload was failing on Railway with a 500 error when uploading from the iOS app.
 
+## Root Cause
+The issue was likely caused by one or more of these Railway-specific problems:
+1. **UPLOAD_FOLDER not configured** - Environment variable missing or incorrect
+2. **File system permissions** - Upload directory not writable
+3. **Directory creation failures** - Unable to create user folders
+4. **Weak error handling** - Original code didn't properly catch and log errors
+
 ## What Was Fixed
-Added comprehensive error logging and debugging to the profile picture upload endpoint to identify and diagnose the issue on Railway.
 
-### Changes Made:
-1. **Enhanced Error Logging** - Added detailed traceback logging to capture the exact error
-2. **Debug Flow Tracking** - Added emoji-based logging at each step of the upload process:
-   - 📸 Upload started
-   - ✅ File received
-   - 📊 File size validation
-   - 📝 Filename generation
-   - 📁 Directory creation
-   - 💾 File saving
-   - 🖼️ Image resize
-   - 🗑️ Old file deletion
-   - 💾 Database update
-   - 🎉 Success
+### 1. Enhanced Error Logging
+Added comprehensive emoji-based logging to track every step:
+- 📸 Upload started
+- ✅ File received  
+- 📊 File size validation
+- 📝 Filename generation
+- 📂 UPLOAD_FOLDER configuration check
+- 📁 User folder creation
+- 💾 File saving
+- 🖼️ Image resize
+- 🗑️ Old file deletion
+- 💾 Database update
+- 🎉 Success
 
-3. **Better Error Details** - Error responses now include:
-   - Full stack traces in server logs
-   - Detailed error messages (in debug mode)
-   - Step-by-step tracking to identify where the failure occurs
+### 2. Robust Error Handling
+Added try-catch blocks for all critical operations:
+- **Filename extraction** - Safely handles invalid filenames
+- **Upload folder validation** - Checks if UPLOAD_FOLDER is configured
+- **Directory creation** - Catches permission errors
+- **File save operation** - Handles write failures
+- **Image resize** - Continues even if resize fails
+- **Database updates** - Rolls back on failure
+
+### 3. Better Error Messages
+- Server logs show full stack traces
+- Client receives specific error messages
+- Each failure point is clearly identified
 
 ## Files Modified:
-- `photovault/routes/mobile_api.py` - Added traceback import and enhanced logging
+- `photovault/routes/mobile_api.py` - Added robust error handling and comprehensive logging
 
 ## How to Deploy to Railway
 
@@ -47,13 +62,26 @@ Railway will automatically:
 2. Build the updated code
 3. Deploy the changes
 
-### Step 4: Test on iOS App
+### Step 4: Verify Railway Configuration
+**IMPORTANT:** Check that Railway has the required environment variable:
+
+1. Go to Railway dashboard: https://railway.app
+2. Select your project
+3. Click on "Variables" tab
+4. **Check if `UPLOAD_FOLDER` exists:**
+   - ✅ If it exists: Good! (should be `/data/uploads` or similar)
+   - ❌ If missing: **Add it now:**
+     ```
+     UPLOAD_FOLDER=/data/uploads
+     ```
+
+### Step 5: Test on iOS App
 1. Open the StoryKeep iOS app on your device
 2. Go to Profile screen
 3. Tap the camera icon to upload a profile picture
 4. Select an image from your library
 
-### Step 5: Check Railway Logs (If Still Failing)
+### Step 6: Check Railway Logs (If Still Failing)
 If the upload still fails, check Railway logs to see the detailed error:
 
 1. Go to Railway dashboard: https://railway.app
