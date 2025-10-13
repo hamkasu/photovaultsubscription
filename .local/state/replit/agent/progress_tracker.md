@@ -218,6 +218,10 @@
 [x] 216. Add auth token to PhotoDetail - COMPLETED: Added AsyncStorage to load authToken and pass in Authorization header
 [x] 217. Add loading indicator - COMPLETED: Shows ActivityIndicator while image loads in PhotoDetail
 [x] 218. Restart Expo Server with PhotoDetail fix - COMPLETED: Server running with tunnel at exp://qakercs-anonymous-8081.exp.direct
+[x] 219. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 220. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 742 packages successfully
+[x] 221. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://2ol3whe-anonymous-8081.exp.direct and QR code ready
+[x] 222. Final verification - COMPLETED: Both servers running successfully with no critical errors
 [x] 219. Fix iOS gallery thumbnails cropping - COMPLETED: Updated GalleryScreen to use resizeMode="contain" for full image display without cropping
 [x] 220. Fix PhotoDetail image cropping - COMPLETED: Updated PhotoDetailScreen to use resizeMode="contain" for full image display
 [x] 221. Restart Expo Server with image cropping fix - COMPLETED: Server running with full images displayed correctly
