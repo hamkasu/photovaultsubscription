@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import * as FileSystem from 'expo-file-system/legacy';
 import { dashboardAPI, photoAPI, authAPI } from '../services/api';
 import api from '../services/api';
 
@@ -24,7 +25,7 @@ export default function DashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState(null);
-  const [profileCacheKey, setProfileCacheKey] = useState(Date.now());
+  const [profileImageUri, setProfileImageUri] = useState(null);
   const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
@@ -35,15 +36,53 @@ export default function DashboardScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       // Reload profile data to get updated profile picture
-      authAPI.getProfile().then(profileData => {
-        setUserData(profileData);
-        // Update cache key to force image reload when profile picture changes
-        setProfileCacheKey(Date.now());
-      }).catch(error => {
-        console.error('Error refreshing profile:', error);
-      });
+      const refreshProfile = async () => {
+        try {
+          const profileData = await authAPI.getProfile();
+          const token = await AsyncStorage.getItem('authToken');
+          
+          setUserData(profileData);
+          
+          // Load profile picture using same method as Profile screen
+          if (profileData.profile_picture && token) {
+            await loadProfileImage(profileData.profile_picture, token);
+          } else {
+            setProfileImageUri(null);
+          }
+        } catch (error) {
+          console.error('Error refreshing profile:', error);
+        }
+      };
+      
+      refreshProfile();
     }, [])
   );
+
+  const loadProfileImage = async (imageUrl, token) => {
+    try {
+      const fileUri = `${FileSystem.cacheDirectory}dashboard_profile_picture.jpg`;
+      const fullUrl = `${BASE_URL}${imageUrl}`;
+      
+      const downloadResult = await FileSystem.downloadAsync(
+        fullUrl,
+        fileUri,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (downloadResult.status === 200) {
+        // Force refresh by adding timestamp
+        const imageUri = `${downloadResult.uri}?t=${Date.now()}`;
+        setProfileImageUri(imageUri);
+      }
+    } catch (error) {
+      console.error('Failed to load profile image:', error);
+      setProfileImageUri(null);
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -58,6 +97,11 @@ export default function DashboardScreen({ navigation }) {
       setRecentPhotos(photosData.photos?.slice(0, 6) || []);
       setUserData(profileData);
       setAuthToken(token);
+      
+      // Load profile picture using same method as Profile screen
+      if (profileData.profile_picture && token) {
+        await loadProfileImage(profileData.profile_picture, token);
+      }
     } catch (error) {
       console.error('Dashboard error:', error);
       Alert.alert('Error', 'Failed to load dashboard data');
@@ -124,14 +168,9 @@ export default function DashboardScreen({ navigation }) {
             style={styles.profileButton}
             onPress={() => navigation.navigate('Profile')}
           >
-            {userData?.profile_picture ? (
+            {profileImageUri ? (
               <Image
-                source={{ 
-                  uri: `${BASE_URL}${userData.profile_picture}?t=${profileCacheKey}`,
-                  headers: authToken ? {
-                    Authorization: `Bearer ${authToken}`,
-                  } : {},
-                }}
+                source={{ uri: profileImageUri }}
                 style={styles.profileImage}
               />
             ) : (

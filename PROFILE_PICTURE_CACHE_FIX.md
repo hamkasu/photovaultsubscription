@@ -7,20 +7,28 @@ Profile pictures were not updating on the Dashboard after being changed. The ima
 React Native's Image component caches images by their URL. When you upload a new profile picture with the same filename (e.g., `avatar.jpg`), the URL stays the same, so React Native shows the cached old image instead of the new one.
 
 ## Solution
-Added cache-busting mechanism using a timestamp query parameter that updates when profile data is refreshed.
+Completely rewrote Dashboard to use the **same working approach as Profile screen**: download image to local cache using `FileSystem.downloadAsync()` before displaying.
 
 ## Files Changed
 - `StoryKeep-iOS/src/screens/DashboardScreen.js`:
-  - Added `profileCacheKey` state variable
-  - Updates cache key when profile data refreshes (useFocusEffect)
-  - Appends cache key to image URL: `?t=${profileCacheKey}`
+  - Added `FileSystem` import from `expo-file-system/legacy`
+  - Added `profileImageUri` state (stores local file URI)
+  - Added `loadProfileImage()` function (downloads image to local cache)
+  - Updated `useFocusEffect` to reload profile image on screen focus
+  - Changed Image component to use local file URI instead of remote URL
 
-## How It Works
-1. When user uploads new profile picture and returns to Dashboard
-2. `useFocusEffect` detects screen focus and calls `authAPI.getProfile()`
-3. Profile data is updated with new `setUserData(profileData)`
-4. Cache key is updated with `setProfileCacheKey(Date.now())`
-5. New URL with updated timestamp forces image reload: `/uploads/1/avatar.jpg?t=1697234567890`
+## How It Works (Same as Profile Screen)
+1. When Dashboard loads or comes into focus:
+   - Fetches profile data from API
+   - If profile picture exists, calls `loadProfileImage()`
+2. `loadProfileImage()` downloads image to local cache:
+   - Uses `FileSystem.downloadAsync()` with authentication headers
+   - Saves to: `${FileSystem.cacheDirectory}dashboard_profile_picture.jpg`
+   - Sets `profileImageUri` to local file path
+3. Image component displays from local cache:
+   - No HTTP caching issues
+   - Always shows latest image
+   - Proper authentication (downloaded with Bearer token)
 
 ## Deployment Steps for Railway
 
