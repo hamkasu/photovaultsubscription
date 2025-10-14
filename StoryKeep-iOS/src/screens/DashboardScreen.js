@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { dashboardAPI, photoAPI, authAPI } from '../services/api';
@@ -28,6 +29,18 @@ export default function DashboardScreen({ navigation }) {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Refresh data when screen comes into focus (e.g., returning from Profile screen)
+  useFocusEffect(
+    useCallback(() => {
+      // Reload profile data to get updated profile picture
+      authAPI.getProfile().then(profileData => {
+        setUserData(profileData);
+      }).catch(error => {
+        console.error('Error refreshing profile:', error);
+      });
+    }, [])
+  );
 
   const loadDashboardData = async () => {
     try {
