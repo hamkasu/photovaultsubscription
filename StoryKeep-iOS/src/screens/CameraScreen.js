@@ -312,148 +312,149 @@ export default function CameraScreen({ navigation }) {
           facing={CAMERA_TYPE.back}
           flash={flashMode}
           zoom={zoom}
-        >
-        {showGuides && detectedBoundaries.length === 0 && (
-          <View style={styles.guides}>
-            <View style={styles.guideFrame} />
-            <Text style={styles.guideText}>
-              Align photos within the frame - Multiple photos supported
-            </Text>
-          </View>
-        )}
+        />
+      </GestureDetector>
 
-        {/* Red outlines for detected photos */}
-        {detectedBoundaries.length > 0 && (
-          <View style={styles.detectionOverlay}>
-            {detectedBoundaries.map((detection, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.detectedBoundary,
-                  {
-                    left: detection.x,
-                    top: detection.y,
-                    width: detection.width,
-                    height: detection.height,
-                  },
-                ]}
-              >
-                <View style={styles.detectedBoundaryInner} />
-                <Text style={styles.detectionLabel}>
-                  Photo {index + 1} ({Math.round(detection.confidence * 100)}%)
-                </Text>
-              </View>
-            ))}
-            <Text style={styles.detectionCount}>
-              {detectedBoundaries.length} photo{detectedBoundaries.length !== 1 ? 's' : ''} detected
-            </Text>
-          </View>
-        )}
-
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="close" size={32} color="#fff" />
-          </TouchableOpacity>
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={previewDetection}
-              disabled={processing || showingPreview}
-            >
-              <Ionicons
-                name={detectedBoundaries.length > 0 ? 'scan-circle' : 'scan-circle-outline'}
-                size={28}
-                color={showingPreview ? '#FFA500' : detectedBoundaries.length > 0 ? '#4CAF50' : '#fff'}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={pickFromLibrary}
-              disabled={processing}
-            >
-              <Ionicons
-                name="images"
-                size={28}
-                color={processing ? '#999' : '#fff'}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => {
-                setShowGuides(!showGuides);
-                if (showGuides) setDetectedBoundaries([]);
-              }}
-            >
-              <Ionicons
-                name={showGuides ? 'grid' : 'grid-outline'}
-                size={28}
-                color="#fff"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
-              <Ionicons name={getFlashIcon()} size={28} color="#fff" />
-            </TouchableOpacity>
-          </View>
+      {/* All UI elements overlaid with absolute positioning */}
+      {showGuides && detectedBoundaries.length === 0 && (
+        <View style={styles.guides}>
+          <View style={styles.guideFrame} />
+          <Text style={styles.guideText}>
+            Align photos within the frame - Multiple photos supported
+          </Text>
         </View>
+      )}
 
-        <View style={styles.controls}>
-          <TouchableOpacity
-            style={[
-              styles.batchButton,
-              batchMode && styles.batchButtonActive,
-            ]}
-            onPress={() => setBatchMode(!batchMode)}
-          >
-            <Ionicons
-              name="albums"
-              size={24}
-              color={batchMode ? '#E85D75' : '#fff'}
-            />
-            <Text
+      {/* Red outlines for detected photos */}
+      {detectedBoundaries.length > 0 && (
+        <View style={styles.detectionOverlay}>
+          {detectedBoundaries.map((detection, index) => (
+            <View
+              key={index}
               style={[
-                styles.batchText,
-                batchMode && styles.batchTextActive,
+                styles.detectedBoundary,
+                {
+                  left: detection.x,
+                  top: detection.y,
+                  width: detection.width,
+                  height: detection.height,
+                },
               ]}
             >
-              {batchMode ? `Batch (${capturedPhotos.length})` : 'Single'}
-            </Text>
+              <View style={styles.detectedBoundaryInner} />
+              <Text style={styles.detectionLabel}>
+                Photo {index + 1} ({Math.round(detection.confidence * 100)}%)
+              </Text>
+            </View>
+          ))}
+          <Text style={styles.detectionCount}>
+            {detectedBoundaries.length} photo{detectedBoundaries.length !== 1 ? 's' : ''} detected
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="close" size={32} color="#fff" />
+        </TouchableOpacity>
+
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={previewDetection}
+            disabled={processing || showingPreview}
+          >
+            <Ionicons
+              name={detectedBoundaries.length > 0 ? 'scan-circle' : 'scan-circle-outline'}
+              size={28}
+              color={showingPreview ? '#FFA500' : detectedBoundaries.length > 0 ? '#4CAF50' : '#fff'}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.captureButton,
-              processing && styles.captureButtonDisabled,
-            ]}
-            onPress={capturePhoto}
+            style={styles.iconButton}
+            onPress={pickFromLibrary}
             disabled={processing}
           >
-            {processing ? (
-              <ActivityIndicator color="#fff" size="large" />
-            ) : (
-              <View style={styles.captureButtonInner} />
-            )}
+            <Ionicons
+              name="images"
+              size={28}
+              color={processing ? '#999' : '#fff'}
+            />
           </TouchableOpacity>
 
-          {batchMode && capturedPhotos.length > 0 ? (
-            <TouchableOpacity
-              style={styles.finishButton}
-              onPress={finishBatch}
-            >
-              <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.placeholder} />
-          )}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              setShowGuides(!showGuides);
+              if (showGuides) setDetectedBoundaries([]);
+            }}
+          >
+            <Ionicons
+              name={showGuides ? 'grid' : 'grid-outline'}
+              size={28}
+              color="#fff"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
+            <Ionicons name={getFlashIcon()} size={28} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </CameraView>
-      </GestureDetector>
+      </View>
+
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={[
+            styles.batchButton,
+            batchMode && styles.batchButtonActive,
+          ]}
+          onPress={() => setBatchMode(!batchMode)}
+        >
+          <Ionicons
+            name="albums"
+            size={24}
+            color={batchMode ? '#E85D75' : '#fff'}
+          />
+          <Text
+            style={[
+              styles.batchText,
+              batchMode && styles.batchTextActive,
+            ]}
+          >
+            {batchMode ? `Batch (${capturedPhotos.length})` : 'Single'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.captureButton,
+            processing && styles.captureButtonDisabled,
+          ]}
+          onPress={capturePhoto}
+          disabled={processing}
+        >
+          {processing ? (
+            <ActivityIndicator color="#fff" size="large" />
+          ) : (
+            <View style={styles.captureButtonInner} />
+          )}
+        </TouchableOpacity>
+
+        {batchMode && capturedPhotos.length > 0 ? (
+          <TouchableOpacity
+            style={styles.finishButton}
+            onPress={finishBatch}
+          >
+            <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.placeholder} />
+        )}
+      </View>
 
       {/* Zoom Indicator */}
       {zoom > 0 && (
@@ -469,12 +470,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   camera: {
-    flex: 1,
-    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   permissionText: {
     color: '#fff',
@@ -492,9 +494,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   guides: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    pointerEvents: 'none',
   },
   guideFrame: {
     width: width * 0.95,
@@ -595,5 +602,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  detectionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  detectedBoundary: {
+    position: 'absolute',
+    borderWidth: 3,
+    borderColor: '#E85D75',
+    borderRadius: 8,
+    backgroundColor: 'rgba(232, 93, 117, 0.1)',
+  },
+  detectedBoundaryInner: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 6,
+    margin: 2,
+  },
+  detectionLabel: {
+    position: 'absolute',
+    top: -25,
+    left: 0,
+    backgroundColor: '#E85D75',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  detectionCount: {
+    position: 'absolute',
+    bottom: 150,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
 });
