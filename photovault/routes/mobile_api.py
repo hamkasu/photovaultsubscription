@@ -818,6 +818,75 @@ def detect_and_extract_photos(current_user):
         db.session.rollback()
         return jsonify({'error': f'Photo detection failed: {str(e)}'}), 500
 
+@mobile_api_bp.route('/preview-detection', methods=['POST'])
+@csrf.exempt
+@token_required
+def preview_detection(current_user):
+    """Preview photo detection without saving - for real-time camera overlay"""
+    try:
+        from photovault.utils.photo_detection import PhotoDetector
+        from photovault.utils.file_handler import validate_image_file
+        import tempfile
+        
+        logger.info(f"📸 Preview detection request from user: {current_user.id}")
+        
+        # Check if file was uploaded
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        
+        if not file or not file.filename:
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Validate file
+        is_valid, validation_msg = validate_image_file(file)
+        if not is_valid:
+            return jsonify({'error': f'Invalid file: {validation_msg}'}), 400
+        
+        # Save to temporary file for processing
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+            temp_path = temp_file.name
+            file.save(temp_path)
+        
+        try:
+            # Initialize detector
+            detector = PhotoDetector()
+            
+            # Detect photos
+            detected = detector.detect_photos(temp_path)
+            
+            # Return detection results with corner points for overlay
+            detection_results = []
+            for det in detected:
+                detection_results.append({
+                    'x': det['x'],
+                    'y': det['y'],
+                    'width': det['width'],
+                    'height': det['height'],
+                    'confidence': det['confidence'],
+                    'corners': det.get('corners', [])  # Corner points for drawing overlay
+                })
+            
+            return jsonify({
+                'success': True,
+                'detected_count': len(detected),
+                'detections': detection_results,
+                'message': f'Detected {len(detected)} photo(s)' if detected else 'No photos detected'
+            }), 200
+            
+        finally:
+            # Clean up temp file
+            try:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except Exception as e:
+                logger.error(f"Failed to clean up temp file: {e}")
+        
+    except Exception as e:
+        logger.error(f"❌ Preview detection error: {str(e)}")
+        return jsonify({'error': 'Preview detection failed'}), 500
+
 @mobile_api_bp.route('/family/vaults', methods=['GET', 'POST'])
 @csrf.exempt
 @token_required
