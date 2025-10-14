@@ -258,10 +258,55 @@ export default function DashboardScreen({ navigation }) {
 
       {stats?.subscription_plan && (
         <View style={styles.subscriptionCard}>
-          <Ionicons name="shield-checkmark" size={24} color="#E85D75" />
-          <Text style={styles.subscriptionText}>
-            {stats.subscription_plan} Plan
-          </Text>
+          <View style={styles.subscriptionHeader}>
+            <Ionicons name="shield-checkmark" size={24} color="#E85D75" />
+            <Text style={styles.subscriptionText}>
+              {stats.subscription_plan} Plan
+            </Text>
+          </View>
+          
+          {/* Storage Quota */}
+          <View style={styles.storageQuota}>
+            <View style={styles.storageHeader}>
+              <Text style={styles.storageLabel}>Storage</Text>
+              <Text style={styles.storageAmount}>
+                {stats.storage_used.toFixed(1)} MB
+                {stats.storage_limit_mb === -1 
+                  ? ' / Unlimited' 
+                  : ` / ${(stats.storage_limit_mb / 1024).toFixed(1)} GB`
+                }
+              </Text>
+            </View>
+            
+            {stats.storage_limit_mb !== -1 && (
+              <>
+                <View style={styles.progressBarContainer}>
+                  <View 
+                    style={[
+                      styles.progressBar, 
+                      { 
+                        width: `${Math.min(stats.storage_usage_percent, 100)}%`,
+                        backgroundColor: 
+                          stats.storage_usage_percent >= 90 ? '#F44336' :
+                          stats.storage_usage_percent >= 70 ? '#FFC107' :
+                          '#4CAF50'
+                      }
+                    ]} 
+                  />
+                </View>
+                <Text style={[
+                  styles.storagePercent,
+                  { color: 
+                    stats.storage_usage_percent >= 90 ? '#F44336' :
+                    stats.storage_usage_percent >= 70 ? '#FFC107' :
+                    '#4CAF50'
+                  }
+                ]}>
+                  {stats.storage_usage_percent.toFixed(1)}% used
+                </Text>
+              </>
+            )}
+          </View>
         </View>
       )}
 
@@ -399,19 +444,57 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   subscriptionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFF0F3',
     padding: 15,
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 10,
   },
+  subscriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
   subscriptionText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#E85D75',
     marginLeft: 10,
+  },
+  storageQuota: {
+    marginTop: 5,
+  },
+  storageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  storageLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+  },
+  storageAmount: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  storagePercent: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'right',
   },
   quickActions: {
     padding: 20,

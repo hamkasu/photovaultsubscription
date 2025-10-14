@@ -169,9 +169,24 @@ def get_dashboard(current_user):
         total_size_bytes = sum(photo.file_size or 0 for photo in photos)
         total_size_mb = round(total_size_bytes / 1024 / 1024, 2) if total_size_bytes > 0 else 0
         
-        # Get subscription info
+        # Get subscription info and storage limits
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         subscription_plan = user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
+        
+        # Calculate storage limit based on subscription plan
+        if user_subscription and user_subscription.plan and user_subscription.plan.storage_gb:
+            storage_limit_gb = user_subscription.plan.storage_gb
+            # Handle unlimited storage (usually represented as -1 or very large number)
+            if storage_limit_gb < 0 or storage_limit_gb >= 999:
+                storage_limit_mb = -1  # -1 indicates unlimited
+                storage_usage_percent = 0  # No percentage for unlimited
+            else:
+                storage_limit_mb = storage_limit_gb * 1024
+                storage_usage_percent = round((total_size_mb / storage_limit_mb * 100), 1) if storage_limit_mb > 0 else 0
+        else:
+            # Free plan defaults - 100MB
+            storage_limit_mb = 100
+            storage_usage_percent = round((total_size_mb / storage_limit_mb * 100), 1) if storage_limit_mb > 0 else 0
         
         # Get voice memo counts for all photos efficiently (single query)
         voice_memo_dict = {}
@@ -249,6 +264,8 @@ def get_dashboard(current_user):
             'enhanced_photos': enhanced_photos,
             'albums': 0,
             'storage_used': total_size_mb,
+            'storage_limit_mb': storage_limit_mb,  # -1 for unlimited
+            'storage_usage_percent': storage_usage_percent,
             'subscription_plan': subscription_plan,
             'recent_photo': recent_photo,
             'all_photos': all_photos,  # ALL photos for gallery
