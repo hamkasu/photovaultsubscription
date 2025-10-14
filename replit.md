@@ -12,7 +12,7 @@ None configured yet (will be added as needed)
 The frontend uses HTML5, CSS3, JavaScript (vanilla + jQuery patterns) with Jinja2 templating, and Bootstrap patterns for responsive design. A unified photo card component system ensures consistent display with a responsive CSS Grid layout (4-column desktop, 3-column tablet, 2-column mobile). Action buttons (View, Download, Edit, Delete) and filename/timestamp overlays are standardized.
 
 ### Technical Implementations
-The backend is built with Flask 3.0.3, PostgreSQL (via Neon on Replit), and SQLAlchemy 2.0.25 for ORM. Alembic via Flask-Migrate handles database migrations. Flask-Login manages authentication, and Flask-WTF + WTForms are used for forms. Gunicorn 21.2.0 serves the application in production. Image processing uses Pillow 11.0.0 and OpenCV 4.12.0.88 (headless), with NumPy and scikit-image. AI integration leverages Google Gemini API (gemini-2.0-flash-exp) for intelligent photo colorization and analysis. Replit Object Storage is used for persistent image storage with local storage fallback.
+The backend is built with Flask 3.0.3, PostgreSQL (via Neon on Replit), and SQLAlchemy 2.0.25 for ORM. Alembic via Flask-Migrate handles database migrations. Flask-Login manages authentication, and Flask-WTF + WTForms are used for forms. Gunicorn 21.2.0 serves the application in production. Image processing uses Pillow 11.3.0 with pillow-heif 1.1.1 for HEIC/HEIF support, and OpenCV 4.12.0.88 (headless), with NumPy and scikit-image. AI integration leverages Google Gemini API (gemini-2.0-flash-exp) for intelligent photo colorization and analysis. Replit Object Storage is used for persistent image storage with local storage fallback.
 
 The iOS Digitizer App is a professional photo digitalization tool built with React Native/Expo, featuring:
 - Smart camera with real-time edge detection, visual guides, and auto-capture.
@@ -28,6 +28,8 @@ The iOS Digitizer App is a professional photo digitalization tool built with Rea
 - Device photo library upload via Expo ImagePicker for direct vault uploads.
 
 Voice memo recording and playback are supported using expo-av (.m4a format), with secure playback and automatic temp file cleanup.
+
+Profile picture uploads support HEIC/HEIF formats (iOS default) with automatic conversion to JPEG for universal compatibility. The upload endpoint uses a temp file pattern with robust error handling to prevent corrupted files.
 
 ### Feature Specifications
 - **Authentication & Authorization**: User registration, login, password reset, session management, admin/superuser roles, subscription-based access.

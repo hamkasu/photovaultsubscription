@@ -16,11 +16,14 @@
 - Form field: `image`
 - Direct SQL updates to avoid model issues
 - 300x300 resize for optimal performance
+- **HEIC/HEIF support** for iOS devices (auto-converts to JPEG)
 
 ## 📝 Files Changed
 
 1. **Backend:**
    - `photovault/routes/mobile_api.py` - New `/profile/avatar` endpoint
+   - `photovault/__init__.py` - HEIC decoder registration
+   - `requirements.txt` - Added `pillow-heif==1.1.1` for iOS image support
 
 2. **iOS App:**
    - `StoryKeep-iOS/src/services/api.js` - New `uploadAvatar()` function
@@ -69,16 +72,20 @@ UPDATE "user" SET profile_picture = NULL WHERE profile_picture LIKE 'cus_%';
 ```bash
 # Stage all changes
 git add photovault/routes/mobile_api.py
+git add photovault/__init__.py
+git add requirements.txt
 git add StoryKeep-iOS/src/services/api.js
 git add StoryKeep-iOS/src/screens/ProfileScreen.js
 git add PROFILE_AVATAR_RAILWAY_DEPLOY.md
 
 # Commit
-git commit -m "New profile picture upload implementation - simple and reliable"
+git commit -m "Add HEIC support for iOS profile pictures with pillow-heif"
 
 # Push to Railway
 git push origin main
 ```
+
+**Important:** Railway will automatically install `pillow-heif` from requirements.txt during deployment.
 
 ### Step 3: Wait for Railway Deployment
 
@@ -103,13 +110,21 @@ git push origin main
 ### Backend Flow:
 ```
 1. Receive POST to /api/profile/avatar with 'image' field
-2. Validate file type (png, jpg, jpeg, webp)
-3. Generate timestamped filename: avatar_20251014_030258.jpg
-4. Save to /uploads/{user_id}/
-5. Resize to 300x300 for performance
-6. Update database with direct SQL (avoids model issues)
-7. Return avatar_url for immediate display
+2. Validate file type (png, jpg, jpeg, webp, heic, heif)
+3. Register HEIC decoder (pillow-heif) for iOS images
+4. Save to temp file with original extension
+5. Convert HEIC → JPEG, resize to 300x300
+6. Save final file to /uploads/{user_id}/
+7. Clean up temp file
+8. Update database with direct SQL (avoids model issues)
+9. Return avatar_url for immediate display
 ```
+
+**Supported Image Formats:**
+- ✅ HEIC/HEIF (iOS default) → auto-converted to JPEG
+- ✅ JPEG/JPG → optimized and resized
+- ✅ PNG → converted to JPEG (no transparency)
+- ✅ WebP → kept as WebP
 
 ### iOS Flow:
 ```

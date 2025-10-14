@@ -218,6 +218,12 @@
     - Expo Server: Running with tunnel at exp://ui57h10-anonymous-8081.exp.direct and QR code displayed
 [x] 250. Fix iOS profile picture upload 500 error on Railway - COMPLETED: Created migration to add profile_picture column to User table
 [x] 251. Create deployment guide - COMPLETED: Created PROFILE_PICTURE_RAILWAY_FIX.md with migration and deployment instructions
+[x] 252. Add HEIC/HEIF image format support for iOS - COMPLETED: Installed pillow-heif library for iOS image decoding
+[x] 253. Register HEIC decoder in app initialization - COMPLETED: Added register_heif_opener() in photovault/__init__.py
+[x] 254. Fix import order for HEIC support - COMPLETED: Late PIL.Image import after HEIC registration ensures decoder availability
+[x] 255. Implement robust error handling for image conversion - COMPLETED: Temp file pattern with proper cleanup, no bogus files
+[x] 256. Update deployment guide with HEIC support - COMPLETED: Updated PROFILE_AVATAR_RAILWAY_DEPLOY.md with pillow-heif dependency
+[x] 257. Architect review of HEIC implementation - COMPLETED: Passed review, HEIC uploads work correctly with conversion to JPEG
 [x] 242. Fix sharpen endpoint 400 error - COMPLETED: Increased file size limit from 10MB to 50MB (aligned with MAX_FILE_SIZE)
 [x] 243. Fix logout navigation - COMPLETED: Optimized auth check interval to 500ms (battery-friendly) with 600ms logout wait for smooth redirect
 [x] 244. Architect review and approval - COMPLETED: Passed review - fixes address issues without performance/battery concerns
