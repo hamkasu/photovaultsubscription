@@ -54,8 +54,18 @@ export const authAPI = {
     return response.data;
   },
   
-  uploadProfilePicture: async (formData) => {
-    const response = await api.post('/api/auth/profile/picture', formData, {
+  uploadAvatar: async (imageUri) => {
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop();
+    const fileType = filename.split('.').pop();
+    
+    formData.append('image', {
+      uri: imageUri,
+      name: `avatar.${fileType}`,
+      type: `image/${fileType}`,
+    });
+    
+    const response = await api.post('/api/profile/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

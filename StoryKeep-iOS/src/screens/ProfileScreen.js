@@ -74,22 +74,11 @@ export default function ProfileScreen({ navigation }) {
     try {
       setUploading(true);
 
-      const formData = new FormData();
-      const filename = imageUri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-      formData.append('file', {
-        uri: imageUri,
-        name: filename,
-        type,
-      });
-
-      const response = await authAPI.uploadProfilePicture(formData);
+      const response = await authAPI.uploadAvatar(imageUri);
 
       if (response.success) {
-        setUserData({ ...userData, profile_picture: response.profile_picture });
-        Alert.alert('Success', 'Profile picture updated successfully');
+        setUserData({ ...userData, profile_picture: response.avatar_url });
+        Alert.alert('Success', 'Profile picture updated');
       }
     } catch (error) {
       console.error('Upload error:', error);
