@@ -265,9 +265,19 @@ def get_profile(current_user):
     try:
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         
+        # Query database directly for profile_picture (bypass SQLAlchemy model)
+        # This works even if the column isn't in the model definition
+        result = db.session.execute(
+            db.text("SELECT profile_picture FROM \"user\" WHERE id = :user_id"),
+            {"user_id": current_user.id}
+        ).fetchone()
+        
+        profile_picture = result[0] if result and result[0] else None
+        
+        logger.info(f"📸 Profile picture from database for user {current_user.username}: {profile_picture}")
+        
         # Build profile picture URL if exists - handle both object storage and local paths
         profile_picture_url = None
-        profile_picture = getattr(current_user, 'profile_picture', None)
         if profile_picture:
             # Check if it's an object storage path
             if profile_picture.startswith('uploads/'):
@@ -279,6 +289,10 @@ def get_profile(current_user):
             else:
                 # Local filesystem - just filename, use user_id subdirectory
                 profile_picture_url = f'/uploads/{current_user.id}/{profile_picture}'
+            
+            logger.info(f"✅ Built profile picture URL: {profile_picture_url}")
+        else:
+            logger.warning(f"⚠️ No profile picture in database for user {current_user.username}")
         
         return jsonify({
             'username': current_user.username,
@@ -288,7 +302,8 @@ def get_profile(current_user):
             'created_at': current_user.created_at.isoformat() if current_user.created_at else None
         })
     except Exception as e:
-        logger.error(f"Profile error: {str(e)}")
+        logger.error(f"❌ Profile error: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 @mobile_api_bp.route('/profile/avatar', methods=['POST'])

@@ -647,3 +647,17 @@ Dashboard now ALWAYS fetches profile picture from user table in database with ze
 - **Better UX**: Shows loading spinner while fetching profile picture
 - **Comprehensive Logging**: Console logs help debug any issues on Railway
 - **Same Pattern as Profile**: Uses exact same proven FileSystem.downloadAsync approach
+
+[x] 398. Diagnose profile_picture returning null despite database value - COMPLETED: Found getattr() returns None when SQLAlchemy model doesn't have column
+[x] 399. Fix backend to query database directly - COMPLETED: Changed /api/auth/profile to use raw SQL query bypassing model
+[x] 400. Add comprehensive logging to profile endpoint - COMPLETED: Logs show exact database value and URL construction
+[x] 401. Restart PhotoVault Server with direct database query - COMPLETED: Server running with SQL query to fetch profile_picture column
+[x] 402. Create Railway deployment guide - COMPLETED: Created PROFILE_PICTURE_DATABASE_FIX.md with complete explanation
+
+## ✅ PROFILE PICTURE DATABASE QUERY FIX - 402 TASKS COMPLETED
+Fixed backend API to directly query profile_picture column from database, bypassing SQLAlchemy model limitation:
+- **Root Cause**: getattr(current_user, 'profile_picture', None) returned None even though database had value
+- **Solution**: Use raw SQL query: SELECT profile_picture FROM "user" WHERE id = :user_id
+- **Why It Works**: Directly fetches column value regardless of SQLAlchemy model definition
+- **Applied To**: /api/auth/profile endpoint in mobile_api.py
+- **Ready for Railway**: Push to GitHub for automatic deployment
