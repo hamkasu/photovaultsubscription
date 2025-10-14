@@ -110,6 +110,15 @@ export const photoAPI = {
     return response.data;
   },
   
+  previewDetection: async (formData) => {
+    const response = await api.post('/api/preview-detection', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  
   enhancePhoto: async (photoId, options) => {
     const response = await api.post(`/api/photos/${photoId}/enhance`, options);
     return response.data;

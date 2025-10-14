@@ -38,6 +38,8 @@ export default function CameraScreen({ navigation }) {
   const [processing, setProcessing] = useState(false);
   const [showGuides, setShowGuides] = useState(true);
   const [zoom, setZoom] = useState(0);
+  const [detectedBoundaries, setDetectedBoundaries] = useState([]);
+  const [showingPreview, setShowingPreview] = useState(false);
   const cameraRef = useRef(null);
   const baseZoom = useRef(0);
 
@@ -50,6 +52,44 @@ export default function CameraScreen({ navigation }) {
     .onEnd(() => {
       baseZoom.current = zoom;
     });
+
+  const previewDetection = async () => {
+    if (cameraRef.current) {
+      try {
+        setShowingPreview(true);
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.5,
+          base64: false,
+        });
+
+        const formData = new FormData();
+        formData.append('image', {
+          uri: photo.uri,
+          type: 'image/jpeg',
+          name: 'preview.jpg',
+        });
+
+        const response = await photoAPI.previewDetection(formData);
+        
+        if (response.success && response.detections && response.detections.length > 0) {
+          setDetectedBoundaries(response.detections);
+          Alert.alert(
+            'Detection Preview',
+            `Found ${response.detected_count} photo(s)!`,
+            [{ text: 'OK' }]
+          );
+        } else {
+          setDetectedBoundaries([]);
+          Alert.alert('No Photos Detected', 'Try adjusting your camera angle or lighting');
+        }
+      } catch (error) {
+        console.error('Preview detection error:', error);
+        Alert.alert('Preview Failed', 'Could not analyze frame');
+      } finally {
+        setShowingPreview(false);
+      }
+    }
+  };
 
   const toggleFlash = () => {
     setFlashMode((current) =>
@@ -273,11 +313,39 @@ export default function CameraScreen({ navigation }) {
           flash={flashMode}
           zoom={zoom}
         >
-        {showGuides && (
+        {showGuides && detectedBoundaries.length === 0 && (
           <View style={styles.guides}>
             <View style={styles.guideFrame} />
             <Text style={styles.guideText}>
               Align photos within the frame - Multiple photos supported
+            </Text>
+          </View>
+        )}
+
+        {/* Red outlines for detected photos */}
+        {detectedBoundaries.length > 0 && (
+          <View style={styles.detectionOverlay}>
+            {detectedBoundaries.map((detection, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.detectedBoundary,
+                  {
+                    left: detection.x,
+                    top: detection.y,
+                    width: detection.width,
+                    height: detection.height,
+                  },
+                ]}
+              >
+                <View style={styles.detectedBoundaryInner} />
+                <Text style={styles.detectionLabel}>
+                  Photo {index + 1} ({Math.round(detection.confidence * 100)}%)
+                </Text>
+              </View>
+            ))}
+            <Text style={styles.detectionCount}>
+              {detectedBoundaries.length} photo{detectedBoundaries.length !== 1 ? 's' : ''} detected
             </Text>
           </View>
         )}
@@ -293,6 +361,18 @@ export default function CameraScreen({ navigation }) {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.iconButton}
+              onPress={previewDetection}
+              disabled={processing || showingPreview}
+            >
+              <Ionicons
+                name={detectedBoundaries.length > 0 ? 'scan-circle' : 'scan-circle-outline'}
+                size={28}
+                color={showingPreview ? '#FFA500' : detectedBoundaries.length > 0 ? '#4CAF50' : '#fff'}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconButton}
               onPress={pickFromLibrary}
               disabled={processing}
             >
@@ -305,7 +385,10 @@ export default function CameraScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => setShowGuides(!showGuides)}
+              onPress={() => {
+                setShowGuides(!showGuides);
+                if (showGuides) setDetectedBoundaries([]);
+              }}
             >
               <Ionicons
                 name={showGuides ? 'grid' : 'grid-outline'}
