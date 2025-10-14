@@ -631,3 +631,19 @@ Completely rewrote Dashboard profile picture loading using the proven working ap
 
 ## ✅ ENVIRONMENT FULLY RESTORED - 390 TASKS COMPLETED
 All dependencies reinstalled and both servers running successfully after system restart.
+
+[x] 391. Fix iOS Dashboard profile picture not showing on Railway - COMPLETED: Completely rewrote Dashboard to ALWAYS pull fresh data from user table
+[x] 392. Add unique filename with timestamp to prevent caching - COMPLETED: Each download uses unique filename to avoid stale cache
+[x] 393. Add comprehensive logging for debugging - COMPLETED: Console logs track entire profile picture loading process
+[x] 394. Add loading indicator during profile fetch - COMPLETED: Shows spinner while downloading profile picture
+[x] 395. Clear existing image before loading new one - COMPLETED: Prevents showing old cached images
+[x] 396. Force fresh database fetch on screen focus - COMPLETED: Always calls authAPI.getProfile() when Dashboard appears
+[x] 397. Restart Expo Server with robust Dashboard fix - COMPLETED: Server running with tunnel at exp://sag_csg-anonymous-8081.exp.direct and QR code ready
+
+## ✅ DASHBOARD PROFILE PICTURE - ALWAYS FROM DATABASE - 397 TASKS COMPLETED
+Dashboard now ALWAYS fetches profile picture from user table in database with zero caching issues:
+- **Fresh Data Every Time**: Calls authAPI.getProfile() whenever Dashboard screen loads or comes into focus
+- **No Cache Problems**: Uses unique filenames with timestamps for each download
+- **Better UX**: Shows loading spinner while fetching profile picture
+- **Comprehensive Logging**: Console logs help debug any issues on Railway
+- **Same Pattern as Profile**: Uses exact same proven FileSystem.downloadAsync approach

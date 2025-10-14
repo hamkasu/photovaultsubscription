@@ -26,42 +26,63 @@ export default function DashboardScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   const [profileImageUri, setProfileImageUri] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  // Refresh data when screen comes into focus (e.g., returning from Profile screen)
+  // ALWAYS reload profile picture when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      // Reload profile data to get updated profile picture
-      const refreshProfile = async () => {
-        try {
-          const profileData = await authAPI.getProfile();
-          const token = await AsyncStorage.getItem('authToken');
-          
-          setUserData(profileData);
-          
-          // Load profile picture using same method as Profile screen
-          if (profileData.profile_picture && token) {
-            await loadProfileImage(profileData.profile_picture, token);
-          } else {
-            setProfileImageUri(null);
-          }
-        } catch (error) {
-          console.error('Error refreshing profile:', error);
-        }
-      };
-      
-      refreshProfile();
+      console.log('📱 Dashboard focused - reloading profile picture...');
+      refreshProfilePicture();
     }, [])
   );
 
+  const refreshProfilePicture = async () => {
+    try {
+      setProfileLoading(true);
+      
+      // ALWAYS fetch fresh profile data from database
+      const profileData = await authAPI.getProfile();
+      const token = await AsyncStorage.getItem('authToken');
+      
+      console.log('👤 Fresh profile data from database:', {
+        username: profileData.username,
+        profile_picture: profileData.profile_picture,
+        hasToken: !!token
+      });
+      
+      setUserData(profileData);
+      
+      // Clear any existing profile image first
+      setProfileImageUri(null);
+      
+      // Download fresh profile picture from server
+      if (profileData.profile_picture && token) {
+        console.log('📥 Downloading fresh profile picture from database...');
+        await loadProfileImage(profileData.profile_picture, token);
+      } else {
+        console.log('⚠️ No profile picture in database or no token');
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing profile:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const loadProfileImage = async (imageUrl, token) => {
     try {
-      const fileUri = `${FileSystem.cacheDirectory}dashboard_profile_picture.jpg`;
+      // Use unique filename with timestamp to avoid cache
+      const timestamp = Date.now();
+      const fileUri = `${FileSystem.cacheDirectory}dashboard_profile_${timestamp}.jpg`;
       const fullUrl = `${BASE_URL}${imageUrl}`;
+      
+      console.log('🖼️ Downloading profile image from:', fullUrl);
+      console.log('💾 Saving to cache:', fileUri);
       
       const downloadResult = await FileSystem.downloadAsync(
         fullUrl,
@@ -73,13 +94,21 @@ export default function DashboardScreen({ navigation }) {
         }
       );
 
+      console.log('📦 Download result:', {
+        status: downloadResult.status,
+        uri: downloadResult.uri
+      });
+
       if (downloadResult.status === 200) {
-        // Force refresh by adding timestamp
-        const imageUri = `${downloadResult.uri}?t=${Date.now()}`;
-        setProfileImageUri(imageUri);
+        // Set image URI without timestamp (file is already unique)
+        setProfileImageUri(downloadResult.uri);
+        console.log('✅ Profile image loaded successfully');
+      } else {
+        console.error('❌ Download failed with status:', downloadResult.status);
+        setProfileImageUri(null);
       }
     } catch (error) {
-      console.error('Failed to load profile image:', error);
+      console.error('❌ Failed to load profile image:', error);
       setProfileImageUri(null);
     }
   };
@@ -93,17 +122,26 @@ export default function DashboardScreen({ navigation }) {
         AsyncStorage.getItem('authToken'),
       ]);
 
+      console.log('📊 Dashboard data loaded:', {
+        total_photos: statsData.total_photos,
+        username: profileData.username,
+        profile_picture: profileData.profile_picture
+      });
+
       setStats(statsData);
       setRecentPhotos(photosData.photos?.slice(0, 6) || []);
       setUserData(profileData);
       setAuthToken(token);
       
-      // Load profile picture using same method as Profile screen
+      // Load profile picture from fresh database data
       if (profileData.profile_picture && token) {
+        console.log('📥 Loading profile picture from database...');
         await loadProfileImage(profileData.profile_picture, token);
+      } else {
+        console.log('⚠️ No profile picture or token');
       }
     } catch (error) {
-      console.error('Dashboard error:', error);
+      console.error('❌ Dashboard error:', error);
       Alert.alert('Error', 'Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -113,6 +151,8 @@ export default function DashboardScreen({ navigation }) {
 
   const onRefresh = () => {
     setRefreshing(true);
+    // Clear existing image before refresh
+    setProfileImageUri(null);
     loadDashboardData();
   };
 
@@ -168,7 +208,9 @@ export default function DashboardScreen({ navigation }) {
             style={styles.profileButton}
             onPress={() => navigation.navigate('Profile')}
           >
-            {profileImageUri ? (
+            {profileLoading ? (
+              <ActivityIndicator size="small" color="#E85D75" />
+            ) : profileImageUri ? (
               <Image
                 source={{ uri: profileImageUri }}
                 style={styles.profileImage}
@@ -323,6 +365,10 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     marginRight: 10,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileImage: {
     width: 40,
