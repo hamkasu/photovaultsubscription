@@ -661,3 +661,16 @@ Fixed backend API to directly query profile_picture column from database, bypass
 - **Why It Works**: Directly fetches column value regardless of SQLAlchemy model definition
 - **Applied To**: /api/auth/profile endpoint in mobile_api.py
 - **Ready for Railway**: Push to GitHub for automatic deployment
+
+[x] 403. Increase Dashboard profile image size by 20% - COMPLETED: Changed from 40x40 to 48x48 pixels
+[x] 404. Update profile image to circular crop - COMPLETED: Changed borderRadius from 20 to 24 (perfect circle)
+[x] 405. Update fallback icon size to match - COMPLETED: Changed person-circle icon from 40 to 48
+[x] 406. Update profileButton container size - COMPLETED: Changed from 40x40 to 48x48 to fit larger image
+[x] 407. Restart Expo Server with larger circular profile image - COMPLETED: Server running with tunnel at exp://sag_csg-anonymous-8081.exp.direct
+
+## ✅ DASHBOARD PROFILE IMAGE SIZE & SHAPE UPDATE - 407 TASKS COMPLETED
+Dashboard profile image now 20% larger with perfect circular crop:
+- **Size Increase**: 40x40px → 48x48px (exactly 20% larger)
+- **Circular Crop**: borderRadius: 24 (50% of width for perfect circle)
+- **Consistent Sizing**: profileButton container also updated to 48x48
+- **Icon Match**: Fallback person-circle icon updated to size 48
