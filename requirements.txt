@@ -18,7 +18,7 @@ psycopg2-binary==2.9.9
 alembic==1.13.1
 
 # Image Processing
-Pillow==11.0.0
+Pillow>=11.1.0
 opencv-python-headless==4.12.0.88
 opencv-contrib-python-headless==4.12.0.88
 numpy>=2.0
@@ -75,7 +75,7 @@ openai>=1.0.0
 opencv-contrib-python-headless==4.12.0.88
 opencv-python-headless==4.12.0.88
 openpyxl
-Pillow==11.0.0
+Pillow>=11.1.0
 psycopg2-binary==2.9.9
 python-decouple==3.8
 python-dotenv==1.0.0
@@ -108,7 +108,7 @@ openai>=1.0.0
 opencv-contrib-python-headless==4.12.0.88
 opencv-python-headless==4.12.0.88
 openpyxl
-Pillow==11.0.0
+Pillow>=11.1.0
 psycopg2-binary==2.9.9
 PyJWT
 python-decouple==3.8
@@ -141,7 +141,7 @@ openai>=1.0.0
 opencv-contrib-python-headless==4.12.0.88
 opencv-python-headless==4.12.0.88
 openpyxl
-Pillow==11.0.0
+Pillow>=11.1.0
 psycopg2-binary==2.9.9
 PyJWT
 python-decouple==3.8
