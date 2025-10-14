@@ -269,12 +269,15 @@ def get_profile(current_user):
         profile_picture_url = None
         profile_picture = getattr(current_user, 'profile_picture', None)
         if profile_picture:
-            # Check if it's an object storage path (starts with users/ or uploads/)
-            if profile_picture.startswith('users/') or profile_picture.startswith('uploads/'):
-                # Object storage path - use as-is
+            # Check if it's an object storage path
+            if profile_picture.startswith('uploads/'):
+                # Already has uploads/ prefix - just add leading slash
+                profile_picture_url = f'/{profile_picture}'
+            elif profile_picture.startswith('users/'):
+                # Object storage with users/ prefix - add /uploads/ prefix
                 profile_picture_url = f'/uploads/{profile_picture}'
             else:
-                # Local filesystem - use user_id subdirectory
+                # Local filesystem - just filename, use user_id subdirectory
                 profile_picture_url = f'/uploads/{current_user.id}/{profile_picture}'
         
         return jsonify({
