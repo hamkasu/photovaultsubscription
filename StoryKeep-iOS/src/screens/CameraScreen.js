@@ -40,8 +40,17 @@ export default function CameraScreen({ navigation }) {
   const [zoom, setZoom] = useState(0);
   const [detectedBoundaries, setDetectedBoundaries] = useState([]);
   const [showingPreview, setShowingPreview] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
   const cameraRef = useRef(null);
   const baseZoom = useRef(0);
+
+  // Force camera remount when screen is focused to prevent black screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setCameraKey(prevKey => prevKey + 1);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   // Pinch to zoom gesture
   const pinchGesture = Gesture.Pinch()
@@ -307,6 +316,7 @@ export default function CameraScreen({ navigation }) {
     <View style={styles.container}>
       <GestureDetector gesture={pinchGesture}>
         <CameraView
+          key={cameraKey}
           ref={cameraRef}
           style={styles.camera}
           facing={CAMERA_TYPE.back}
