@@ -9,6 +9,13 @@ from photovault.extensions import db, login_manager, migrate, csrf
 from photovault.config import config
 import os
 
+# Register HEIC decoder for iOS image support
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass  # pillow-heif not installed
+
 def _seed_subscription_plans(app):
     """Ensure all default subscription plans exist in the database (upsert behavior)"""
     from photovault.models import SubscriptionPlan

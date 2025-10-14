@@ -296,32 +296,67 @@ def update_avatar(current_user):
         if not image_file or image_file.filename == '':
             return jsonify({'error': 'No image selected'}), 400
         
-        # Validate file type
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'webp'}
-        file_ext = image_file.filename.rsplit('.', 1)[-1].lower() if '.' in image_file.filename else ''
-        if file_ext not in allowed_extensions:
+        # Validate file type - accept HEIC for iOS devices
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'webp', 'heic', 'heif'}
+        original_ext = image_file.filename.rsplit('.', 1)[-1].lower() if '.' in image_file.filename else ''
+        if original_ext not in allowed_extensions:
             return jsonify({'error': f'Invalid file type. Use: {", ".join(allowed_extensions)}'}), 400
+        
+        # Determine if we need to convert HEIC
+        is_heic = original_ext in ('heic', 'heif')
+        target_ext = 'jpg' if is_heic else original_ext
         
         # Generate simple filename
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-        avatar_filename = f'avatar_{timestamp}.{file_ext}'
+        avatar_filename = f'avatar_{timestamp}.{target_ext}'
         
         # Create upload directory
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
         os.makedirs(upload_dir, exist_ok=True)
         
-        # Save the file
+        # Save the file temporarily
+        temp_path = os.path.join(upload_dir, f'temp_{timestamp}.{original_ext}')
         avatar_path = os.path.join(upload_dir, avatar_filename)
-        image_file.save(avatar_path)
+        image_file.save(temp_path)
         
-        # Resize to 300x300 for profile picture
+        # Resize and convert image (import here to ensure HEIC decoder is registered)
         try:
+            try:
+                from pillow_heif import register_heif_opener
+                register_heif_opener()
+            except:
+                pass
+            
             from PIL import Image
-            img = Image.open(avatar_path)
+            img = Image.open(temp_path)
+            
+            # Convert to RGB if needed (for HEIC/PNG with transparency)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                rgb_img.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = rgb_img
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Resize
             img.thumbnail((300, 300))
-            img.save(avatar_path, quality=85)
-        except:
-            pass  # If resize fails, keep original
+            
+            # Save as target format
+            save_format = 'JPEG' if target_ext == 'jpg' else target_ext.upper()
+            img.save(avatar_path, format=save_format, quality=85)
+            
+            # Remove temp file on success
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
+        except Exception as resize_err:
+            # If conversion fails, clean up and return error
+            logger.error(f"Image processing failed: {str(resize_err)}")
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            if os.path.exists(avatar_path):
+                os.remove(avatar_path)
+            return jsonify({'error': 'Failed to process image. Please try a different image format.'}), 500
         
         # Update database - use SQL update to avoid model issues
         try:
