@@ -583,3 +583,10 @@ Fixed AttributeError on Railway when accessing profile_picture. Code now works w
 
 ## ✅ DASHBOARD PROFILE PICTURE REFRESH FIX - 370 TASKS COMPLETED
 Dashboard now automatically refreshes profile picture when user navigates back from Profile screen after changing it.
+
+[x] 371. Fix profile picture URL construction in getProfile API - COMPLETED: Fixed double /uploads/ path issue
+[x] 372. Restart PhotoVault Server with URL fix - COMPLETED: Server running with corrected profile picture paths
+[x] 373. Architect review and approval - COMPLETED: URL construction logic verified for all storage scenarios
+
+## ✅ PROFILE PICTURE URL FIX - 373 TASKS COMPLETED
+Fixed incorrect URL construction that was causing profile pictures to not display on iOS app. The API was creating `/uploads/uploads/1/avatar.jpg` instead of `/uploads/1/avatar.jpg`.
