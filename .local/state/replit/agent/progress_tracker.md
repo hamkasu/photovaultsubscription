@@ -602,3 +602,11 @@ Fixed incorrect URL construction that was causing profile pictures to not displa
 
 ## ✅ ENVIRONMENT FULLY RESTORED - 377 TASKS COMPLETED
 All dependencies reinstalled and both servers running successfully after system restart.
+
+[x] 378. Fix profile picture not updating on Dashboard - COMPLETED: Added cache-busting mechanism with profileCacheKey state
+[x] 379. Implement smart cache invalidation - COMPLETED: Cache key updates only when profile data refreshes, not on every render
+[x] 380. Restart Expo Server with cache fix - COMPLETED: Server running with tunnel at exp://jwxm9qy-anonymous-8081.exp.direct and QR code ready
+[x] 381. Create Railway deployment guide - COMPLETED: Created PROFILE_PICTURE_CACHE_FIX.md with testing instructions
+
+## ✅ PROFILE PICTURE CACHE FIX - 381 TASKS COMPLETED
+Fixed Dashboard profile picture not updating after upload. Added cache-busting timestamp that updates when returning from Profile screen.

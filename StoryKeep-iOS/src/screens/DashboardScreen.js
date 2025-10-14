@@ -24,6 +24,7 @@ export default function DashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  const [profileCacheKey, setProfileCacheKey] = useState(Date.now());
   const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
@@ -36,6 +37,8 @@ export default function DashboardScreen({ navigation }) {
       // Reload profile data to get updated profile picture
       authAPI.getProfile().then(profileData => {
         setUserData(profileData);
+        // Update cache key to force image reload when profile picture changes
+        setProfileCacheKey(Date.now());
       }).catch(error => {
         console.error('Error refreshing profile:', error);
       });
@@ -124,7 +127,7 @@ export default function DashboardScreen({ navigation }) {
             {userData?.profile_picture ? (
               <Image
                 source={{ 
-                  uri: `${BASE_URL}${userData.profile_picture}`,
+                  uri: `${BASE_URL}${userData.profile_picture}?t=${profileCacheKey}`,
                   headers: authToken ? {
                     Authorization: `Bearer ${authToken}`,
                   } : {},
