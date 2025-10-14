@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { authAPI, dashboardAPI } from '../services/api';
 
 export default function ProfileScreen({ navigation }) {
@@ -20,6 +21,7 @@ export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  const [profileImageUri, setProfileImageUri] = useState(null);
   const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
@@ -37,11 +39,39 @@ export default function ProfileScreen({ navigation }) {
       setUserData(profile);
       setStats(dashStats);
       setAuthToken(token);
+      
+      // Load profile picture with authentication
+      if (profile.profile_picture && token) {
+        await loadProfileImage(profile.profile_picture, token);
+      }
     } catch (error) {
       console.error('Profile error:', error);
       Alert.alert('Error', 'Failed to load profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProfileImage = async (imageUrl, token) => {
+    try {
+      const fileUri = `${FileSystem.cacheDirectory}profile_picture.jpg`;
+      
+      const downloadResult = await FileSystem.downloadAsync(
+        `${BASE_URL}${imageUrl}`,
+        fileUri,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (downloadResult.status === 200) {
+        // Force refresh by adding timestamp
+        setProfileImageUri(`${downloadResult.uri}?t=${Date.now()}`);
+      }
+    } catch (error) {
+      console.error('Failed to load profile image:', error);
     }
   };
 
@@ -78,6 +108,10 @@ export default function ProfileScreen({ navigation }) {
 
       if (response.success) {
         setUserData({ ...userData, profile_picture: response.avatar_url });
+        // Reload the profile image with authentication
+        if (authToken) {
+          await loadProfileImage(response.avatar_url, authToken);
+        }
         Alert.alert('Success', 'Profile picture updated');
       }
     } catch (error) {
@@ -114,14 +148,9 @@ export default function ProfileScreen({ navigation }) {
           onPress={handlePickImage}
           disabled={uploading}
         >
-          {userData?.profile_picture ? (
+          {profileImageUri ? (
             <Image
-              source={{ 
-                uri: `${BASE_URL}${userData.profile_picture}`,
-                headers: authToken ? {
-                  Authorization: `Bearer ${authToken}`,
-                } : {},
-              }}
+              source={{ uri: profileImageUri }}
               style={styles.avatarImage}
             />
           ) : (
