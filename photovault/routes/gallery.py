@@ -343,7 +343,9 @@ def uploaded_file(current_user, user_id, filename):
         if is_avatar:
             from photovault.models import User
             user = User.query.get(user_id)
-            if user and user.profile_picture == filename:
+            # Safe check for profile_picture attribute (may not exist in older database schemas)
+            user_profile_pic = getattr(user, 'profile_picture', None) if user else None
+            if user and user_profile_pic == filename:
                 current_app.logger.info(f"Serving avatar for user {user_id}: {filename}")
             else:
                 current_app.logger.warning(f"Avatar file requested but not current profile picture: {filename} for user {user_id}")
