@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { photoAPI } from '../services/api';
@@ -36,7 +37,19 @@ export default function CameraScreen({ navigation }) {
   const [capturedPhotos, setCapturedPhotos] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [showGuides, setShowGuides] = useState(true);
+  const [zoom, setZoom] = useState(0);
   const cameraRef = useRef(null);
+  const baseZoom = useRef(0);
+
+  // Pinch to zoom gesture
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((event) => {
+      const newZoom = Math.min(Math.max(baseZoom.current + (event.scale - 1) * 0.5, 0), 1);
+      setZoom(newZoom);
+    })
+    .onEnd(() => {
+      baseZoom.current = zoom;
+    });
 
   const toggleFlash = () => {
     setFlashMode((current) =>
@@ -252,12 +265,14 @@ export default function CameraScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        ref={cameraRef}
-        style={styles.camera}
-        facing={CAMERA_TYPE.back}
-        flash={flashMode}
-      >
+      <GestureDetector gesture={pinchGesture}>
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing={CAMERA_TYPE.back}
+          flash={flashMode}
+          zoom={zoom}
+        >
         {showGuides && (
           <View style={styles.guides}>
             <View style={styles.guideFrame} />
@@ -355,6 +370,14 @@ export default function CameraScreen({ navigation }) {
           )}
         </View>
       </CameraView>
+      </GestureDetector>
+
+      {/* Zoom Indicator */}
+      {zoom > 0 && (
+        <View style={styles.zoomIndicator}>
+          <Text style={styles.zoomText}>{(1 + zoom * 9).toFixed(1)}x</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -475,5 +498,19 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 52,
+  },
+  zoomIndicator: {
+    position: 'absolute',
+    top: 120,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  zoomText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
