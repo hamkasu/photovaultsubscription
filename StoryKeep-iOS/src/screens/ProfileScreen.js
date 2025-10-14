@@ -36,13 +36,22 @@ export default function ProfileScreen({ navigation }) {
         AsyncStorage.getItem('authToken'),
       ]);
 
+      console.log('👤 Profile data:', profile);
+      console.log('📸 Profile picture URL:', profile.profile_picture);
+
       setUserData(profile);
       setStats(dashStats);
       setAuthToken(token);
       
       // Load profile picture with authentication
       if (profile.profile_picture && token) {
+        console.log('✅ Profile picture exists, loading...');
         await loadProfileImage(profile.profile_picture, token);
+      } else {
+        console.log('⚠️ No profile picture or token:', {
+          hasPicture: !!profile.profile_picture,
+          hasToken: !!token
+        });
       }
     } catch (error) {
       console.error('Profile error:', error);
@@ -54,10 +63,16 @@ export default function ProfileScreen({ navigation }) {
 
   const loadProfileImage = async (imageUrl, token) => {
     try {
+      console.log('🖼️ Loading profile image:', imageUrl);
+      console.log('🔑 Token:', token ? 'Present' : 'Missing');
+      
       const fileUri = `${FileSystem.cacheDirectory}profile_picture.jpg`;
+      const fullUrl = `${BASE_URL}${imageUrl}`;
+      
+      console.log('📥 Downloading from:', fullUrl);
       
       const downloadResult = await FileSystem.downloadAsync(
-        `${BASE_URL}${imageUrl}`,
+        fullUrl,
         fileUri,
         {
           headers: {
@@ -66,12 +81,18 @@ export default function ProfileScreen({ navigation }) {
         }
       );
 
+      console.log('📦 Download result:', downloadResult);
+
       if (downloadResult.status === 200) {
         // Force refresh by adding timestamp
-        setProfileImageUri(`${downloadResult.uri}?t=${Date.now()}`);
+        const imageUri = `${downloadResult.uri}?t=${Date.now()}`;
+        console.log('✅ Profile image loaded:', imageUri);
+        setProfileImageUri(imageUri);
+      } else {
+        console.error('❌ Download failed with status:', downloadResult.status);
       }
     } catch (error) {
-      console.error('Failed to load profile image:', error);
+      console.error('❌ Failed to load profile image:', error);
     }
   };
 
