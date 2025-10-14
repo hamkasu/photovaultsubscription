@@ -576,3 +576,10 @@ All dependencies reinstalled and both servers running successfully after system 
 
 ## ✅ PROFILE PICTURE FIX COMPLETE - 367 TASKS COMPLETED
 Fixed AttributeError on Railway when accessing profile_picture. Code now works with or without the column using safe getattr() check.
+
+[x] 368. Fix Dashboard profile picture not updating after change - COMPLETED: Added useFocusEffect hook to refresh profile data when returning from Profile screen
+[x] 369. Restart Expo Server with Dashboard refresh fix - COMPLETED: Server running with updated navigation focus listener
+[x] 370. Architect review and approval - COMPLETED: Fix approved - useFocusEffect correctly refreshes profile picture on Dashboard
+
+## ✅ DASHBOARD PROFILE PICTURE REFRESH FIX - 370 TASKS COMPLETED
+Dashboard now automatically refreshes profile picture when user navigates back from Profile screen after changing it.
