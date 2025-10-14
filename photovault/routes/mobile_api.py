@@ -265,11 +265,17 @@ def get_profile(current_user):
     try:
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         
-        # Build profile picture URL if exists - use getattr for backward compatibility
+        # Build profile picture URL if exists - handle both object storage and local paths
         profile_picture_url = None
         profile_picture = getattr(current_user, 'profile_picture', None)
         if profile_picture:
-            profile_picture_url = f'/uploads/{current_user.id}/{profile_picture}'
+            # Check if it's an object storage path (starts with users/ or uploads/)
+            if profile_picture.startswith('users/') or profile_picture.startswith('uploads/'):
+                # Object storage path - use as-is
+                profile_picture_url = f'/uploads/{profile_picture}'
+            else:
+                # Local filesystem - use user_id subdirectory
+                profile_picture_url = f'/uploads/{current_user.id}/{profile_picture}'
         
         return jsonify({
             'username': current_user.username,
@@ -286,7 +292,7 @@ def get_profile(current_user):
 @csrf.exempt
 @token_required
 def update_avatar(current_user):
-    """Simple profile picture upload - brand new implementation"""
+    """Profile picture upload with object storage support for Railway persistence"""
     try:
         # Get the uploaded file
         if 'image' not in request.files:
@@ -310,17 +316,9 @@ def update_avatar(current_user):
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         avatar_filename = f'avatar_{timestamp}.{target_ext}'
         
-        # Create upload directory
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Save the file temporarily
-        temp_path = os.path.join(upload_dir, f'temp_{timestamp}.{original_ext}')
-        avatar_path = os.path.join(upload_dir, avatar_filename)
-        image_file.save(temp_path)
-        
-        # Resize and convert image (import here to ensure HEIC decoder is registered)
+        # Process image in memory (resize, convert, etc.)
         try:
+            # Register HEIC decoder if available
             try:
                 from pillow_heif import register_heif_opener
                 register_heif_opener()
@@ -328,7 +326,10 @@ def update_avatar(current_user):
                 pass
             
             from PIL import Image
-            img = Image.open(temp_path)
+            import io
+            
+            # Open image from upload stream
+            img = Image.open(image_file.stream)
             
             # Convert to RGB if needed (for HEIC/PNG with transparency)
             if img.mode in ('RGBA', 'LA', 'P'):
@@ -338,41 +339,72 @@ def update_avatar(current_user):
             elif img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Resize
+            # Resize to 300x300 thumbnail
             img.thumbnail((300, 300))
             
-            # Save as target format
+            # Save to BytesIO buffer
+            buffer = io.BytesIO()
             save_format = 'JPEG' if target_ext == 'jpg' else target_ext.upper()
-            img.save(avatar_path, format=save_format, quality=85)
+            img.save(buffer, format=save_format, quality=85)
+            buffer.seek(0)
             
-            # Remove temp file on success
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-                
-        except Exception as resize_err:
-            # If conversion fails, clean up and return error
-            logger.error(f"Image processing failed: {str(resize_err)}")
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            if os.path.exists(avatar_path):
-                os.remove(avatar_path)
+            # Create a file-like object for enhanced file handler
+            from werkzeug.datastructures import FileStorage
+            processed_file = FileStorage(
+                stream=buffer,
+                filename=avatar_filename,
+                content_type=f'image/{target_ext}'
+            )
+            
+        except Exception as process_err:
+            logger.error(f"Image processing failed: {str(process_err)}")
             return jsonify({'error': 'Failed to process image. Please try a different image format.'}), 500
+        
+        # Save using enhanced file handler (supports object storage + Railway volumes)
+        from photovault.utils.enhanced_file_handler import save_uploaded_file_enhanced
+        
+        success, file_path = save_uploaded_file_enhanced(
+            file=processed_file,
+            filename=avatar_filename,
+            user_id=current_user.id
+        )
+        
+        if not success:
+            logger.error(f"Failed to save avatar: {file_path}")
+            return jsonify({'error': 'Failed to save profile picture'}), 500
+        
+        # Determine the stored path format (object storage vs local)
+        # Object storage paths: users/1/avatar.jpg or uploads/1/avatar.jpg
+        # Local paths: /path/to/uploads/1/avatar.jpg
+        if file_path.startswith('users/') or file_path.startswith('uploads/'):
+            # Object storage path - store as-is
+            stored_path = file_path
+        else:
+            # Local filesystem path - store just the filename
+            stored_path = avatar_filename
         
         # Update database - use SQL update to avoid model issues
         try:
             db.session.execute(
                 db.text("UPDATE \"user\" SET profile_picture = :filename WHERE id = :user_id"),
-                {'filename': avatar_filename, 'user_id': current_user.id}
+                {'filename': stored_path, 'user_id': current_user.id}
             )
             db.session.commit()
         except Exception as db_err:
             db.session.rollback()
-            if os.path.exists(avatar_path):
-                os.remove(avatar_path)
-            return jsonify({'error': f'Database error: {str(db_err)}'}), 500
+            logger.error(f"Database update failed: {str(db_err)}")
+            return jsonify({'error': 'Database error'}), 500
         
-        # Return success
-        avatar_url = f'/uploads/{current_user.id}/{avatar_filename}'
+        # Build avatar URL based on storage type
+        if stored_path.startswith('users/') or stored_path.startswith('uploads/'):
+            # Object storage - use direct path
+            avatar_url = f'/uploads/{stored_path}'
+        else:
+            # Local storage - use user_id path
+            avatar_url = f'/uploads/{current_user.id}/{stored_path}'
+        
+        logger.info(f"✅ Profile picture updated for user {current_user.id}: {avatar_url}")
+        
         return jsonify({
             'success': True,
             'avatar_url': avatar_url,

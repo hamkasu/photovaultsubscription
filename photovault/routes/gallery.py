@@ -461,6 +461,27 @@ def uploaded_file(current_user, user_id, filename):
             # Unknown filename - try uploads directory
             file_to_serve = os.path.join(uploads_dir, filename)
         
+        # Check if file is in object storage first (profile pictures)
+        if photo.file_path and (photo.file_path.startswith('users/') or photo.file_path.startswith('uploads/')):
+            try:
+                from photovault.services.app_storage_service import app_storage
+                from flask import send_file
+                import io
+                
+                success, file_bytes = app_storage.download_file(photo.file_path)
+                if success:
+                    current_app.logger.info(f"Serving file from object storage: {photo.file_path}")
+                    response = send_file(
+                        io.BytesIO(file_bytes),
+                        mimetype=f'image/{filename.rsplit(".", 1)[-1] if "." in filename else "jpeg"}'
+                    )
+                    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+                    response.headers['Pragma'] = 'no-cache'
+                    response.headers['Expires'] = '0'
+                    return response
+            except Exception as storage_err:
+                current_app.logger.warning(f"Object storage download failed: {storage_err}")
+        
         if file_to_serve and os.path.exists(file_to_serve):
             response = send_file(file_to_serve)
             # Add cache control headers to prevent stale image caching

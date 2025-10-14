@@ -63,9 +63,15 @@ def save_uploaded_file_enhanced(file, filename, user_id=None):
         # Reset file pointer for local save
         file.seek(0)
         
-        # Save the file
+        # Save the file - handle both FileStorage objects and BytesIO streams
         try:
-            file.save(file_path)
+            if hasattr(file, 'save'):
+                # FileStorage object with save method
+                file.save(file_path)
+            else:
+                # Raw file-like object (BytesIO, etc.) - write manually
+                with open(file_path, 'wb') as f:
+                    f.write(file.read())
             logger.info(f'File saved to: {file_path}')
         except Exception as save_error:
             logger.error(f'Failed to save file {file_path}: {str(save_error)}')
