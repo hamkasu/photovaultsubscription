@@ -24,11 +24,11 @@ class PhotoDetector:
     """Automatic detection and extraction of rectangular photos from images"""
     
     def __init__(self):
-        self.min_photo_area = 10000  # Minimum area for a valid photo (pixels)
-        self.max_photo_area_ratio = 0.8  # Max ratio of detected photo to original image
-        self.min_aspect_ratio = 0.3  # Minimum width/height ratio
-        self.max_aspect_ratio = 3.0  # Maximum width/height ratio
-        self.contour_area_threshold = 0.01  # Min contour area as fraction of image
+        self.min_photo_area = 5000  # Minimum area for a valid photo (pixels) - lowered for better detection
+        self.max_photo_area_ratio = 0.85  # Max ratio of detected photo to original image
+        self.min_aspect_ratio = 0.25  # Minimum width/height ratio - more permissive
+        self.max_aspect_ratio = 4.0  # Maximum width/height ratio - more permissive
+        self.contour_area_threshold = 0.008  # Min contour area as fraction of image - more sensitive
         self.enable_perspective_correction = True  # Enable perspective transformation for tilted photos
         self.enable_edge_refinement = True  # Enable advanced edge refinement
         
@@ -95,7 +95,7 @@ class PhotoDetector:
                 # Calculate confidence based on shape analysis
                 confidence = self._calculate_confidence(contour, x, y, w, h)
                 
-                if confidence > 0.3:  # Minimum confidence threshold
+                if confidence > 0.35:  # Minimum confidence threshold - raised for better accuracy
                     detected_photos.append({
                         'x': int(x),
                         'y': int(y),
@@ -104,7 +104,8 @@ class PhotoDetector:
                         'area': int(area),
                         'confidence': float(confidence),
                         'aspect_ratio': float(w/h),
-                        'contour': contour.tolist()  # For debugging/visualization
+                        'contour': contour.tolist(),  # For debugging/visualization
+                        'corners': self._get_photo_corners(contour).tolist()  # Add corner points for overlay
                     })
             
             # Sort by confidence
@@ -151,16 +152,16 @@ class PhotoDetector:
             cv2.THRESH_BINARY, 11, 2
         )
         
-        # Apply Canny edge detection with optimized parameters
-        edges = cv2.Canny(enhanced, 30, 100, apertureSize=3, L2gradient=True)
+        # Apply Canny edge detection with improved parameters for better photo detection
+        edges = cv2.Canny(enhanced, 40, 120, apertureSize=3, L2gradient=True)
         
         # Apply morphological operations to close gaps and strengthen edges
-        kernel_close = np.ones((3, 3), np.uint8)
+        kernel_close = np.ones((5, 5), np.uint8)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel_close)
         
-        # Dilate slightly to connect nearby edges
-        kernel_dilate = np.ones((2, 2), np.uint8)
-        edges = cv2.dilate(edges, kernel_dilate, iterations=1)
+        # Dilate to connect nearby edges
+        kernel_dilate = np.ones((3, 3), np.uint8)
+        edges = cv2.dilate(edges, kernel_dilate, iterations=2)
         
         return edges
         
