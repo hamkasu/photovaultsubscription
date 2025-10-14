@@ -336,14 +336,60 @@ def uploaded_file(current_user, user_id, filename):
             (Photo.filename == original_filename) | (Photo.edited_filename == original_filename)
         ).first()
         
+        # Check if this is a profile picture/avatar (not a photo)
+        is_avatar = filename.startswith('avatar_')
+        
+        # Handle avatars separately - they're not in Photo table, they're in User table
+        if is_avatar:
+            from photovault.models import User
+            user = User.query.get(user_id)
+            if user and user.profile_picture == filename:
+                current_app.logger.info(f"Serving avatar for user {user_id}: {filename}")
+            else:
+                current_app.logger.warning(f"Avatar file requested but not current profile picture: {filename} for user {user_id}")
+            
+            # Try to serve avatar from App Storage first
+            app_storage_path = f"users/{user_id}/{filename}"
+            
+            if file_exists_enhanced(app_storage_path):
+                success, file_content = get_file_content(app_storage_path)
+                if success:
+                    import mimetypes
+                    content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+                    return Response(
+                        file_content,
+                        mimetype=content_type,
+                        headers={
+                            'Content-Disposition': f'inline; filename="{filename}"',
+                            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    )
+            
+            # Fallback to local filesystem for avatar
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+            avatar_path = os.path.join(upload_folder, str(user_id), filename)
+            
+            if os.path.exists(avatar_path):
+                current_app.logger.info(f"Serving avatar from local storage: {avatar_path}")
+                response = send_file(avatar_path)
+                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+                response.headers['Pragma'] = 'no-cache'
+                response.headers['Expires'] = '0'
+                return response
+            else:
+                current_app.logger.error(f"Avatar file not found: {avatar_path}")
+                return send_file('static/img/placeholder.png', mimetype='image/png')
+        
+        # For regular photos (not avatars), photo record must exist
         if not photo:
-            # If photo record not found but it's a thumbnail request, serve placeholder
             if is_thumbnail_request:
                 current_app.logger.warning(f"Photo record not found for thumbnail: {filename}")
                 return redirect(url_for('static', filename='img/placeholder.png'))
             else:
                 abort(404)
-            
+        
         # Try to serve from App Storage first, then fallback to local filesystem
         
         # Check if this is likely an App Storage path (based on how we store photos)

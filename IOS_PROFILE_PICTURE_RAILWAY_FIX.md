@@ -63,12 +63,29 @@ Railway will automatically deploy when it detects the push to `main` branch.
 
 ## 🧪 Test on iOS App
 
+After deployment, test all three functions that were broken:
+
+### Test 1: Profile Picture Display ✅
 1. **Login** to the iOS app (Railway production)
 2. **Navigate** to Profile/Settings
 3. **Upload** a new profile picture
-4. **Verify** the picture displays correctly
-5. **Restart** the Railway container (to test persistence)
-6. **Refresh** the app - picture should still be there
+4. **Verify** the picture displays (not placeholder)
+5. **Restart** Railway container (Settings → Restart)
+6. **Refresh** app - picture should persist
+
+### Test 2: Photo Download ✅
+1. Open any photo in Photo Detail screen
+2. Tap **"Download"** button
+3. Should see: "Success: Photo saved to your library!"
+4. Check iOS Photos app - image should be there
+
+### Test 3: Photo Sharing ✅
+1. Open any photo in Photo Detail screen
+2. Tap **"Share"** button  
+3. iOS share sheet should appear
+4. Share to Messages/Email - should work
+
+**All three features should work after this fix!**
 
 ## 🔧 **IMPORTANT**: Railway Volumes (Required for Persistence)
 
