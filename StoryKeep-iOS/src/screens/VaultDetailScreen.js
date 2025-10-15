@@ -519,25 +519,32 @@ export default function VaultDetailScreen({ route, navigation }) {
             />
           )}
           
-          {/* Floating Add Buttons */}
+          {/* Floating Add Buttons with Labels */}
           <View style={styles.floatingButtonsContainer}>
-            <TouchableOpacity
-              style={styles.floatingAddButton}
-              onPress={openPhotoPicker}
-            >
-              <Ionicons name="images" size={24} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.floatingAddButton, styles.floatingLibraryButton]}
-              onPress={uploadFromCameraLibrary}
-              disabled={uploadingFromLibrary}
-            >
-              {uploadingFromLibrary ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Ionicons name="camera" size={24} color="#fff" />
-              )}
-            </TouchableOpacity>
+            <View style={styles.floatingButtonWrapper}>
+              <TouchableOpacity
+                style={styles.floatingAddButton}
+                onPress={openPhotoPicker}
+              >
+                <Ionicons name="images" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.floatingButtonLabel}>My Gallery</Text>
+            </View>
+            
+            <View style={styles.floatingButtonWrapper}>
+              <TouchableOpacity
+                style={[styles.floatingAddButton, styles.floatingLibraryButton]}
+                onPress={uploadFromCameraLibrary}
+                disabled={uploadingFromLibrary}
+              >
+                {uploadingFromLibrary ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Ionicons name="camera" size={24} color="#fff" />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.floatingButtonLabel}>Take Photo</Text>
+            </View>
           </View>
         </View>
       )}
@@ -835,10 +842,29 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 30,
-    gap: 15,
+    gap: 20,
+    alignItems: 'center',
+  },
+  floatingButtonWrapper: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  floatingButtonLabel: {
+    color: '#333',
+    fontSize: 12,
+    fontWeight: '600',
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   floatingLibraryButton: {
-    marginTop: 15,
+    backgroundColor: '#4CAF50',
   },
   emptyPhotos: {
     flex: 1,
@@ -858,9 +884,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   floatingAddButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
     width: 60,
     height: 60,
     borderRadius: 30,
