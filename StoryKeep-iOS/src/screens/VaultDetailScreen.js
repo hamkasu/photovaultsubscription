@@ -540,10 +540,10 @@ export default function VaultDetailScreen({ route, navigation }) {
                 {uploadingFromLibrary ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Ionicons name="camera" size={24} color="#fff" />
+                  <Ionicons name="image" size={24} color="#fff" />
                 )}
               </TouchableOpacity>
-              <Text style={styles.floatingButtonLabel}>Take Photo</Text>
+              <Text style={styles.floatingButtonLabel}>Camera Roll</Text>
             </View>
           </View>
         </View>
