@@ -82,17 +82,16 @@ def upload_image():
                 from photovault.models import Photo, db
                 
                 # Use the new filename format for display
-                photo = Photo(
-                    filename=filename,
-                    original_name=filename,  # Use the new format for display
-                    user_id=current_user.id,
-                    file_path=file_path,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
-                    file_size=os.path.getsize(file_path),
-                    upload_source='camera',  # Mark as camera capture
-                    # Note: quadrant info is preserved in filename and original_name
-                )
+                photo = Photo()
+                photo.filename = filename
+                photo.original_name = filename  # Use the new format for display
+                photo.user_id = current_user.id
+                photo.file_path = file_path
+                photo.created_at = datetime.utcnow()
+                photo.updated_at = datetime.utcnow()
+                photo.file_size = os.path.getsize(file_path)
+                photo.upload_source = 'camera'  # Mark as camera capture
+                # Note: quadrant info is preserved in filename and original_name
                 
                 db.session.add(photo)
                 db.session.commit()

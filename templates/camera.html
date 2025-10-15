@@ -1275,7 +1275,7 @@
                     const formData = new FormData();
                     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
                     const filename = `camera-capture-${timestamp}.jpg`;
-                    formData.append('file', blob, filename);
+                    formData.append('image', blob, filename);  // Fixed: 'file' -> 'image'
                     formData.append('source', 'camera');
                     
                     // Get CSRF token
@@ -1284,7 +1284,7 @@
                         formData.append('csrf_token', csrfToken);
                     }
 
-                    const uploadResponse = await fetch('/api/upload', {
+                    const uploadResponse = await fetch('/camera/upload', {  // Fixed: '/api/upload' -> '/camera/upload'
                         method: 'POST',
                         body: formData
                     });
@@ -1526,7 +1526,7 @@
             async uploadQuadPhoto(blob, filename, quadrantName) {
                 try {
                     const formData = new FormData();
-                    formData.append('file', blob, filename);
+                    formData.append('image', blob, filename);  // Fixed: 'file' -> 'image'
                     formData.append('source', 'camera');
                     formData.append('quadrant', quadrantName);
                     
