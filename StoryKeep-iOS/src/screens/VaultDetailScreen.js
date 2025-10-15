@@ -323,7 +323,7 @@ export default function VaultDetailScreen({ route, navigation }) {
           if (selectionMode) {
             togglePhotoSelection(item.id);
           } else {
-            navigation.navigate('PhotoDetail', { photoId: item.id });
+            navigation.navigate('PhotoDetail', { photo: item });
           }
         }}
         onLongPress={() => {
