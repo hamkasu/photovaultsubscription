@@ -686,3 +686,15 @@ Dashboard profile image now 20% larger with perfect circular crop:
 
 ## ✅ ENVIRONMENT FULLY RESTORED - 411 TASKS COMPLETED
 All dependencies reinstalled and both servers running successfully after system restart.
+
+[x] 412. Fix iOS photo download/save error on Railway - COMPLETED: Updated handleDownload to use full URL (BASE_URL + relativePath) instead of relative path
+[x] 413. Add authentication headers to photo download - COMPLETED: Added Authorization Bearer token to FileSystem.downloadAsync
+[x] 414. Add download logging for debugging - COMPLETED: Console logs track URL construction and download process
+[x] 415. Restart Expo Server with photo download fix - COMPLETED: Server running with updated download functionality
+
+## ✅ PHOTO DOWNLOAD FIX - 415 TASKS COMPLETED
+Fixed iOS photo save/download error on Railway:
+- **Root Cause**: Download was using relative path `/uploads/1/photo.jpg` instead of full URL
+- **Solution**: Construct full URL with BASE_URL prefix + add JWT authentication headers
+- **Applied To**: handleDownload function in PhotoDetailScreen.js
+- **Ready for Railway**: Changes need to be pushed to GitHub for deployment

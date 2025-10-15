@@ -246,16 +246,30 @@ export default function PhotoDetailScreen({ route, navigation }) {
         return;
       }
 
-      const imageUrl = showOriginal ? photo.url : (photo.edited_url || photo.url);
+      const relativePath = showOriginal ? photo.url : (photo.edited_url || photo.url);
+      const imageUrl = BASE_URL + relativePath;
       const fileUri = FileSystem.documentDirectory + `photo_${photo.id}.jpg`;
       
-      const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
+      console.log('📥 Downloading photo from:', imageUrl);
+      
+      const { uri } = await FileSystem.downloadAsync(
+        imageUrl, 
+        fileUri,
+        {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        }
+      );
+      
+      console.log('💾 Saving to library from:', uri);
       const asset = await MediaLibrary.createAssetAsync(uri);
       
       Alert.alert('Success', 'Photo saved to your library!');
+      console.log('✅ Photo saved successfully');
     } catch (error) {
       Alert.alert('Error', 'Failed to save photo');
-      console.error(error);
+      console.error('❌ Download error:', error);
     } finally {
       setLoading(false);
     }
