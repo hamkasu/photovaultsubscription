@@ -647,6 +647,21 @@ def upload_photo(current_user):
         
         logger.info(f"Photo uploaded successfully: {photo.id}")
         
+        face_processing_result = {}
+        try:
+            from photovault.services.face_detection_service import face_detection_service
+            
+            face_processing_result = face_detection_service.process_and_tag_photo(photo, auto_tag=True)
+            
+            if face_processing_result.get('faces_detected', 0) > 0:
+                logger.info(f"Face processing completed: "
+                           f"{face_processing_result['faces_detected']} faces detected, "
+                           f"{face_processing_result['tags_created']} auto-tagged")
+        
+        except Exception as face_detection_error:
+            logger.warning(f"Face processing failed: {face_detection_error}")
+            face_processing_result = {'error': str(face_detection_error)}
+        
         return jsonify({
             'success': True,
             'photo': {
@@ -659,7 +674,9 @@ def upload_photo(current_user):
                 'thumbnail_url': url_for('gallery.uploaded_file',
                                        user_id=current_user.id,
                                        filename=os.path.basename(thumbnail_path),
-                                       _external=True)
+                                       _external=True),
+                'faces_detected': face_processing_result.get('faces_detected', 0),
+                'tags_created': face_processing_result.get('tags_created', 0)
             }
         }), 201
         

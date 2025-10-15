@@ -181,6 +181,24 @@ def process_uploaded_file(file, upload_source='file'):
         db.session.add(photo)
         db.session.commit()
         
+        face_processing_result = {}
+        try:
+            from photovault.services.face_detection_service import face_detection_service
+            
+            face_processing_result = face_detection_service.process_and_tag_photo(photo, auto_tag=True)
+            
+            if face_processing_result.get('faces_detected', 0) > 0:
+                logger.info(f"Face processing completed for {original_name}: "
+                           f"{face_processing_result['faces_detected']} faces detected, "
+                           f"{face_processing_result['tags_created']} auto-tagged")
+        
+        except Exception as face_detection_error:
+            logger.warning(f"Face processing failed for {original_name}: {face_detection_error}")
+            face_processing_result = {'error': str(face_detection_error)}
+        
+        file_metadata['faces_detected'] = face_processing_result.get('faces_detected', 0)
+        file_metadata['tags_created'] = face_processing_result.get('tags_created', 0)
+        
         logger.info(f"Successfully processed {upload_source} upload: {original_name}")
         return file_metadata
         
