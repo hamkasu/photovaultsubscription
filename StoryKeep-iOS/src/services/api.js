@@ -179,6 +179,14 @@ export const vaultAPI = {
     return response.data;
   },
   
+  addPhotosToVaultBulk: async (vaultId, photoIds, caption = '') => {
+    const response = await api.post(`/api/family/vault/${vaultId}/add-photos-bulk`, {
+      photo_ids: photoIds,
+      caption,
+    });
+    return response.data;
+  },
+  
   createVault: async (name, description) => {
     const response = await api.post('/api/family/vaults', { name, description });
     return response.data;

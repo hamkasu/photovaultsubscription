@@ -292,40 +292,47 @@ export default function GalleryScreen({ navigation }) {
 
     setSharingToVault(true);
     try {
-      let successCount = 0;
-      let failCount = 0;
-
-      for (const photoId of selectedPhotos) {
-        try {
-          await vaultAPI.addPhotoToVault(vaultId, photoId, '');
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to share photo ${photoId}:`, error);
-          failCount++;
-        }
-      }
-
-      setShowVaultModal(false);
+      // Use bulk API endpoint for efficient sharing
+      const response = await vaultAPI.addPhotosToVaultBulk(vaultId, selectedPhotos, '');
       
-      if (successCount > 0) {
-        const message = failCount > 0 
-          ? `Shared ${successCount} photo(s) to "${vaultName}". ${failCount} failed.`
-          : `Successfully shared ${successCount} photo(s) to "${vaultName}"`;
-        
+      const successCount = response.success_count || 0;
+      const failCount = response.failed_count || 0;
+      const failedPhotoIds = response.failed_photo_ids || [];
+      
+      if (failCount === 0) {
+        // All photos shared successfully
         Alert.alert(
           'Success',
-          message,
+          `Successfully shared ${successCount} photo${successCount > 1 ? 's' : ''} to "${vaultName}"`,
           [{ text: 'OK', onPress: () => {
+            setShowVaultModal(false);
             setSelectionMode(false);
             setSelectedPhotos([]);
           }}]
         );
+      } else if (successCount > 0) {
+        // Partial success - keep failed photos selected for retry
+        setSelectedPhotos(failedPhotoIds);
+        Alert.alert(
+          'Partial Success',
+          `Shared ${successCount} photo(s) successfully. ${failCount} photo(s) failed and remain selected for retry.`,
+          [{ text: 'OK' }]
+        );
       } else {
-        Alert.alert('Error', 'Failed to share photos to vault');
+        // All photos failed
+        Alert.alert(
+          'Error', 
+          `Failed to share all ${failCount} photo(s) to vault. Please try again.`,
+          [{ text: 'OK' }]
+        );
       }
     } catch (error) {
       console.error('Share to vault error:', error);
-      Alert.alert('Error', 'Failed to share photos to vault');
+      Alert.alert(
+        'Error',
+        'Failed to share photos to vault. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setSharingToVault(false);
     }
@@ -581,31 +588,39 @@ export default function GalleryScreen({ navigation }) {
                 </Text>
               </View>
             ) : (
-              <ScrollView style={styles.vaultList}>
-                {vaults.map((vault) => (
-                  <TouchableOpacity
-                    key={vault.id}
-                    style={styles.vaultItem}
-                    onPress={() => shareToVault(vault.id, vault.name)}
-                    disabled={sharingToVault}
-                  >
-                    <View style={styles.vaultIcon}>
-                      <Ionicons name="people" size={24} color="#E85D75" />
-                    </View>
-                    <View style={styles.vaultDetails}>
-                      <Text style={styles.vaultName}>{vault.name}</Text>
-                      <Text style={styles.vaultDescription} numberOfLines={1}>
-                        {vault.description || 'No description'}
+              <>
+                <ScrollView style={styles.vaultList}>
+                  {vaults.map((vault) => (
+                    <TouchableOpacity
+                      key={vault.id}
+                      style={[styles.vaultItem, sharingToVault && styles.vaultItemDisabled]}
+                      onPress={() => shareToVault(vault.id, vault.name)}
+                      disabled={sharingToVault}
+                    >
+                      <View style={styles.vaultIcon}>
+                        <Ionicons name="people" size={24} color="#E85D75" />
+                      </View>
+                      <View style={styles.vaultDetails}>
+                        <Text style={styles.vaultName}>{vault.name}</Text>
+                        <Text style={styles.vaultDescription} numberOfLines={1}>
+                          {vault.description || 'No description'}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color="#999" />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+                {sharingToVault && (
+                  <View style={styles.sharingOverlay}>
+                    <View style={styles.sharingContainer}>
+                      <ActivityIndicator size="large" color="#E85D75" />
+                      <Text style={styles.sharingText}>
+                        Sharing {selectedPhotos.length} photo{selectedPhotos.length > 1 ? 's' : ''}...
                       </Text>
                     </View>
-                    {sharingToVault ? (
-                      <ActivityIndicator color="#E85D75" size="small" />
-                    ) : (
-                      <Ionicons name="chevron-forward" size={24} color="#999" />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                  </View>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -915,5 +930,28 @@ const styles = StyleSheet.create({
   vaultDescription: {
     fontSize: 14,
     color: '#666',
+  },
+  vaultItemDisabled: {
+    opacity: 0.5,
+  },
+  sharingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sharingContainer: {
+    alignItems: 'center',
+    padding: 30,
+  },
+  sharingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '600',
   },
 });

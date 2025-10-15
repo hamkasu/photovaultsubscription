@@ -1266,6 +1266,104 @@ def add_photo_to_vault(current_user, vault_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@mobile_api_bp.route('/family/vault/<int:vault_id>/add-photos-bulk', methods=['POST'])
+@csrf.exempt
+@token_required
+def add_photos_to_vault_bulk(current_user, vault_id):
+    """Bulk add multiple photos to vault"""
+    try:
+        data = request.get_json()
+        if not data or 'photo_ids' not in data:
+            return jsonify({'success': False, 'error': 'photo_ids required'}), 400
+        
+        photo_ids = data.get('photo_ids', [])
+        caption = data.get('caption', '')
+        
+        if not isinstance(photo_ids, list) or len(photo_ids) == 0:
+            return jsonify({'success': False, 'error': 'photo_ids must be a non-empty array'}), 400
+        
+        logger.info(f"📤 BULK SHARE REQUEST: vault={vault_id}, {len(photo_ids)} photos, user={current_user.username}")
+        
+        # Get vault and verify access
+        vault = FamilyVault.query.filter_by(id=vault_id).first()
+        if not vault:
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
+        
+        # Check vault access - creator OR member
+        is_creator = (vault.created_by == current_user.id)
+        member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        if not is_creator and not member:
+            return jsonify({'success': False, 'error': 'No vault access'}), 403
+        
+        success_count = 0
+        failed_count = 0
+        failed_photo_ids = []
+        errors = []
+        
+        for photo_id in photo_ids:
+            try:
+                # Get photo
+                photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+                if not photo:
+                    logger.warning(f"❌ Photo {photo_id} not found")
+                    failed_count += 1
+                    failed_photo_ids.append(photo_id)
+                    errors.append(f"Photo {photo_id} not found")
+                    continue
+                
+                # Check if already added
+                existing = VaultPhoto.query.filter_by(vault_id=vault_id, photo_id=photo_id).first()
+                if existing:
+                    logger.info(f"⚠️ Photo {photo_id} already in vault")
+                    success_count += 1
+                    continue
+                
+                # Add to vault
+                vault_photo = VaultPhoto()
+                vault_photo.vault_id = vault_id
+                vault_photo.photo_id = photo_id
+                vault_photo.shared_by = current_user.id
+                vault_photo.shared_at = datetime.utcnow()
+                vault_photo.caption = caption
+                
+                db.session.add(vault_photo)
+                success_count += 1
+                logger.info(f"✅ Photo {photo_id} added to vault")
+                
+            except Exception as e:
+                logger.error(f"❌ Error adding photo {photo_id}: {str(e)}")
+                failed_count += 1
+                failed_photo_ids.append(photo_id)
+                errors.append(f"Photo {photo_id}: {str(e)}")
+                continue
+        
+        # Commit all additions
+        db.session.commit()
+        
+        logger.info(f"🎯 BULK SHARE COMPLETE: success={success_count}, failed={failed_count}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Added {success_count} photos to vault',
+            'success_count': success_count,
+            'failed_count': failed_count,
+            'failed_photo_ids': failed_photo_ids,
+            'errors': errors if errors else None
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"💥 BULK SHARE ERROR: {str(e)}")
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': f'Bulk share failed: {str(e)}'}), 500
+
 @mobile_api_bp.route('/family/vault/<int:vault_id>/photos/<int:photo_id>', methods=['DELETE'])
 @csrf.exempt
 @token_required
