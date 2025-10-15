@@ -10,10 +10,12 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { photoAPI } from '../services/api';
+import { photoAPI, vaultAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 
@@ -32,6 +34,12 @@ export default function GalleryScreen({ navigation }) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, isDownloading: false });
+  
+  // Vault sharing states
+  const [showVaultModal, setShowVaultModal] = useState(false);
+  const [vaults, setVaults] = useState([]);
+  const [loadingVaults, setLoadingVaults] = useState(false);
+  const [sharingToVault, setSharingToVault] = useState(false);
 
   useEffect(() => {
     loadPhotos();
@@ -254,6 +262,75 @@ export default function GalleryScreen({ navigation }) {
     );
   };
 
+  const loadVaults = async () => {
+    setLoadingVaults(true);
+    try {
+      const response = await vaultAPI.getVaults();
+      setVaults(response.vaults || []);
+    } catch (error) {
+      console.error('Load vaults error:', error);
+      Alert.alert('Error', 'Failed to load family vaults');
+    } finally {
+      setLoadingVaults(false);
+    }
+  };
+
+  const openVaultModal = () => {
+    if (selectedPhotos.length === 0) {
+      Alert.alert('No Selection', 'Please select photos to share');
+      return;
+    }
+    loadVaults();
+    setShowVaultModal(true);
+  };
+
+  const shareToVault = async (vaultId, vaultName) => {
+    if (selectedPhotos.length === 0) {
+      Alert.alert('No Selection', 'Please select photos to share');
+      return;
+    }
+
+    setSharingToVault(true);
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const photoId of selectedPhotos) {
+        try {
+          await vaultAPI.addPhotoToVault(vaultId, photoId, '');
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to share photo ${photoId}:`, error);
+          failCount++;
+        }
+      }
+
+      setShowVaultModal(false);
+      
+      if (successCount > 0) {
+        const message = failCount > 0 
+          ? `Shared ${successCount} photo(s) to "${vaultName}". ${failCount} failed.`
+          : `Successfully shared ${successCount} photo(s) to "${vaultName}"`;
+        
+        Alert.alert(
+          'Success',
+          message,
+          [{ text: 'OK', onPress: () => {
+            setSelectionMode(false);
+            setSelectedPhotos([]);
+          }}]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to share photos to vault');
+      }
+    } catch (error) {
+      console.error('Share to vault error:', error);
+      Alert.alert('Error', 'Failed to share photos to vault');
+    } finally {
+      setSharingToVault(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -396,6 +473,12 @@ export default function GalleryScreen({ navigation }) {
               {selectedPhotos.length > 0 && !downloadProgress.isDownloading && (
                 <>
                   <TouchableOpacity 
+                    style={styles.shareButton}
+                    onPress={openVaultModal}
+                  >
+                    <Ionicons name="share-social" size={24} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
                     style={styles.downloadButton}
                     onPress={handleBulkDownload}
                   >
@@ -467,6 +550,66 @@ export default function GalleryScreen({ navigation }) {
           }
         />
       )}
+
+      {/* Vault Selection Modal */}
+      <Modal
+        visible={showVaultModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowVaultModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Share to Family Vault</Text>
+              <TouchableOpacity onPress={() => setShowVaultModal(false)}>
+                <Ionicons name="close" size={28} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            {loadingVaults ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color="#E85D75" />
+                <Text style={styles.loadingText}>Loading vaults...</Text>
+              </View>
+            ) : vaults.length === 0 ? (
+              <View style={styles.emptyVaults}>
+                <Ionicons name="people-outline" size={60} color="#666" />
+                <Text style={styles.emptyVaultsText}>No family vaults yet</Text>
+                <Text style={styles.emptyVaultsSubtext}>
+                  Create a family vault to share photos
+                </Text>
+              </View>
+            ) : (
+              <ScrollView style={styles.vaultList}>
+                {vaults.map((vault) => (
+                  <TouchableOpacity
+                    key={vault.id}
+                    style={styles.vaultItem}
+                    onPress={() => shareToVault(vault.id, vault.name)}
+                    disabled={sharingToVault}
+                  >
+                    <View style={styles.vaultIcon}>
+                      <Ionicons name="people" size={24} color="#E85D75" />
+                    </View>
+                    <View style={styles.vaultDetails}>
+                      <Text style={styles.vaultName}>{vault.name}</Text>
+                      <Text style={styles.vaultDescription} numberOfLines={1}>
+                        {vault.description || 'No description'}
+                      </Text>
+                    </View>
+                    {sharingToVault ? (
+                      <ActivityIndicator color="#E85D75" size="small" />
+                    ) : (
+                      <Ionicons name="chevron-forward" size={24} color="#999" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -683,5 +826,94 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  shareButton: {
+    backgroundColor: '#4CAF50',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalLoading: {
+    padding: 60,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#666',
+  },
+  emptyVaults: {
+    padding: 60,
+    alignItems: 'center',
+  },
+  emptyVaultsText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 15,
+  },
+  emptyVaultsSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  vaultList: {
+    maxHeight: 400,
+  },
+  vaultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  vaultIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF0F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  vaultDetails: {
+    flex: 1,
+  },
+  vaultName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  vaultDescription: {
+    fontSize: 14,
+    color: '#666',
   },
 });
