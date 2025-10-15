@@ -31,6 +31,7 @@ export default function GalleryScreen({ navigation }) {
   const [authToken, setAuthToken] = useState(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, isDownloading: false });
 
   useEffect(() => {
     loadPhotos();
@@ -137,15 +138,24 @@ export default function GalleryScreen({ navigation }) {
         return;
       }
 
-      setLoading(true);
+      const totalPhotos = selectedPhotos.length;
+      setDownloadProgress({ current: 0, total: totalPhotos, isDownloading: true });
+      
       let successCount = 0;
       let failCount = 0;
+      const failedPhotos = [];
 
       for (let i = 0; i < selectedPhotos.length; i++) {
         const photoId = selectedPhotos[i];
         const photo = allPhotos.find(p => p.id === photoId);
         
-        if (!photo) continue;
+        setDownloadProgress({ current: i + 1, total: totalPhotos, isDownloading: true });
+        
+        if (!photo) {
+          failedPhotos.push({ id: photoId, reason: 'Photo not found' });
+          failCount++;
+          continue;
+        }
 
         try {
           console.log(`📥 Downloading ${i + 1}/${selectedPhotos.length}: Photo ${photoId}`);
@@ -169,28 +179,39 @@ export default function GalleryScreen({ navigation }) {
           console.log(`✅ Saved ${i + 1}/${selectedPhotos.length}`);
         } catch (error) {
           console.error(`❌ Failed to download photo ${photoId}:`, error);
+          const photoDate = formatDate(photo.created_at);
+          failedPhotos.push({ id: photoId, date: photoDate });
           failCount++;
         }
       }
 
-      setLoading(false);
+      setDownloadProgress({ current: 0, total: 0, isDownloading: false });
       
       if (successCount > 0) {
+        let message = `Successfully saved ${successCount} photo(s) to your library!`;
+        
+        if (failCount > 0) {
+          const failedDetails = failedPhotos.map(p => `ID ${p.id}${p.date ? ` (${p.date})` : ''}`).join(', ');
+          message = `Successfully saved ${successCount} photo(s). ${failCount} failed:\n${failedDetails}`;
+        }
+        
         Alert.alert(
           'Download Complete', 
-          `Successfully saved ${successCount} photo(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+          message,
           [{ text: 'OK', onPress: () => {
             setSelectionMode(false);
             setSelectedPhotos([]);
           }}]
         );
       } else {
-        Alert.alert('Error', 'Failed to download photos');
+        const failedDetails = failedPhotos.map(p => `ID ${p.id}${p.date ? ` (${p.date})` : ''}`).join('\n');
+        Alert.alert('Error', `Failed to download all photos:\n${failedDetails}`);
+        setDownloadProgress({ current: 0, total: 0, isDownloading: false });
       }
     } catch (error) {
       console.error('Bulk download error:', error);
       Alert.alert('Error', 'Failed to download photos');
-      setLoading(false);
+      setDownloadProgress({ current: 0, total: 0, isDownloading: false });
     }
   };
 
@@ -362,15 +383,17 @@ export default function GalleryScreen({ navigation }) {
         <View style={styles.headerLeft}>
           <Text style={styles.title}>Gallery</Text>
           <Text style={styles.count}>
-            {selectionMode 
-              ? `${selectedPhotos.length} selected` 
-              : `${displayPhotos.length} photos`}
+            {downloadProgress.isDownloading 
+              ? `Downloading ${downloadProgress.current} of ${downloadProgress.total}...`
+              : selectionMode 
+                ? `${selectedPhotos.length} selected` 
+                : `${displayPhotos.length} photos`}
           </Text>
         </View>
         <View style={styles.headerRight}>
           {selectionMode && (
             <>
-              {selectedPhotos.length > 0 && (
+              {selectedPhotos.length > 0 && !downloadProgress.isDownloading && (
                 <>
                   <TouchableOpacity 
                     style={styles.downloadButton}
@@ -386,24 +409,28 @@ export default function GalleryScreen({ navigation }) {
                   </TouchableOpacity>
                 </>
               )}
-              <TouchableOpacity 
-                style={[styles.selectAllButton, selectedPhotos.length === displayPhotos.length && styles.selectAllButtonActive]}
-                onPress={selectedPhotos.length === displayPhotos.length ? deselectAll : selectAll}
-              >
-                <Text style={styles.selectAllButtonText}>
-                  {selectedPhotos.length === displayPhotos.length ? 'None' : 'All'}
-                </Text>
-              </TouchableOpacity>
+              {!downloadProgress.isDownloading && (
+                <TouchableOpacity 
+                  style={[styles.selectAllButton, selectedPhotos.length === displayPhotos.length && styles.selectAllButtonActive]}
+                  onPress={selectedPhotos.length === displayPhotos.length ? deselectAll : selectAll}
+                >
+                  <Text style={styles.selectAllButtonText}>
+                    {selectedPhotos.length === displayPhotos.length ? 'None' : 'All'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
-          <TouchableOpacity 
-            style={styles.selectButton}
-            onPress={toggleSelectionMode}
-          >
-            <Text style={styles.selectButtonText}>
-              {selectionMode ? 'Done' : 'Select'}
-            </Text>
-          </TouchableOpacity>
+          {!downloadProgress.isDownloading && (
+            <TouchableOpacity 
+              style={styles.selectButton}
+              onPress={toggleSelectionMode}
+            >
+              <Text style={styles.selectButtonText}>
+                {selectionMode ? 'Done' : 'Select'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
