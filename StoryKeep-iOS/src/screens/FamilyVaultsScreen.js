@@ -10,6 +10,9 @@ import {
   Alert,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { vaultAPI } from '../services/api';
@@ -160,7 +163,10 @@ export default function FamilyVaultsScreen({ navigation }) {
         visible={createModalVisible}
         onRequestClose={() => !creating && setCreateModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create Family Vault</Text>
@@ -172,7 +178,12 @@ export default function FamilyVaultsScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
+            <ScrollView 
+              style={styles.modalBody} 
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.inputLabel}>Vault Name</Text>
               <TextInput
                 style={styles.input}
@@ -204,9 +215,9 @@ export default function FamilyVaultsScreen({ navigation }) {
                   <Text style={styles.submitButtonText}>Create Vault</Text>
                 )}
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -355,6 +366,9 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 20,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   inputLabel: {
     fontSize: 16,
