@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Dimensions,
   TextInput,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
@@ -17,6 +18,7 @@ import { photoAPI, voiceMemoAPI, commentAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 
 const { width } = Dimensions.get('window');
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
@@ -29,6 +31,10 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [aiMetadata, setAIMetadata] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  
+  // Pinch zoom states
+  const scale = new Animated.Value(1);
+  const [currentScale, setCurrentScale] = useState(1);
   
   // Simple voice memo debug states
   const [recording, setRecording] = useState(null);
@@ -496,6 +502,44 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const editedImageUrl = getImageUrl(photo.edited_url);
   const imageUrl = showOriginal ? originalImageUrl : (editedImageUrl || originalImageUrl);
 
+  // Pinch zoom gesture
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      const newScale = currentScale * e.scale;
+      // Limit zoom between 1x and 5x
+      if (newScale >= 1 && newScale <= 5) {
+        scale.setValue(newScale);
+      }
+    })
+    .onEnd((e) => {
+      const newScale = currentScale * e.scale;
+      // Limit zoom between 1x and 5x
+      const clampedScale = Math.min(Math.max(newScale, 1), 5);
+      setCurrentScale(clampedScale);
+      
+      // If zoomed out past 1x, reset to 1x
+      if (clampedScale < 1.1) {
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+        }).start();
+        setCurrentScale(1);
+      }
+    });
+
+  // Double tap to reset zoom
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+      setCurrentScale(1);
+    });
+
+  const composedGesture = Gesture.Race(doubleTapGesture, pinchGesture);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -509,22 +553,36 @@ export default function PhotoDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView>
-        {imageUrl && authToken ? (
-          <Image 
-            source={{ 
-              uri: imageUrl,
-              headers: {
-                Authorization: `Bearer ${authToken}`
-              }
-            }} 
-            style={styles.image}
-            resizeMode="contain"
-          />
-        ) : (
-          <View style={styles.image}>
-            <ActivityIndicator size="large" color="#E85D75" />
-          </View>
-        )}
+        <View style={styles.imageContainer}>
+          {imageUrl && authToken ? (
+            <GestureDetector gesture={composedGesture}>
+              <Animated.Image 
+                source={{ 
+                  uri: imageUrl,
+                  headers: {
+                    Authorization: `Bearer ${authToken}`
+                  }
+                }} 
+                style={[
+                  styles.image,
+                  {
+                    transform: [{ scale: scale }]
+                  }
+                ]}
+                resizeMode="contain"
+              />
+            </GestureDetector>
+          ) : (
+            <View style={styles.image}>
+              <ActivityIndicator size="large" color="#E85D75" />
+            </View>
+          )}
+          {currentScale > 1 && (
+            <View style={styles.zoomIndicator}>
+              <Text style={styles.zoomText}>{currentScale.toFixed(1)}x</Text>
+            </View>
+          )}
+        </View>
 
         {photo.edited_url && (
           <View style={styles.toggleContainer}>
@@ -926,12 +984,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  imageContainer: {
+    width: width,
+    height: width,
+    position: 'relative',
+    backgroundColor: '#f0f0f0',
+  },
   image: {
     width: width,
     height: width,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  zoomIndicator: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    zIndex: 10,
+  },
+  zoomText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   toggleContainer: {
     flexDirection: 'row',
