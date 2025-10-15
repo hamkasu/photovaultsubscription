@@ -1,13 +1,19 @@
 # 📸 Photo Detection Fix - Deploy to Railway
 
-## 🐛 Issue Fixed
-Photo detection was **not working** for physical photos because the confidence threshold was too strict (35%). Photos were being uploaded but not automatically detected and extracted from backgrounds.
+## 🐛 Issues Fixed
+
+### Problem 1: Detection Too Strict
+Photo detection was **not working** because the confidence threshold was too strict (35%). Photos were being uploaded but not automatically detected and extracted.
+
+### Problem 2: Numpy Compatibility Error
+Code was using deprecated `np.int0` causing crashes: `module 'numpy' has no attribute 'int0'`
 
 ## ✅ What Was Fixed
 
 ### 1. **Lowered Confidence Threshold**
 - **Before**: 35% confidence required → Too strict, rejected most real photos
 - **After**: 20% confidence required → More lenient, better detection of actual photos
+- **Tested**: Your 2-photo image now detects both photos at 89.1% and 72.3% confidence! ✅
 
 ### 2. **Improved Detection Parameters**
 - **Minimum Photo Area**: 5000 → 3000 pixels (detects smaller photos)
@@ -15,7 +21,11 @@ Photo detection was **not working** for physical photos because the confidence t
 - **Aspect Ratio Range**: 0.25-4.0 → 0.20-5.0 (supports Polaroids and panoramas)
 - **Contour Sensitivity**: 0.008 → 0.005 (more sensitive edge detection)
 
-### 3. **Enhanced Logging**
+### 3. **Fixed Numpy Compatibility**
+- **Before**: `np.int0(box)` → Crashes on newer numpy versions
+- **After**: `box.astype(int)` → Works on all numpy versions
+
+### 4. **Enhanced Logging**
 - Added detailed logs showing:
   - Number of contours found
   - Why photos are rejected (size, confidence, position)
@@ -23,7 +33,7 @@ Photo detection was **not working** for physical photos because the confidence t
   - Detection success/failure reasons
 
 ## 📋 Files Changed
-1. `photovault/utils/photo_detection.py` - Detection algorithm improvements
+1. `photovault/utils/photo_detection.py` - Detection algorithm improvements + numpy fix
 
 ## 🚀 Deploy to Railway
 

@@ -252,7 +252,7 @@ class PhotoDetector:
         # Otherwise, use the bounding rectangle corners
         rect = cv2.minAreaRect(contour)
         box = cv2.boxPoints(rect)
-        return np.int0(box)
+        return box.astype(int)
     
     def _order_points(self, pts: np.ndarray) -> np.ndarray:
         """
