@@ -14,6 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI } from '../services/api';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -109,6 +111,86 @@ export default function GalleryScreen({ navigation }) {
       setSelectedPhotos(selectedPhotos.filter(id => id !== photoId));
     } else {
       setSelectedPhotos([...selectedPhotos, photoId]);
+    }
+  };
+
+  const selectAll = () => {
+    const allPhotoIds = displayPhotos.map(photo => photo.id);
+    setSelectedPhotos(allPhotoIds);
+  };
+
+  const deselectAll = () => {
+    setSelectedPhotos([]);
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedPhotos.length === 0) {
+      Alert.alert('No Selection', 'Please select photos to download');
+      return;
+    }
+
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Cannot save photos without permission');
+        return;
+      }
+
+      setLoading(true);
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < selectedPhotos.length; i++) {
+        const photoId = selectedPhotos[i];
+        const photo = allPhotos.find(p => p.id === photoId);
+        
+        if (!photo) continue;
+
+        try {
+          console.log(`📥 Downloading ${i + 1}/${selectedPhotos.length}: Photo ${photoId}`);
+          
+          const relativePath = photo.edited_url || photo.url;
+          const imageUrl = BASE_URL + relativePath;
+          const fileUri = FileSystem.documentDirectory + `photo_${photo.id}_${Date.now()}.jpg`;
+          
+          const { uri } = await FileSystem.downloadAsync(
+            imageUrl, 
+            fileUri,
+            {
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
+            }
+          );
+          
+          await MediaLibrary.createAssetAsync(uri);
+          successCount++;
+          console.log(`✅ Saved ${i + 1}/${selectedPhotos.length}`);
+        } catch (error) {
+          console.error(`❌ Failed to download photo ${photoId}:`, error);
+          failCount++;
+        }
+      }
+
+      setLoading(false);
+      
+      if (successCount > 0) {
+        Alert.alert(
+          'Download Complete', 
+          `Successfully saved ${successCount} photo(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+          [{ text: 'OK', onPress: () => {
+            setSelectionMode(false);
+            setSelectedPhotos([]);
+          }}]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to download photos');
+      }
+    } catch (error) {
+      console.error('Bulk download error:', error);
+      Alert.alert('Error', 'Failed to download photos');
+      setLoading(false);
     }
   };
 
@@ -286,20 +368,40 @@ export default function GalleryScreen({ navigation }) {
           </Text>
         </View>
         <View style={styles.headerRight}>
-          {selectionMode && selectedPhotos.length > 0 && (
-            <TouchableOpacity 
-              style={styles.deleteButton}
-              onPress={handleBulkDelete}
-            >
-              <Ionicons name="trash" size={24} color="#fff" />
-            </TouchableOpacity>
+          {selectionMode && (
+            <>
+              {selectedPhotos.length > 0 && (
+                <>
+                  <TouchableOpacity 
+                    style={styles.downloadButton}
+                    onPress={handleBulkDownload}
+                  >
+                    <Ionicons name="download" size={24} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={handleBulkDelete}
+                  >
+                    <Ionicons name="trash" size={24} color="#fff" />
+                  </TouchableOpacity>
+                </>
+              )}
+              <TouchableOpacity 
+                style={[styles.selectAllButton, selectedPhotos.length === displayPhotos.length && styles.selectAllButtonActive]}
+                onPress={selectedPhotos.length === displayPhotos.length ? deselectAll : selectAll}
+              >
+                <Text style={styles.selectAllButtonText}>
+                  {selectedPhotos.length === displayPhotos.length ? 'None' : 'All'}
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
           <TouchableOpacity 
             style={styles.selectButton}
             onPress={toggleSelectionMode}
           >
             <Text style={styles.selectButtonText}>
-              {selectionMode ? 'Cancel' : 'Select'}
+              {selectionMode ? 'Done' : 'Select'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -389,6 +491,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  downloadButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#34C759',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   deleteButton: {
     width: 40,
     height: 40,
@@ -397,6 +508,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
+  },
+  selectAllButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#333',
+    marginRight: 10,
+  },
+  selectAllButtonActive: {
+    backgroundColor: '#555',
+  },
+  selectAllButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   filterContainer: {
     flexDirection: 'row',
