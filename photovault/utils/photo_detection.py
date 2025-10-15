@@ -24,11 +24,11 @@ class PhotoDetector:
     """Automatic detection and extraction of rectangular photos from images"""
     
     def __init__(self):
-        self.min_photo_area = 5000  # Minimum area for a valid photo (pixels) - lowered for better detection
-        self.max_photo_area_ratio = 0.85  # Max ratio of detected photo to original image
-        self.min_aspect_ratio = 0.25  # Minimum width/height ratio - more permissive
-        self.max_aspect_ratio = 4.0  # Maximum width/height ratio - more permissive
-        self.contour_area_threshold = 0.008  # Min contour area as fraction of image - more sensitive
+        self.min_photo_area = 3000  # Minimum area for a valid photo (pixels) - lowered for smaller photos
+        self.max_photo_area_ratio = 0.90  # Max ratio of detected photo to original image
+        self.min_aspect_ratio = 0.20  # Minimum width/height ratio - very permissive for Polaroids
+        self.max_aspect_ratio = 5.0  # Maximum width/height ratio - very permissive
+        self.contour_area_threshold = 0.005  # Min contour area as fraction of image - very sensitive
         self.enable_perspective_correction = True  # Enable perspective transformation for tilted photos
         self.enable_edge_refinement = True  # Enable advanced edge refinement
         
@@ -83,6 +83,8 @@ class PhotoDetector:
                 logger.error(f"Image preprocessing failed: {e}")
                 return []
             
+            logger.info(f"📊 Found {len(contours)} contours to analyze")
+            
             for i, contour in enumerate(contours):
                 # Get bounding rectangle
                 x, y, w, h = cv2.boundingRect(contour)
@@ -90,12 +92,14 @@ class PhotoDetector:
                 
                 # Apply filters
                 if not self._is_valid_photo_region(x, y, w, h, original_area):
+                    logger.debug(f"🚫 Contour {i+1} rejected by region validation: {w}x{h} at ({x},{y}), area={area}")
                     continue
                     
                 # Calculate confidence based on shape analysis
                 confidence = self._calculate_confidence(contour, x, y, w, h)
                 
-                if confidence > 0.35:  # Minimum confidence threshold - raised for better accuracy
+                if confidence > 0.20:  # Minimum confidence threshold - lowered for better detection of real photos
+                    logger.info(f"✅ Photo detected with {confidence:.1%} confidence: {w}x{h} at ({x},{y})")
                     detected_photos.append({
                         'x': int(x),
                         'y': int(y),
@@ -107,6 +111,8 @@ class PhotoDetector:
                         'contour': contour.tolist(),  # For debugging/visualization
                         'corners': self._get_photo_corners(contour).tolist()  # Add corner points for overlay
                     })
+                else:
+                    logger.debug(f"🚫 Contour {i+1} rejected - low confidence {confidence:.1%}: {w}x{h}")
             
             # Sort by confidence
             detected_photos.sort(key=lambda p: p['confidence'], reverse=True)
