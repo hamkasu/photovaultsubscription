@@ -17,16 +17,17 @@ import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system/legacy';
 import { dashboardAPI, photoAPI, authAPI } from '../services/api';
 import api from '../services/api';
+import { useLoading } from '../contexts/LoadingContext';
 
 export default function DashboardScreen({ navigation }) {
   const [stats, setStats] = useState(null);
   const [recentPhotos, setRecentPhotos] = useState([]);
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   const [profileImageUri, setProfileImageUri] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const { startLoading, stopLoading } = useLoading();
   const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
   useEffect(() => {
@@ -115,6 +116,7 @@ export default function DashboardScreen({ navigation }) {
 
   const loadDashboardData = async () => {
     try {
+      startLoading('Loading dashboard...');
       const [statsData, photosData, profileData, token] = await Promise.all([
         dashboardAPI.getStats(),
         photoAPI.getPhotos('all'),
@@ -144,7 +146,7 @@ export default function DashboardScreen({ navigation }) {
       console.error('❌ Dashboard error:', error);
       Alert.alert('Error', 'Failed to load dashboard data');
     } finally {
-      setLoading(false);
+      stopLoading();
       setRefreshing(false);
     }
   };
@@ -183,7 +185,7 @@ export default function DashboardScreen({ navigation }) {
     );
   };
 
-  if (loading) {
+  if (!stats || !userData) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#E85D75" />

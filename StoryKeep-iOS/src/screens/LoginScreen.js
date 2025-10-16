@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Image,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -15,11 +14,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { authAPI } from '../services/api';
+import { useLoading } from '../contexts/LoadingContext';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { startLoading, stopLoading } = useLoading();
 
   const handleLogin = async (skipBiometricSave = false, credEmail = null, credPassword = null) => {
     const loginEmail = credEmail || email;
@@ -30,7 +30,7 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    setLoading(true);
+    startLoading('Logging in...');
     try {
       const response = await authAPI.login(loginEmail, loginPassword);
       
@@ -78,7 +78,7 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   };
 
@@ -158,13 +158,8 @@ export default function LoginScreen({ navigation }) {
           <TouchableOpacity
             style={styles.button}
             onPress={handleLogin}
-            disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Login</Text>
-            )}
+            <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={checkBiometric} style={styles.biometricButton}>

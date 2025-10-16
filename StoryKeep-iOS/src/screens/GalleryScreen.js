@@ -19,6 +19,7 @@ import { photoAPI, vaultAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import { sharePhoto } from '../utils/sharePhoto';
+import { useLoading } from '../contexts/LoadingContext';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -28,13 +29,13 @@ const BASE_URL = 'https://web-production-535bd.up.railway.app';
 export default function GalleryScreen({ navigation }) {
   const [allPhotos, setAllPhotos] = useState([]);
   const [displayPhotos, setDisplayPhotos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [authToken, setAuthToken] = useState(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, isDownloading: false });
+  const { startLoading, stopLoading } = useLoading();
   
   // Vault sharing states
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -52,6 +53,9 @@ export default function GalleryScreen({ navigation }) {
 
   const loadPhotos = async () => {
     try {
+      if (!refreshing) {
+        startLoading('Loading gallery...');
+      }
       const token = await AsyncStorage.getItem('authToken');
       setAuthToken(token);
       
@@ -72,7 +76,9 @@ export default function GalleryScreen({ navigation }) {
       console.error('Gallery error:', error);
       Alert.alert('Error', 'Failed to load photos');
     } finally {
-      setLoading(false);
+      if (!refreshing) {
+        stopLoading();
+      }
       setRefreshing(false);
     }
   };
@@ -240,7 +246,7 @@ export default function GalleryScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              setLoading(true);
+              startLoading('Deleting photos...');
               const result = await photoAPI.bulkDeletePhotos(selectedPhotos);
               
               Alert.alert(
@@ -255,7 +261,8 @@ export default function GalleryScreen({ navigation }) {
             } catch (error) {
               console.error('Bulk delete error:', error);
               Alert.alert('Error', 'Failed to delete photos');
-              setLoading(false);
+            } finally {
+              stopLoading();
             }
           },
         },
@@ -466,14 +473,6 @@ export default function GalleryScreen({ navigation }) {
       </Text>
     </TouchableOpacity>
   );
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E85D75" />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>

@@ -6,20 +6,20 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authAPI } from '../services/api';
+import { useLoading } from '../contexts/LoadingContext';
 
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { startLoading, stopLoading } = useLoading();
 
   const handleRegister = async () => {
     if (!username || !email || !password) {
@@ -37,7 +37,7 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    setLoading(true);
+    startLoading('Creating account...');
     try {
       const response = await authAPI.register(username, email, password);
       
@@ -51,7 +51,7 @@ export default function RegisterScreen({ navigation }) {
     } catch (error) {
       Alert.alert('Registration Failed', error.response?.data?.message || 'Please try again');
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   };
 
@@ -102,13 +102,8 @@ export default function RegisterScreen({ navigation }) {
             <TouchableOpacity
               style={styles.button}
               onPress={handleRegister}
-              disabled={loading}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign Up</Text>
-              )}
+              <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.goBack()}>
