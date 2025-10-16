@@ -336,27 +336,30 @@ CALMIC SDN BHD - "Committed to Excellence"
                 const url = typeof args[0] === 'string' ? args[0] : args[0].url;
                 const method = args[1]?.method || 'GET';
                 
-                // Start loading counter for POST, PUT, DELETE requests
-                let loadingId = null;
+                // Start loading counter for ALL requests (GET, POST, PUT, DELETE, etc.)
+                const operationName = url.split('/').pop() || 'request';
+                const loadingId = window.startLoading(`${method} ${operationName}`);
+                
+                // Add CSRF token for mutating requests
                 if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-                    const operationName = url.split('/').pop() || 'request';
-                    loadingId = window.startLoading(`${method} ${operationName}`);
-                    
                     const token = getCSRFToken();
                     if (token) {
+                        args[1] = args[1] || {};
                         args[1].headers = args[1].headers || {};
                         args[1].headers['X-CSRFToken'] = token;
                     }
                 }
                 
+                // Use finally to ensure loading stops even on error
                 return originalFetch.apply(this, args)
                     .then(response => {
-                        if (loadingId !== null) window.stopLoading(loadingId);
                         return response;
                     })
                     .catch(error => {
-                        if (loadingId !== null) window.stopLoading(loadingId);
                         throw error;
+                    })
+                    .finally(() => {
+                        if (loadingId !== null) window.stopLoading(loadingId);
                     });
             };
         }
