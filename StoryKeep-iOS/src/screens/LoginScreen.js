@@ -98,7 +98,7 @@ export default function LoginScreen({ navigation }) {
         return;
       }
 
-      const biometricPrompt = Platform.OS === 'ios' ? 'Login with Face ID/Touch ID' : 'Login with Fingerprint';
+      const biometricPrompt = Platform.OS === 'ios' ? 'Login with Face ID/Touch ID' : 'Login with biometrics';
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: biometricPrompt,
         cancelLabel: 'Cancel',
