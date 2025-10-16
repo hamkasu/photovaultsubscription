@@ -250,6 +250,12 @@
 [x] 257. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel ready and Metro bundler running
+[x] 258. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 259. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed 743 packages successfully
+[x] 260. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
+[x] 261. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized
+    - Expo Server: Running with tunnel ready and Metro bundler running
 [x] 258. Implement vault creator protection - COMPLETED: Updated error message to "Cannot downgrade creator"
 [x] 259. Add is_creator flag to members list - COMPLETED: Backend now includes is_creator flag in vault detail API response
 [x] 260. Fix iOS creator identification - COMPLETED: Changed from checking role === 'owner' to using is_creator flag
