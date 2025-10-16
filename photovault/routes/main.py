@@ -310,6 +310,20 @@ def montage():
         flash('Error loading montage page.', 'error')
         return redirect(url_for('main.dashboard'))
 
+@main_bp.route('/sharpening')
+@login_required
+def sharpening():
+    """Photo sharpening page"""
+    try:
+        from photovault.models import Photo
+        # Get user's photos for sharpening
+        photos = Photo.query.filter_by(user_id=current_user.id).order_by(Photo.created_at.desc()).limit(20).all()
+        return render_template('sharpening.html', photos=photos)
+    except Exception as e:
+        print(f"Sharpening page error: {str(e)}")
+        flash('Error loading sharpening page.', 'error')
+        return redirect(url_for('main.dashboard'))
+
 @main_bp.route('/people/add', methods=['POST'])
 @login_required
 def add_person():
