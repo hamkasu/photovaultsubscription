@@ -314,6 +314,10 @@
 [x] 256. Delete duplicate sharpen endpoint from photo.py - COMPLETED: Removed lines 1583-1770, kept only mobile_api.py version with JWT auth
 [x] 257. Restart PhotoVault Server - COMPLETED: Server running successfully with single sharpen endpoint
 [x] 258. Create deployment guide - COMPLETED: Created SHARPEN_DUPLICATE_FIX.md with complete fix explanation
+[x] 259. Identify duplicate enhance endpoint - COMPLETED: Found enhance endpoint also duplicated in photo.py causing same JWT auth failure
+[x] 260. Delete duplicate enhance endpoint from photo.py - COMPLETED: Removed lines 1371-1581 (211 lines of conflicting code)
+[x] 261. Restart PhotoVault Server - COMPLETED: Server running successfully with both duplicates removed
+[x] 262. Create comprehensive deployment guide - COMPLETED: Created ENHANCE_SHARPEN_DUPLICATE_FIX.md covering both fixes
 [x] 249. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 772 packages successfully
 [x] 250. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
 [x] 251. Final verification - COMPLETED: Both servers running successfully with no critical errors
