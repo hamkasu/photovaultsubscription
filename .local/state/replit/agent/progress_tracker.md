@@ -260,6 +260,9 @@
 [x] 263. Restart PhotoVault Server with sharpening fix - COMPLETED: Server running on port 5000 with corrected endpoint
 [x] 264. Fix web sharpening CSRF token error - COMPLETED: Removed duplicate csrf-token meta tag from sharpening.html (was in extra_css block causing validation failure)
 [x] 265. Restart PhotoVault Server with CSRF fix - COMPLETED: Server running on port 5000, sharpening feature now works correctly
+[x] 266. Update iOS sharpen function to match web version - COMPLETED: Updated mobile_api.py to use enhancer.sharpen_image(), store metadata, support all parameters
+[x] 267. Restart PhotoVault Server with iOS sharpen fix - COMPLETED: Server running on port 5000, iOS and web sharpen functions now consistent
+[x] 268. Create deployment guide for Railway - COMPLETED: Created IOS_SHARPEN_CONSISTENCY_FIX.md with deployment instructions
 [x] 258. Implement vault creator protection - COMPLETED: Updated error message to "Cannot downgrade creator"
 [x] 259. Add is_creator flag to members list - COMPLETED: Backend now includes is_creator flag in vault detail API response
 [x] 260. Fix iOS creator identification - COMPLETED: Changed from checking role === 'owner' to using is_creator flag

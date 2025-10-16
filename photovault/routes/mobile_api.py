@@ -2197,47 +2197,80 @@ def check_grayscale_mobile(current_user, photo_id):
 @csrf.exempt
 @token_required
 def sharpen_photo_mobile(current_user, photo_id):
-    """Simple robust sharpen for iOS - based on working web version"""
+    """
+    Apply image sharpening to a photo (mobile endpoint - matches web version)
+    
+    Request JSON:
+        {
+            "intensity": float,   # iOS sends intensity (mapped to amount)
+            "radius": float,      # Sharpening radius (optional, default: 2.0)
+            "threshold": int,     # Sharpening threshold (optional, default: 3)
+            "method": str         # Sharpening method (optional, default: 'unsharp')
+        }
+    
+    Returns:
+        {
+            "success": bool,
+            "photo_id": int,
+            "enhanced_url": str,
+            "message": str
+        }
+    """
     try:
-        from photovault.utils.image_enhancement import sharpen_image
+        from photovault.utils.image_enhancement import enhancer
         from photovault.services.app_storage_service import app_storage
-        from photovault.utils.enhanced_file_handler import get_image_info_enhanced
         from werkzeug.utils import secure_filename as sanitize_name
         import random
         from datetime import datetime
         import io
         
-        # Get photo (simple approach from web version)
-        photo = Photo.query.get_or_404(photo_id)
-        if photo.user_id != current_user.id:
-            return jsonify({'success': False, 'error': 'Access denied'}), 403
+        # Get photo - match web version
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
         
-        # Get file path
-        user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
-        full_file_path = photo.file_path if os.path.isabs(photo.file_path) else os.path.join(user_upload_dir, photo.file_path)
+        if not photo:
+            return jsonify({
+                'success': False,
+                'error': 'Photo not found or unauthorized'
+            }), 404
         
-        # Parameters (iOS sends 'intensity')
+        # Get file paths
+        original_path = photo.file_path
+        
+        if not os.path.exists(original_path):
+            return jsonify({
+                'success': False,
+                'error': 'Original photo file not found'
+            }), 404
+        
+        # Parameters - iOS sends 'intensity', web sends 'amount'
+        # Support both for compatibility
         data = request.get_json() or {}
-        intensity = float(data.get('intensity', 1.5))
+        amount = data.get('amount', data.get('intensity', 1.5))
+        radius = data.get('radius', 2.0)
+        threshold = data.get('threshold', 3)
+        method = data.get('method', 'unsharp')
         
-        # Generate filename
+        # Generate sharpened filename - match web version format
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)
         safe_username = sanitize_name(current_user.username)
-        sharpened_filename = f"{safe_username}.sharpened.{date}.{random_number}.jpg"
+        sharpened_filename = f"{safe_username}.{date}.sharp.{random_number}.jpg"
         
-        # Create directory and temp path
-        os.makedirs(user_upload_dir, exist_ok=True)
-        temp_sharpened_filepath = os.path.join(user_upload_dir, sharpened_filename)
+        logger.info(f"Sharpening photo {photo_id}: original='{photo.filename}', sharpened='{sharpened_filename}'")
         
-        # Sharpen image
-        output_path, applied_settings = sharpen_image(
-            full_file_path, 
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_upload_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_upload_folder, exist_ok=True)
+        temp_sharpened_filepath = os.path.join(user_upload_folder, sharpened_filename)
+        
+        # Apply sharpening - match web version using enhancer
+        output_path = enhancer.sharpen_image(
+            original_path,
             temp_sharpened_filepath,
-            radius=2.0,
-            amount=intensity,
-            threshold=3,
-            method='unsharp'
+            radius=radius,
+            amount=amount,
+            threshold=threshold,
+            method=method
         )
         
         # Upload to app storage if available (Railway persistence)
@@ -2253,28 +2286,36 @@ def sharpen_photo_mobile(current_user, photo_id):
                     except:
                         pass
         
-        # Update photo record
+        # Update database with sharpened version - match web version with metadata
         photo.edited_filename = sharpened_filename
         photo.edited_path = sharpened_filepath
-        photo.updated_at = datetime.utcnow()
+        photo.enhancement_metadata = {
+            'sharpening': {
+                'radius': radius,
+                'amount': amount,
+                'threshold': threshold,
+                'method': method,
+                'timestamp': str(datetime.now())
+            }
+        }
         db.session.commit()
+        
+        logger.info(f"Photo {photo_id} sharpened successfully")
         
         return jsonify({
             'success': True,
-            'message': 'Photo sharpened successfully',
-            'photo': {
-                'id': photo.id,
-                'filename': photo.filename,
-                'sharpened_filename': sharpened_filename,
-                'sharpened_url': f'/uploads/{current_user.id}/{sharpened_filename}',
-                'settings_applied': applied_settings
-            }
-        }), 200
+            'photo_id': photo.id,
+            'enhanced_url': f'/uploads/{current_user.id}/{sharpened_filename}',
+            'message': 'Photo sharpened successfully'
+        })
         
     except Exception as e:
-        logger.error(f"Sharpen error: {str(e)}")
+        logger.error(f"Sharpening failed: {e}")
         db.session.rollback()
-        return jsonify({'success': False, 'error': 'Failed to sharpen photo'}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 # ============================================================================
