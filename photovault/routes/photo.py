@@ -1561,8 +1561,8 @@ def enhance_photo_api(photo_id):
         }), 500
 
 @photo_bp.route('/api/photos/<int:photo_id>/sharpen', methods=['POST'])
-@login_required
-def sharpen_photo_api(photo_id):
+@hybrid_auth
+def sharpen_photo_api(current_user, photo_id):
     """
     API endpoint to sharpen an image
     """
