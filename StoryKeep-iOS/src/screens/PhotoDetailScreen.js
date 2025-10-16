@@ -19,6 +19,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { sharePhoto } from '../utils/sharePhoto';
 
 const { width } = Dimensions.get('window');
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
@@ -306,6 +307,10 @@ export default function PhotoDetailScreen({ route, navigation }) {
         },
       ]
     );
+  };
+
+  const handleShare = async () => {
+    await sharePhoto(photo, authToken, !showOriginal);
   };
 
   // Simple debugging voice memo functions
@@ -642,7 +647,7 @@ export default function PhotoDetailScreen({ route, navigation }) {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
             <Ionicons name="share-social" size={24} color="#E85D75" />
             <Text style={styles.actionText}>Share</Text>
           </TouchableOpacity>
