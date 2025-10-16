@@ -480,7 +480,7 @@ export default function VaultDetailScreen({ route, navigation }) {
     const isOwner = vault?.is_creator;
     const isAdmin = vault?.member_role === 'admin';
     const canManage = isOwner || isAdmin;
-    const isCurrentMemberOwner = item.role === 'owner';
+    const isCurrentMemberCreator = item.is_creator === true;
     
     return (
       <View style={styles.memberCard}>
@@ -491,18 +491,18 @@ export default function VaultDetailScreen({ route, navigation }) {
           <Text style={styles.memberName}>{item.username || item.email}</Text>
           <View style={styles.memberRoleBadge}>
             <Ionicons 
-              name={item.role === 'admin' || isCurrentMemberOwner ? 'shield' : 'person'}
+              name={item.role === 'admin' || isCurrentMemberCreator ? 'shield' : 'person'}
               size={12}
-              color={item.role === 'admin' || isCurrentMemberOwner ? '#E85D75' : '#666'}
+              color={item.role === 'admin' || isCurrentMemberCreator ? '#E85D75' : '#666'}
               style={{ marginRight: 4 }}
             />
-            <Text style={[styles.memberRole, (item.role === 'admin' || isCurrentMemberOwner) && styles.memberRoleAdmin]}>
-              {isCurrentMemberOwner ? 'Owner' : item.role}
+            <Text style={[styles.memberRole, (item.role === 'admin' || isCurrentMemberCreator) && styles.memberRoleAdmin]}>
+              {isCurrentMemberCreator ? 'Creator' : item.role}
             </Text>
           </View>
         </View>
         
-        {canManage && !isCurrentMemberOwner && (
+        {canManage && !isCurrentMemberCreator && (
           <View style={styles.memberActions}>
             <TouchableOpacity
               style={styles.memberActionButton}
@@ -583,20 +583,20 @@ export default function VaultDetailScreen({ route, navigation }) {
             <Text style={styles.headerTitle} numberOfLines={1}>{vault.name}</Text>
             <View style={styles.headerActions}>
               {(vault.is_creator || vault.member_role === 'admin') && (
-                <>
-                  <TouchableOpacity 
-                    style={styles.headerButton}
-                    onPress={openEditModal}
-                  >
-                    <Ionicons name="create-outline" size={24} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.headerButton}
-                    onPress={handleDeleteVault}
-                  >
-                    <Ionicons name="trash-outline" size={24} color="#fff" />
-                  </TouchableOpacity>
-                </>
+                <TouchableOpacity 
+                  style={styles.headerButton}
+                  onPress={openEditModal}
+                >
+                  <Ionicons name="create-outline" size={24} color="#fff" />
+                </TouchableOpacity>
+              )}
+              {vault.is_creator && (
+                <TouchableOpacity 
+                  style={styles.headerButton}
+                  onPress={handleDeleteVault}
+                >
+                  <Ionicons name="trash-outline" size={24} color="#fff" />
+                </TouchableOpacity>
               )}
               <TouchableOpacity onPress={toggleSelectionMode}>
                 <Ionicons name="checkmark-circle-outline" size={28} color="#fff" />

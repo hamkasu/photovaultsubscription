@@ -1123,6 +1123,7 @@ def get_vault_detail(current_user, vault_id):
                             'username': user.username,
                             'email': user.email,
                             'role': member.role if hasattr(member, 'role') else 'member',
+                            'is_creator': user.id == vault.created_by,
                             'joined_at': member.joined_at.isoformat() if member.joined_at else None
                         })
                 except Exception as member_error:
@@ -1774,9 +1775,9 @@ def change_member_role(current_user, vault_id, user_id):
             logger.error(f"❌ User {current_user.id} does not have permission to change roles")
             return jsonify({'success': False, 'error': 'Only admins can change member roles'}), 403
         
-        # Cannot change creator role
+        # Cannot downgrade creator
         if user_id == vault.created_by:
-            return jsonify({'success': False, 'error': 'Cannot change creator role'}), 400
+            return jsonify({'success': False, 'error': 'Cannot downgrade creator'}), 400
         
         # Get new role from request
         data = request.get_json()
