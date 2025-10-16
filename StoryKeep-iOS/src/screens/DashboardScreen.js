@@ -216,7 +216,7 @@ export default function DashboardScreen({ navigation }) {
                 style={styles.profileImage}
               />
             ) : (
-              <Ionicons name="person-circle" size={48} color="#E85D75" />
+              <Ionicons name="person-circle" size={62} color="#E85D75" />
             )}
           </TouchableOpacity>
           <TouchableOpacity
@@ -410,15 +410,15 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     marginRight: 10,
-    width: 48,
-    height: 48,
+    width: 62,
+    height: 62,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     backgroundColor: '#FFF0F3',
   },
   logoutButton: {

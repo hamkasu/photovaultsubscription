@@ -176,7 +176,7 @@ export default function ProfileScreen({ navigation }) {
             />
           ) : (
             <View style={styles.avatar}>
-              <Ionicons name="person" size={60} color="#E85D75" />
+              <Ionicons name="person" size={78} color="#E85D75" />
             </View>
           )}
           <View style={styles.cameraIconContainer}>
@@ -301,17 +301,17 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 156,
+    height: 156,
+    borderRadius: 78,
     backgroundColor: '#FFF0F3',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 156,
+    height: 156,
+    borderRadius: 78,
     backgroundColor: '#FFF0F3',
   },
   cameraIconContainer: {
