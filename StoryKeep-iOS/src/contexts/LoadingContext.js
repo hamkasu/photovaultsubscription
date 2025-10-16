@@ -1,23 +1,33 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 
 const LoadingContext = createContext();
 
 export const LoadingProvider = ({ children }) => {
-  const [loadingCount, setLoadingCount] = useState(0);
-  const [loadingMessages, setLoadingMessages] = useState([]);
+  const [loadingOperations, setLoadingOperations] = useState([]);
+  const nextIdRef = useRef(0);
 
   const startLoading = useCallback((message = 'Loading...') => {
-    setLoadingCount(prev => prev + 1);
-    setLoadingMessages(prev => [...prev, message]);
+    const id = nextIdRef.current++;
+    setLoadingOperations(prev => [...prev, { id, message }]);
+    
+    // Return the ID so callers can stop the specific operation
+    return id;
   }, []);
 
-  const stopLoading = useCallback(() => {
-    setLoadingCount(prev => Math.max(0, prev - 1));
-    setLoadingMessages(prev => prev.slice(1));
+  const stopLoading = useCallback((operationId) => {
+    setLoadingOperations(prev => {
+      // If no ID provided, remove the most recent operation (LIFO)
+      if (operationId === undefined) {
+        return prev.slice(0, -1);
+      }
+      // Remove specific operation by ID
+      return prev.filter(op => op.id !== operationId);
+    });
   }, []);
 
-  const isLoading = loadingCount > 0;
-  const currentMessage = loadingMessages[loadingMessages.length - 1] || 'Loading...';
+  const isLoading = loadingOperations.length > 0;
+  const loadingCount = loadingOperations.length;
+  const currentMessage = loadingOperations[loadingOperations.length - 1]?.message || 'Loading...';
 
   return (
     <LoadingContext.Provider

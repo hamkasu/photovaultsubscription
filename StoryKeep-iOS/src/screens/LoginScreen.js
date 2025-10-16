@@ -30,7 +30,7 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    startLoading('Logging in...');
+    const loadingId = startLoading('Logging in...');
     try {
       const response = await authAPI.login(loginEmail, loginPassword);
       
@@ -78,7 +78,7 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
     } finally {
-      stopLoading();
+      stopLoading(loadingId);
     }
   };
 

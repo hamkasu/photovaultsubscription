@@ -37,7 +37,7 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    startLoading('Creating account...');
+    const loadingId = startLoading('Creating account...');
     try {
       const response = await authAPI.register(username, email, password);
       
@@ -51,7 +51,7 @@ export default function RegisterScreen({ navigation }) {
     } catch (error) {
       Alert.alert('Registration Failed', error.response?.data?.message || 'Please try again');
     } finally {
-      stopLoading();
+      stopLoading(loadingId);
     }
   };
 

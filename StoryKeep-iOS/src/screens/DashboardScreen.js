@@ -115,8 +115,8 @@ export default function DashboardScreen({ navigation }) {
   };
 
   const loadDashboardData = async () => {
+    const loadingId = startLoading('Loading dashboard...');
     try {
-      startLoading('Loading dashboard...');
       const [statsData, photosData, profileData, token] = await Promise.all([
         dashboardAPI.getStats(),
         photoAPI.getPhotos('all'),
@@ -146,7 +146,7 @@ export default function DashboardScreen({ navigation }) {
       console.error('❌ Dashboard error:', error);
       Alert.alert('Error', 'Failed to load dashboard data');
     } finally {
-      stopLoading();
+      stopLoading(loadingId);
       setRefreshing(false);
     }
   };

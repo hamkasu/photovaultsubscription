@@ -52,10 +52,8 @@ export default function GalleryScreen({ navigation }) {
   }, [filter, allPhotos]);
 
   const loadPhotos = async () => {
+    const loadingId = !refreshing ? startLoading('Loading gallery...') : null;
     try {
-      if (!refreshing) {
-        startLoading('Loading gallery...');
-      }
       const token = await AsyncStorage.getItem('authToken');
       setAuthToken(token);
       
@@ -76,8 +74,8 @@ export default function GalleryScreen({ navigation }) {
       console.error('Gallery error:', error);
       Alert.alert('Error', 'Failed to load photos');
     } finally {
-      if (!refreshing) {
-        stopLoading();
+      if (loadingId !== null) {
+        stopLoading(loadingId);
       }
       setRefreshing(false);
     }
@@ -245,8 +243,8 @@ export default function GalleryScreen({ navigation }) {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            const loadingId = startLoading('Deleting photos...');
             try {
-              startLoading('Deleting photos...');
               const result = await photoAPI.bulkDeletePhotos(selectedPhotos);
               
               Alert.alert(
@@ -262,7 +260,7 @@ export default function GalleryScreen({ navigation }) {
               console.error('Bulk delete error:', error);
               Alert.alert('Error', 'Failed to delete photos');
             } finally {
-              stopLoading();
+              stopLoading(loadingId);
             }
           },
         },
