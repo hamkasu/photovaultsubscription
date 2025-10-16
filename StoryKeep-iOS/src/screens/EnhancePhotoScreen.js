@@ -9,8 +9,10 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI } from '../services/api';
 
@@ -24,6 +26,12 @@ export default function EnhancePhotoScreen({ route, navigation }) {
   const [authToken, setAuthToken] = useState(null);
   const [isBlackAndWhite, setIsBlackAndWhite] = useState(null);
   const [detectingColor, setDetectingColor] = useState(true);
+  
+  // Sharpen controls modal state
+  const [showSharpenControls, setShowSharpenControls] = useState(false);
+  const [sharpenIntensity, setSharpenIntensity] = useState(1.5);
+  const [sharpenRadius, setSharpenRadius] = useState(2.0);
+  const [sharpenThreshold, setSharpenThreshold] = useState(3);
 
   useEffect(() => {
     loadAuthToken();
@@ -64,10 +72,23 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     }
   };
 
-  const handleSharpen = async () => {
+  const handleSharpenWithControls = () => {
+    setShowSharpenControls(true);
+  };
+
+  const applySharpen = async () => {
+    setShowSharpenControls(false);
     setProcessing(true);
     try {
-      const response = await photoAPI.sharpenPhoto(photo.id, 1.5);
+      const options = {
+        intensity: sharpenIntensity,
+        radius: sharpenRadius,
+        threshold: sharpenThreshold,
+        method: 'unsharp'
+      };
+      
+      console.log('Applying sharpen with options:', options);
+      const response = await photoAPI.sharpenPhoto(photo.id, options);
       
       // Fetch the updated photo data
       const updatedPhoto = await photoAPI.getPhotoDetail(photo.id);
@@ -214,8 +235,8 @@ export default function EnhancePhotoScreen({ route, navigation }) {
           <EnhancementOption
             icon="brush"
             title="Sharpen"
-            description="Fix blurry or degraded photos"
-            onPress={handleSharpen}
+            description="Fix blurry or degraded photos with custom controls"
+            onPress={handleSharpenWithControls}
             color="#FF9800"
           />
 
@@ -245,6 +266,140 @@ export default function EnhancePhotoScreen({ route, navigation }) {
           </View>
         )}
       </ScrollView>
+
+      <Modal
+        visible={showSharpenControls}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowSharpenControls(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Sharpen Controls</Text>
+              <TouchableOpacity onPress={() => setShowSharpenControls(false)}>
+                <Ionicons name="close" size={28} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.controlGroup}>
+                <View style={styles.controlHeader}>
+                  <Text style={styles.controlLabel}>Intensity</Text>
+                  <Text style={styles.controlValue}>{sharpenIntensity.toFixed(1)}</Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0.5}
+                  maximumValue={3.0}
+                  step={0.1}
+                  value={sharpenIntensity}
+                  onValueChange={setSharpenIntensity}
+                  minimumTrackTintColor="#FF9800"
+                  maximumTrackTintColor="#ddd"
+                  thumbTintColor="#FF9800"
+                />
+                <Text style={styles.controlDescription}>
+                  Higher values create sharper images but may introduce artifacts
+                </Text>
+              </View>
+
+              <View style={styles.controlGroup}>
+                <View style={styles.controlHeader}>
+                  <Text style={styles.controlLabel}>Radius</Text>
+                  <Text style={styles.controlValue}>{sharpenRadius.toFixed(1)}</Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={1.0}
+                  maximumValue={5.0}
+                  step={0.5}
+                  value={sharpenRadius}
+                  onValueChange={setSharpenRadius}
+                  minimumTrackTintColor="#FF9800"
+                  maximumTrackTintColor="#ddd"
+                  thumbTintColor="#FF9800"
+                />
+                <Text style={styles.controlDescription}>
+                  Controls the sharpening area size (smaller = finer detail)
+                </Text>
+              </View>
+
+              <View style={styles.controlGroup}>
+                <View style={styles.controlHeader}>
+                  <Text style={styles.controlLabel}>Threshold</Text>
+                  <Text style={styles.controlValue}>{sharpenThreshold}</Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0}
+                  maximumValue={10}
+                  step={1}
+                  value={sharpenThreshold}
+                  onValueChange={setSharpenThreshold}
+                  minimumTrackTintColor="#FF9800"
+                  maximumTrackTintColor="#ddd"
+                  thumbTintColor="#FF9800"
+                />
+                <Text style={styles.controlDescription}>
+                  Prevents sharpening low-contrast areas (reduces noise)
+                </Text>
+              </View>
+
+              <View style={styles.presetContainer}>
+                <Text style={styles.presetTitle}>Quick Presets</Text>
+                <View style={styles.presetButtons}>
+                  <TouchableOpacity
+                    style={styles.presetButton}
+                    onPress={() => {
+                      setSharpenIntensity(1.0);
+                      setSharpenRadius(1.5);
+                      setSharpenThreshold(3);
+                    }}
+                  >
+                    <Text style={styles.presetButtonText}>Light</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.presetButton}
+                    onPress={() => {
+                      setSharpenIntensity(1.5);
+                      setSharpenRadius(2.0);
+                      setSharpenThreshold(3);
+                    }}
+                  >
+                    <Text style={styles.presetButtonText}>Medium</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.presetButton}
+                    onPress={() => {
+                      setSharpenIntensity(2.5);
+                      setSharpenRadius(2.5);
+                      setSharpenThreshold(2);
+                    }}
+                  >
+                    <Text style={styles.presetButtonText}>Strong</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowSharpenControls(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.applyButton]}
+                onPress={applySharpen}
+              >
+                <Text style={styles.applyButtonText}>Apply Sharpen</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -364,5 +519,117 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    maxHeight: '80%',
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalBody: {
+    flex: 1,
+    padding: 20,
+  },
+  controlGroup: {
+    marginBottom: 30,
+  },
+  controlHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  controlLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  controlValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF9800',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  controlDescription: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 5,
+    fontStyle: 'italic',
+  },
+  presetContainer: {
+    marginTop: 10,
+  },
+  presetTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+  },
+  presetButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  presetButton: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  presetButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF9800',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  applyButton: {
+    backgroundColor: '#FF9800',
+  },
+  applyButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });

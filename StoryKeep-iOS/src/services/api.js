@@ -134,8 +134,14 @@ export const photoAPI = {
     return response.data;
   },
   
-  sharpenPhoto: async (photoId, intensity = 1.5) => {
-    const response = await api.post(`/api/photos/${photoId}/sharpen`, { intensity });
+  sharpenPhoto: async (photoId, options = {}) => {
+    const { intensity = 1.5, radius = 2.0, threshold = 3, method = 'unsharp' } = options;
+    const response = await api.post(`/api/photos/${photoId}/sharpen`, { 
+      intensity, 
+      radius, 
+      threshold, 
+      method 
+    });
     return response.data;
   },
   
