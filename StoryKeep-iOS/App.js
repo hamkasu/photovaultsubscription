@@ -7,6 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar, Platform, BackHandler, Alert } from 'react-native';
 
+import { LoadingProvider } from './src/contexts/LoadingContext';
+import LoadingOverlay from './src/components/LoadingOverlay';
+
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -122,30 +125,33 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#ffffff"
-        translucent={false}
-      />
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {!isAuthenticated ? (
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="Main" component={MainTabs} />
-              <Stack.Screen name="PhotoDetail" component={PhotoDetailScreen} />
-              <Stack.Screen name="VaultDetail" component={VaultDetailScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
-              <Stack.Screen name="EnhancePhoto" component={EnhancePhotoScreen} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <LoadingProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor="#ffffff"
+          translucent={false}
+        />
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {!isAuthenticated ? (
+              <>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+              </>
+            ) : (
+              <>
+                <Stack.Screen name="Main" component={MainTabs} />
+                <Stack.Screen name="PhotoDetail" component={PhotoDetailScreen} />
+                <Stack.Screen name="VaultDetail" component={VaultDetailScreen} />
+                <Stack.Screen name="Profile" component={ProfileScreen} />
+                <Stack.Screen name="EnhancePhoto" component={EnhancePhotoScreen} />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+        <LoadingOverlay />
+      </GestureHandlerRootView>
+    </LoadingProvider>
   );
 }
