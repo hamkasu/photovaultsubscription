@@ -2197,94 +2197,67 @@ def check_grayscale_mobile(current_user, photo_id):
 @csrf.exempt
 @token_required
 def sharpen_photo_mobile(current_user, photo_id):
-    """
-    Mobile API endpoint to sharpen a photo with JWT authentication
-    """
+    """Simple robust sharpen for iOS - based on working web version"""
     try:
-        logger.info(f"🔧 SHARPEN REQUEST: photo_id={photo_id}, user={current_user.username}")
-        
         from photovault.utils.image_enhancement import sharpen_image
+        from photovault.services.app_storage_service import app_storage
+        from photovault.utils.enhanced_file_handler import get_image_info_enhanced
+        from werkzeug.utils import secure_filename as sanitize_name
         import random
         from datetime import datetime
+        import io
         
-        # Get the photo and verify ownership
-        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
-        if not photo:
-            logger.warning(f"❌ Photo {photo_id} not found or access denied for user {current_user.id}")
-            return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        # Get photo (simple approach from web version)
+        photo = Photo.query.get_or_404(photo_id)
+        if photo.user_id != current_user.id:
+            return jsonify({'success': False, 'error': 'Access denied'}), 403
         
-        logger.info(f"📸 Found photo: filename={photo.filename}, file_path={photo.file_path}")
-        
-        # Construct full file path
+        # Get file path
         user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
-        if os.path.isabs(photo.file_path):
-            full_file_path = photo.file_path
-        else:
-            full_file_path = os.path.join(user_upload_dir, photo.file_path)
+        full_file_path = photo.file_path if os.path.isabs(photo.file_path) else os.path.join(user_upload_dir, photo.file_path)
         
-        logger.info(f"📂 Full file path: {full_file_path}")
-        
-        # Check if file exists
-        if not os.path.exists(full_file_path):
-            logger.error(f"❌ File not found on disk: {full_file_path}")
-            return jsonify({'success': False, 'error': 'Photo file not found'}), 404
-        
-        # Check image size
-        file_size = os.path.getsize(full_file_path)
-        file_size_mb = file_size / (1024 * 1024)
-        logger.info(f"📏 File size: {file_size_mb:.2f}MB")
-        
-        if file_size > 50 * 1024 * 1024:  # 50MB limit (same as MAX_FILE_SIZE)
-            logger.warning(f"⚠️ File too large: {file_size_mb:.2f}MB > 50MB limit")
-            return jsonify({
-                'success': False, 
-                'error': 'Image too large for sharpening. Please use smaller images (under 50MB).'
-            }), 400
-        
-        # Get sharpening parameters from request
+        # Parameters (iOS sends 'intensity')
         data = request.get_json() or {}
-        intensity = float(data.get('intensity', 1.5))  # iOS sends 'intensity'
-        radius = float(data.get('radius', 2.0))
-        amount = intensity  # Map intensity to amount
-        threshold = int(data.get('threshold', 3))
-        method = data.get('method', 'unsharp')
+        intensity = float(data.get('intensity', 1.5))
         
-        logger.info(f"⚙️ Sharpen settings: intensity={intensity}, radius={radius}, threshold={threshold}, method={method}")
-        
-        # Generate filename for sharpened version
-        from werkzeug.utils import secure_filename as sanitize_name
+        # Generate filename
         date = datetime.now().strftime('%Y%m%d')
         random_number = random.randint(100000, 999999)
         safe_username = sanitize_name(current_user.username)
         sharpened_filename = f"{safe_username}.sharpened.{date}.{random_number}.jpg"
         
-        logger.info(f"🎯 Sharpened filename: {sharpened_filename}")
-        
-        # Create user upload directory
+        # Create directory and temp path
         os.makedirs(user_upload_dir, exist_ok=True)
+        temp_sharpened_filepath = os.path.join(user_upload_dir, sharpened_filename)
         
-        # Sharpened image path
-        sharpened_filepath = os.path.join(user_upload_dir, sharpened_filename)
-        
-        # Apply sharpening
-        logger.info(f"🔧 Applying sharpening...")
+        # Sharpen image
         output_path, applied_settings = sharpen_image(
             full_file_path, 
-            sharpened_filepath,
-            radius=radius,
-            amount=amount,
-            threshold=threshold,
-            method=method
+            temp_sharpened_filepath,
+            radius=2.0,
+            amount=intensity,
+            threshold=3,
+            method='unsharp'
         )
         
-        logger.info(f"✅ Sharpening complete: {output_path}, settings: {applied_settings}")
+        # Upload to app storage if available (Railway persistence)
+        sharpened_filepath = temp_sharpened_filepath
+        if app_storage.is_available():
+            with open(temp_sharpened_filepath, 'rb') as f:
+                img_bytes = io.BytesIO(f.read())
+                success, storage_path = app_storage.upload_file(img_bytes, sharpened_filename, str(current_user.id))
+                if success:
+                    sharpened_filepath = storage_path
+                    try:
+                        os.remove(temp_sharpened_filepath)
+                    except:
+                        pass
         
-        # Update photo record with sharpened version
+        # Update photo record
         photo.edited_filename = sharpened_filename
+        photo.edited_path = sharpened_filepath
         photo.updated_at = datetime.utcnow()
         db.session.commit()
-        
-        logger.info(f"💾 Database updated: photo {photo_id} sharpened successfully")
         
         return jsonify({
             'success': True,
@@ -2299,12 +2272,9 @@ def sharpen_photo_mobile(current_user, photo_id):
         }), 200
         
     except Exception as e:
-        import traceback
-        error_trace = traceback.format_exc()
-        logger.error(f"💥 SHARPEN ERROR for photo {photo_id}: {str(e)}")
-        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        logger.error(f"Sharpen error: {str(e)}")
         db.session.rollback()
-        return jsonify({'success': False, 'error': f'Sharpening failed: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': 'Failed to sharpen photo'}), 500
 
 
 # ============================================================================
