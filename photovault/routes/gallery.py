@@ -513,7 +513,6 @@ def uploaded_file(current_user, user_id, filename):
         if photo.file_path and (photo.file_path.startswith('users/') or photo.file_path.startswith('uploads/')):
             try:
                 from photovault.services.app_storage_service import app_storage
-                from flask import send_file
                 import io
                 
                 success, file_bytes = app_storage.download_file(photo.file_path)
