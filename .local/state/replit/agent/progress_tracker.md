@@ -310,6 +310,10 @@
 [x] 252. Fix iOS sharpen "Authorization token is missing" error - COMPLETED: Changed sharpen endpoint from @login_required to @hybrid_auth
 [x] 253. Create deployment guide - COMPLETED: Created SHARPEN_JWT_AUTH_FIX.md with fix explanation and deployment steps
 [x] 254. Restart PhotoVault Server - COMPLETED: Server running successfully on port 5000 with hybrid auth enabled
+[x] 255. Identify duplicate sharpen endpoints - COMPLETED: Found TWO endpoints with same URL (/api/photos/<id>/sharpen) causing conflict
+[x] 256. Delete duplicate sharpen endpoint from photo.py - COMPLETED: Removed lines 1583-1770, kept only mobile_api.py version with JWT auth
+[x] 257. Restart PhotoVault Server - COMPLETED: Server running successfully with single sharpen endpoint
+[x] 258. Create deployment guide - COMPLETED: Created SHARPEN_DUPLICATE_FIX.md with complete fix explanation
 [x] 249. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 772 packages successfully
 [x] 250. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
 [x] 251. Final verification - COMPLETED: Both servers running successfully with no critical errors
