@@ -58,6 +58,12 @@ export default function VaultDetailScreen({ route, navigation }) {
   
   // Camera library upload states
   const [uploadingFromLibrary, setUploadingFromLibrary] = useState(false);
+  
+  // Edit vault states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editVaultName, setEditVaultName] = useState('');
+  const [editVaultDescription, setEditVaultDescription] = useState('');
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     loadAuthToken();
@@ -313,6 +319,104 @@ export default function VaultDetailScreen({ route, navigation }) {
     }
   };
 
+  const openEditModal = () => {
+    setEditVaultName(vault.name);
+    setEditVaultDescription(vault.description || '');
+    setShowEditModal(true);
+  };
+
+  const handleEditVault = async () => {
+    if (!editVaultName.trim()) {
+      Alert.alert('Error', 'Vault name cannot be empty');
+      return;
+    }
+
+    setEditing(true);
+    try {
+      await vaultAPI.editVault(vaultId, editVaultName.trim(), editVaultDescription.trim());
+      Alert.alert('Success', 'Vault updated successfully');
+      setShowEditModal(false);
+      loadVaultDetails();
+    } catch (error) {
+      console.error('Edit vault error:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to update vault');
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDeleteVault = () => {
+    Alert.alert(
+      'Delete Vault',
+      'Are you sure you want to delete this vault? This action cannot be undone. All photos and members will be removed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await vaultAPI.deleteVault(vaultId);
+              Alert.alert('Success', 'Vault deleted successfully');
+              navigation.goBack();
+            } catch (error) {
+              console.error('Delete vault error:', error);
+              Alert.alert('Error', error.response?.data?.error || 'Failed to delete vault');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRemoveMember = (member) => {
+    Alert.alert(
+      'Remove Member',
+      `Remove ${member.username || member.email} from this vault?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await vaultAPI.removeMember(vaultId, member.id);
+              Alert.alert('Success', 'Member removed successfully');
+              loadVaultDetails();
+            } catch (error) {
+              console.error('Remove member error:', error);
+              Alert.alert('Error', error.response?.data?.error || 'Failed to remove member');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleChangeMemberRole = (member) => {
+    const newRole = member.role === 'admin' ? 'member' : 'admin';
+    Alert.alert(
+      'Change Role',
+      `Change ${member.username || member.email} to ${newRole}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Change',
+          onPress: async () => {
+            try {
+              await vaultAPI.changeMemberRole(vaultId, member.id, newRole);
+              Alert.alert('Success', `Member role changed to ${newRole}`);
+              loadVaultDetails();
+            } catch (error) {
+              console.error('Change role error:', error);
+              Alert.alert('Error', error.response?.data?.error || 'Failed to change member role');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderPhoto = ({ item }) => {
     const isSelected = selectedPhotos.includes(item.id);
     
@@ -372,19 +476,55 @@ export default function VaultDetailScreen({ route, navigation }) {
     );
   };
 
-  const renderMember = ({ item }) => (
-    <View style={styles.memberCard}>
-      <View style={styles.memberAvatar}>
-        <Ionicons name="person" size={24} color="#E85D75" />
-      </View>
-      <View style={styles.memberInfo}>
-        <Text style={styles.memberName}>{item.username || item.email}</Text>
-        <View style={styles.memberRoleBadge}>
-          <Text style={styles.memberRole}>{item.role}</Text>
+  const renderMember = ({ item }) => {
+    const isOwner = vault?.is_creator;
+    const isAdmin = vault?.member_role === 'admin';
+    const canManage = isOwner || isAdmin;
+    const isCurrentMemberOwner = item.role === 'owner';
+    
+    return (
+      <View style={styles.memberCard}>
+        <View style={styles.memberAvatar}>
+          <Ionicons name="person" size={24} color="#E85D75" />
         </View>
+        <View style={styles.memberInfo}>
+          <Text style={styles.memberName}>{item.username || item.email}</Text>
+          <View style={styles.memberRoleBadge}>
+            <Ionicons 
+              name={item.role === 'admin' || isCurrentMemberOwner ? 'shield' : 'person'}
+              size={12}
+              color={item.role === 'admin' || isCurrentMemberOwner ? '#E85D75' : '#666'}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={[styles.memberRole, (item.role === 'admin' || isCurrentMemberOwner) && styles.memberRoleAdmin]}>
+              {isCurrentMemberOwner ? 'Owner' : item.role}
+            </Text>
+          </View>
+        </View>
+        
+        {canManage && !isCurrentMemberOwner && (
+          <View style={styles.memberActions}>
+            <TouchableOpacity
+              style={styles.memberActionButton}
+              onPress={() => handleChangeMemberRole(item)}
+            >
+              <Ionicons 
+                name={item.role === 'admin' ? 'person-remove' : 'person-add'} 
+                size={20} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.memberActionButton}
+              onPress={() => handleRemoveMember(item)}
+            >
+              <Ionicons name="trash-outline" size={20} color="#E85D75" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -441,9 +581,27 @@ export default function VaultDetailScreen({ route, navigation }) {
               <Ionicons name="arrow-back" size={28} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle} numberOfLines={1}>{vault.name}</Text>
-            <TouchableOpacity onPress={toggleSelectionMode}>
-              <Ionicons name="checkmark-circle-outline" size={28} color="#fff" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              {(vault.is_creator || vault.member_role === 'admin') && (
+                <>
+                  <TouchableOpacity 
+                    style={styles.headerButton}
+                    onPress={openEditModal}
+                  >
+                    <Ionicons name="create-outline" size={24} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.headerButton}
+                    onPress={handleDeleteVault}
+                  >
+                    <Ionicons name="trash-outline" size={24} color="#fff" />
+                  </TouchableOpacity>
+                </>
+              )}
+              <TouchableOpacity onPress={toggleSelectionMode}>
+                <Ionicons name="checkmark-circle-outline" size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </>
         )}
       </View>
@@ -706,6 +864,66 @@ export default function VaultDetailScreen({ route, navigation }) {
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Edit Vault Modal */}
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => !editing && setShowEditModal(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Edit Vault</Text>
+                  <TouchableOpacity onPress={() => !editing && setShowEditModal(false)}>
+                    <Ionicons name="close" size={28} color="#333" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.inviteForm}>
+                  <Text style={styles.inputLabel}>Vault Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Vault name"
+                    value={editVaultName}
+                    onChangeText={setEditVaultName}
+                    editable={!editing}
+                  />
+
+                  <Text style={styles.inputLabel}>Description</Text>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Vault description"
+                    value={editVaultDescription}
+                    onChangeText={setEditVaultDescription}
+                    multiline
+                    numberOfLines={4}
+                    editable={!editing}
+                  />
+
+                  <TouchableOpacity
+                    style={[styles.inviteButton, editing && styles.inviteButtonDisabled]}
+                    onPress={handleEditVault}
+                    disabled={editing || !editVaultName.trim()}
+                  >
+                    {editing ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.inviteButtonText}>Save Changes</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -953,6 +1171,29 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textTransform: 'capitalize',
+  },
+  memberRoleAdmin: {
+    color: '#E85D75',
+  },
+  memberActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  memberActionButton: {
+    padding: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerButton: {
+    padding: 4,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
   emptyMembers: {
     alignItems: 'center',

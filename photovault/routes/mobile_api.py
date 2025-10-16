@@ -1584,6 +1584,245 @@ def invite_member_to_vault(current_user, vault_id):
             'error_type': type(e).__name__
         }), 500
 
+@mobile_api_bp.route('/family/vault/<int:vault_id>', methods=['PATCH'])
+@csrf.exempt
+@token_required
+def edit_vault(current_user, vault_id):
+    """Edit vault name and description - Admin/Creator only"""
+    try:
+        logger.info(f"✏️ EDIT VAULT REQUEST: vault_id={vault_id}, user_id={current_user.id}")
+        
+        # Get vault
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
+        
+        # Check if user is creator or admin
+        is_creator = vault.created_by == current_user.id
+        membership = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        is_admin = membership and membership.role == 'admin'
+        
+        if not (is_creator or is_admin):
+            logger.error(f"❌ User {current_user.id} does not have permission to edit vault {vault_id}")
+            return jsonify({'success': False, 'error': 'Only admins can edit vault'}), 403
+        
+        # Get update data
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        # Update vault
+        if 'name' in data:
+            name = data['name'].strip()
+            if not name:
+                return jsonify({'success': False, 'error': 'Vault name cannot be empty'}), 400
+            vault.name = name
+        
+        if 'description' in data:
+            vault.description = data['description'].strip()
+        
+        db.session.commit()
+        
+        logger.info(f"✅ Vault {vault_id} updated successfully")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Vault updated successfully',
+            'vault': {
+                'id': vault.id,
+                'name': vault.name,
+                'description': vault.description
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"💥 EDIT VAULT ERROR: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@mobile_api_bp.route('/family/vault/<int:vault_id>', methods=['DELETE'])
+@csrf.exempt
+@token_required
+def delete_vault(current_user, vault_id):
+    """Delete vault - Creator only"""
+    try:
+        logger.info(f"🗑️ DELETE VAULT REQUEST: vault_id={vault_id}, user_id={current_user.id}")
+        
+        # Get vault
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
+        
+        # Only creator can delete vault
+        if vault.created_by != current_user.id:
+            logger.error(f"❌ User {current_user.id} is not the creator of vault {vault_id}")
+            return jsonify({'success': False, 'error': 'Only vault creator can delete vault'}), 403
+        
+        # Delete all related data
+        # Delete vault photos
+        VaultPhoto.query.filter_by(vault_id=vault_id).delete()
+        
+        # Delete vault members
+        FamilyMember.query.filter_by(vault_id=vault_id).delete()
+        
+        # Delete pending invitations
+        VaultInvitation.query.filter_by(vault_id=vault_id).delete()
+        
+        # Delete vault
+        db.session.delete(vault)
+        db.session.commit()
+        
+        logger.info(f"✅ Vault {vault_id} deleted successfully")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Vault deleted successfully'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"💥 DELETE VAULT ERROR: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@mobile_api_bp.route('/family/vault/<int:vault_id>/member/<int:user_id>', methods=['DELETE'])
+@csrf.exempt
+@token_required
+def remove_vault_member(current_user, vault_id, user_id):
+    """Remove member from vault - Admin/Creator only"""
+    try:
+        logger.info(f"👤❌ REMOVE MEMBER REQUEST: vault_id={vault_id}, user_id={user_id}, requester={current_user.id}")
+        
+        # Get vault
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
+        
+        # Check if requester is creator or admin
+        is_creator = vault.created_by == current_user.id
+        requester_membership = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        is_admin = requester_membership and requester_membership.role == 'admin'
+        
+        if not (is_creator or is_admin):
+            logger.error(f"❌ User {current_user.id} does not have permission to remove members")
+            return jsonify({'success': False, 'error': 'Only admins can remove members'}), 403
+        
+        # Cannot remove the creator
+        if user_id == vault.created_by:
+            return jsonify({'success': False, 'error': 'Cannot remove vault creator'}), 400
+        
+        # Cannot remove yourself
+        if user_id == current_user.id:
+            return jsonify({'success': False, 'error': 'Cannot remove yourself. Leave vault instead.'}), 400
+        
+        # Get member to remove
+        member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=user_id,
+            status='active'
+        ).first()
+        
+        if not member:
+            return jsonify({'success': False, 'error': 'Member not found in vault'}), 404
+        
+        # Remove member
+        member.status = 'removed'
+        db.session.commit()
+        
+        logger.info(f"✅ Member {user_id} removed from vault {vault_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Member removed successfully'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"💥 REMOVE MEMBER ERROR: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@mobile_api_bp.route('/family/vault/<int:vault_id>/member/<int:user_id>/role', methods=['PATCH'])
+@csrf.exempt
+@token_required
+def change_member_role(current_user, vault_id, user_id):
+    """Change member role between admin and member - Admin/Creator only"""
+    try:
+        logger.info(f"👤🔄 CHANGE ROLE REQUEST: vault_id={vault_id}, user_id={user_id}, requester={current_user.id}")
+        
+        # Get vault
+        vault = FamilyVault.query.get(vault_id)
+        if not vault:
+            return jsonify({'success': False, 'error': 'Vault not found'}), 404
+        
+        # Check if requester is creator or admin
+        is_creator = vault.created_by == current_user.id
+        requester_membership = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        is_admin = requester_membership and requester_membership.role == 'admin'
+        
+        if not (is_creator or is_admin):
+            logger.error(f"❌ User {current_user.id} does not have permission to change roles")
+            return jsonify({'success': False, 'error': 'Only admins can change member roles'}), 403
+        
+        # Cannot change creator role
+        if user_id == vault.created_by:
+            return jsonify({'success': False, 'error': 'Cannot change creator role'}), 400
+        
+        # Get new role from request
+        data = request.get_json()
+        if not data or 'role' not in data:
+            return jsonify({'success': False, 'error': 'Role not provided'}), 400
+        
+        new_role = data['role']
+        if new_role not in ['admin', 'member']:
+            return jsonify({'success': False, 'error': 'Invalid role. Use "admin" or "member"'}), 400
+        
+        # Get member to update
+        member = FamilyMember.query.filter_by(
+            vault_id=vault_id,
+            user_id=user_id,
+            status='active'
+        ).first()
+        
+        if not member:
+            return jsonify({'success': False, 'error': 'Member not found in vault'}), 404
+        
+        # Update role
+        old_role = member.role
+        member.role = new_role
+        db.session.commit()
+        
+        logger.info(f"✅ Member {user_id} role changed from {old_role} to {new_role} in vault {vault_id}")
+        
+        # Get updated user info
+        user = User.query.get(user_id)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Member role updated to {new_role}',
+            'member': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': new_role
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"💥 CHANGE ROLE ERROR: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @mobile_api_bp.route('/photos/<int:photo_id>/enhance', methods=['POST'])
 @csrf.exempt
 @token_required

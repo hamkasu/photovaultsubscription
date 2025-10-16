@@ -204,6 +204,31 @@ export const vaultAPI = {
     const response = await api.delete(`/api/family/vault/${vaultId}/photos/${photoId}`);
     return response.data;
   },
+  
+  editVault: async (vaultId, name, description) => {
+    const response = await api.patch(`/api/family/vault/${vaultId}`, {
+      name,
+      description,
+    });
+    return response.data;
+  },
+  
+  deleteVault: async (vaultId) => {
+    const response = await api.delete(`/api/family/vault/${vaultId}`);
+    return response.data;
+  },
+  
+  removeMember: async (vaultId, userId) => {
+    const response = await api.delete(`/api/family/vault/${vaultId}/member/${userId}`);
+    return response.data;
+  },
+  
+  changeMemberRole: async (vaultId, userId, newRole) => {
+    const response = await api.patch(`/api/family/vault/${vaultId}/member/${userId}/role`, {
+      role: newRole,
+    });
+    return response.data;
+  },
 };
 
 export const voiceMemoAPI = {
