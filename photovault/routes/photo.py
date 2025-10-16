@@ -1582,10 +1582,10 @@ def enhance_photo_api(photo_id):
 
 @photo_bp.route('/api/photos/<int:photo_id>/sharpen', methods=['POST'])
 @csrf.exempt
-@login_required
-def sharpen_photo_api(photo_id):
+@hybrid_auth
+def sharpen_photo_api(current_user, photo_id):
     """
-    API endpoint to sharpen an image - Simple session-based auth for web users
+    API endpoint to sharpen an image - Supports both session and JWT auth
     """
     try:
         from photovault.models import Photo

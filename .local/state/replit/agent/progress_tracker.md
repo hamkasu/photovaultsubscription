@@ -307,6 +307,9 @@
 [x] 251. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel ready and Metro bundler running
+[x] 252. Fix iOS sharpen "Authorization token is missing" error - COMPLETED: Changed sharpen endpoint from @login_required to @hybrid_auth
+[x] 253. Create deployment guide - COMPLETED: Created SHARPEN_JWT_AUTH_FIX.md with fix explanation and deployment steps
+[x] 254. Restart PhotoVault Server - COMPLETED: Server running successfully on port 5000 with hybrid auth enabled
 [x] 249. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 772 packages successfully
 [x] 250. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
 [x] 251. Final verification - COMPLETED: Both servers running successfully with no critical errors
