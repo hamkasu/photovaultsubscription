@@ -1,14 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, Animated } from 'react-native';
-import { useLoading } from '../contexts/LoadingContext';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { useLoading } from '../context/LoadingContext';
+import { Ionicons } from '@expo/vector-icons';
 
-const LoadingOverlay = () => {
-  const { isLoading, loadingCount } = useLoading();
+export default function LoadingCounter() {
+  const { counter } = useLoading();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (isLoading) {
+    if (counter > 0) {
+      // Show animation
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -22,7 +25,17 @@ const LoadingOverlay = () => {
           useNativeDriver: true,
         }),
       ]).start();
+
+      // Continuous rotation for spinner
+      Animated.loop(
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        })
+      ).start();
     } else {
+      // Hide animation
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
@@ -37,9 +50,14 @@ const LoadingOverlay = () => {
         }),
       ]).start();
     }
-  }, [isLoading]);
+  }, [counter]);
 
-  if (!isLoading) return null;
+  if (counter === 0) return null;
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
     <Animated.View
@@ -51,17 +69,19 @@ const LoadingOverlay = () => {
         },
       ]}
     >
-      <ActivityIndicator size="small" color="#fff" />
-      <Text style={styles.count}>{loadingCount}</Text>
+      <Animated.View style={{ transform: [{ rotate: spin }] }}>
+        <Ionicons name="sync" size={18} color="#fff" />
+      </Animated.View>
+      <Text style={styles.count}>{counter}</Text>
     </Animated.View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 50,
-    right: 15,
+    top: 10,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(102, 126, 234, 0.95)',
@@ -84,5 +104,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-export default LoadingOverlay;

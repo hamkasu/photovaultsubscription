@@ -1467,6 +1467,8 @@ StoryKeepUploader.prototype.handleFormSubmit = async function(e) {
     e.preventDefault();
     if (this.isUploading) return;
     if (!this.selectedFiles.length) { this.showMessage('Please select files first', 'warning'); return; }
+    
+    const loadingId = window.startLoading(`Uploading ${this.selectedFiles.length} file(s)`);
     this.isUploading = true;
     const uploadBtn = document.getElementById('uploadBtn');
     if (uploadBtn) uploadBtn.disabled = true;
@@ -1483,6 +1485,7 @@ StoryKeepUploader.prototype.handleFormSubmit = async function(e) {
         }
     }
     this.isUploading = false;
+    window.stopLoading(loadingId);
     if (uploadBtn) uploadBtn.disabled = false;
     this.selectedFiles = [];
     this.updateFileDisplay();
