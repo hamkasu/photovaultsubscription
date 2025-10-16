@@ -1606,6 +1606,7 @@ def save_ai_faces(photo_id):
         }), 500
 
 @photo_bp.route('/api/photos/<int:photo_id>/ai-poses', methods=['POST'])
+
 @login_required
 def save_ai_poses(photo_id):
     """
