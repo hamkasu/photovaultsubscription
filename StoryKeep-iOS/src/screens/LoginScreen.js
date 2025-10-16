@@ -50,9 +50,10 @@ export default function LoginScreen({ navigation }) {
             const isEnrolled = await LocalAuthentication.isEnrolledAsync();
             
             if (hasHardware && isEnrolled) {
+              const biometricType = Platform.OS === 'ios' ? 'Face ID/Touch ID' : 'Fingerprint/Face Unlock';
               Alert.alert(
                 'Enable Biometric Login',
-                'Would you like to use Face ID/Touch ID for quick login?',
+                `Would you like to use ${biometricType} for quick login?`,
                 [
                   {
                     text: 'No',
@@ -97,8 +98,9 @@ export default function LoginScreen({ navigation }) {
         return;
       }
 
+      const biometricPrompt = Platform.OS === 'ios' ? 'Login with Face ID/Touch ID' : 'Login with Fingerprint';
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Login with biometrics',
+        promptMessage: biometricPrompt,
         cancelLabel: 'Cancel',
         fallbackLabel: 'Use Password',
       });
@@ -166,7 +168,9 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={checkBiometric} style={styles.biometricButton}>
-            <Text style={styles.biometricText}>🔐 Login with Face ID</Text>
+            <Text style={styles.biometricText}>
+              🔐 Login with {Platform.OS === 'ios' ? 'Face ID' : 'Biometrics'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>

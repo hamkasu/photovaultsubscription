@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar, Platform, BackHandler, Alert } from 'react-native';
 
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -70,6 +71,29 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Android back button handling
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (!isAuthenticated) {
+          // If on login/register screen, confirm exit
+          Alert.alert(
+            'Exit App',
+            'Are you sure you want to exit?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Exit', onPress: () => BackHandler.exitApp() }
+            ]
+          );
+          return true; // Prevent default back behavior
+        }
+        return false; // Allow default back behavior when authenticated
+      });
+
+      return () => backHandler.remove();
+    }
+  }, [isAuthenticated]);
+
   const checkAuthStatus = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
@@ -99,6 +123,11 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {!isAuthenticated ? (
