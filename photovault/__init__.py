@@ -266,6 +266,8 @@ def create_app(config_class=None):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(admin_export_bp, url_prefix='/admin')
     app.register_blueprint(superuser_bp, url_prefix='/superuser')
+    # Register mobile_api_bp BEFORE photo_bp to ensure JWT-authenticated routes match first
+    app.register_blueprint(mobile_api_bp)
     app.register_blueprint(photo_bp)
     app.register_blueprint(gallery_bp)
     app.register_blueprint(family_bp)
@@ -273,7 +275,6 @@ def create_app(config_class=None):
     app.register_blueprint(social_media_bp)
     app.register_blueprint(colorization_bp)
     app.register_blueprint(billing_bp)
-    app.register_blueprint(mobile_api_bp)
     
     # Note: Upload file serving is handled securely via gallery.uploaded_file route with authentication
     
