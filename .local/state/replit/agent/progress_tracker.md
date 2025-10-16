@@ -810,3 +810,17 @@ Fixed web enhancement failing with "Authorization token is missing" error:
 - **Authentication**: Uses same session-based auth as colorization (CSRF token, not JWT)
 - **Frontend Updated**: Changed to call `/api/colorization/enhance` with photo_id in request body
 - **Result**: Enhancement now works like colorization with proper session authentication
+
+[x] 440. Fix sharpening authorization error - COMPLETED: Added web sharpening endpoint with session-based auth
+[x] 441. Create /api/colorization/sharpen endpoint - COMPLETED: New endpoint with @login_required decorator
+[x] 442. Update frontend to use correct sharpening endpoint - COMPLETED: Changed from /api/photos/${photoId}/sharpen to /api/colorization/sharpen
+[x] 443. Restart PhotoVault Server with sharpening fix - COMPLETED: Server running with new endpoint
+
+## ✅ SHARPENING AUTHORIZATION FIX - 443 TASKS COMPLETED
+Fixed web sharpening failing with "Authorization token is missing" error:
+- **Root Cause**: Frontend was calling mobile API endpoint requiring JWT token, not session-based auth
+- **Solution**: Created dedicated web endpoint `/api/colorization/sharpen` with `@login_required` decorator
+- **Method Used**: `enhancer.sharpen_image()` with radius, amount, threshold, method parameters
+- **Frontend Updated**: Changed to call `/api/colorization/sharpen` with photo_id in request body
+- **Result**: Both enhancement and sharpening now work with proper session authentication
+- **Consistency**: All web enhancement features (colorization, enhancement, sharpening) now use same auth pattern

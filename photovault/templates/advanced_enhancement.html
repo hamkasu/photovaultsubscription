@@ -666,13 +666,14 @@ function sharpenPhoto() {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/api/photos/${photoId}/sharpen`, {
+    fetch('/api/colorization/sharpen', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
         },
         body: JSON.stringify({
+            photo_id: photoId,
             radius: 2.0,
             amount: 1.5,
             threshold: 3,

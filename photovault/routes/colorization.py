@@ -412,6 +412,121 @@ def enhance_photo():
         }), 500
 
 
+@colorization_bp.route('/sharpen', methods=['POST'])
+@login_required
+def sharpen_photo():
+    """
+    Apply image sharpening to a photo (web endpoint)
+    
+    Request JSON:
+        {
+            "photo_id": int,     # Photo ID to sharpen
+            "radius": float,     # Sharpening radius (optional, default: 2.0)
+            "amount": float,     # Sharpening amount (optional, default: 1.5)
+            "threshold": int,    # Sharpening threshold (optional, default: 3)
+            "method": str        # Sharpening method (optional, default: 'unsharp')
+        }
+    
+    Returns:
+        {
+            "success": bool,
+            "photo_id": int,
+            "enhanced_url": str,
+            "message": str
+        }
+    """
+    try:
+        from photovault.utils.image_enhancement import enhancer
+        import random
+        
+        data = request.get_json()
+        
+        if not data or 'photo_id' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'photo_id is required'
+            }), 400
+        
+        photo_id = data['photo_id']
+        radius = data.get('radius', 2.0)
+        amount = data.get('amount', 1.5)
+        threshold = data.get('threshold', 3)
+        method = data.get('method', 'unsharp')
+        
+        # Get photo from database
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        
+        if not photo:
+            return jsonify({
+                'success': False,
+                'error': 'Photo not found or unauthorized'
+            }), 404
+        
+        # Get file paths
+        original_path = photo.file_path
+        
+        if not os.path.exists(original_path):
+            return jsonify({
+                'success': False,
+                'error': 'Original photo file not found'
+            }), 404
+        
+        # Generate sharpened filename
+        from werkzeug.utils import secure_filename as sanitize_name
+        date = datetime.now().strftime('%Y%m%d')
+        random_number = random.randint(100000, 999999)
+        safe_username = sanitize_name(current_user.username)
+        sharpened_filename = f"{safe_username}.{date}.sharp.{random_number}.jpg"
+        
+        logger.info(f"Sharpening photo {photo_id}: original='{photo.filename}', sharpened='{sharpened_filename}'")
+        
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_upload_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_upload_folder, exist_ok=True)
+        sharpened_filepath = os.path.join(user_upload_folder, sharpened_filename)
+        
+        # Apply sharpening
+        output_path = enhancer.sharpen_image(
+            original_path,
+            sharpened_filepath,
+            radius=radius,
+            amount=amount,
+            threshold=threshold,
+            method=method
+        )
+        
+        # Update database with sharpened version
+        photo.edited_filename = sharpened_filename
+        photo.edited_path = sharpened_filepath
+        photo.enhancement_metadata = {
+            'sharpening': {
+                'radius': radius,
+                'amount': amount,
+                'threshold': threshold,
+                'method': method,
+                'timestamp': str(datetime.now())
+            }
+        }
+        db.session.commit()
+        
+        logger.info(f"Photo {photo_id} sharpened successfully")
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo.id,
+            'enhanced_url': f'/uploads/{current_user.id}/{sharpened_filename}',
+            'message': 'Photo sharpened successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Sharpening failed: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @colorization_bp.route('/enhance-analyze', methods=['POST'])
 @login_required
 def analyze_enhancement():
