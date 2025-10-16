@@ -27,6 +27,7 @@ The iOS Digitizer App is a professional photo digitalization tool built with Rea
 - Family vault photo management with multi-select deletion and permission-based access control.
 - Device photo library upload via Expo ImagePicker for direct vault uploads.
 - Gallery bulk share to family vaults with efficient bulk API endpoint, loading overlay, and intelligent retry logic for failed photos.
+- Enhanced dashboard with 30% larger stat icons (42px), Vaults stat display with green highlight, and accurate vault counting using set-based deduplication to prevent double-counting of creators who are also members.
 
 Voice memo recording and playback are supported using expo-av (.m4a format), with secure playback and automatic temp file cleanup.
 
