@@ -230,6 +230,12 @@
 [x] 245. Restart both workflows with fixes - COMPLETED: PhotoVault Server and Expo Server running successfully with updated code
     - PhotoVault Server: Running on port 5000 with sharpen limit increased
     - Expo Server: Running with tunnel at exp://xxnze50-anonymous-8081.exp.direct with optimized logout
+[x] 265. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 266. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed 744 packages successfully
+[x] 267. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
+[x] 268. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized
+    - Expo Server: Running with tunnel at exp://u_yaidi-anonymous-8081.exp.direct and QR code displayed
 [x] 254. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
 [x] 255. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed 743 packages successfully
 [x] 256. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel at exp://vgw8kle-anonymous-8081.exp.direct and QR code ready
