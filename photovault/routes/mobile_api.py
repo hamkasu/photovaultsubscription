@@ -169,6 +169,18 @@ def get_dashboard(current_user):
         total_size_bytes = sum(photo.file_size or 0 for photo in photos)
         total_size_mb = round(total_size_bytes / 1024 / 1024, 2) if total_size_bytes > 0 else 0
         
+        # Count family vaults (where user is creator or member) - avoid double counting
+        from photovault.models import FamilyVault, FamilyMember
+        
+        # Get distinct vault IDs where user is creator
+        created_vault_ids = set([v.id for v in FamilyVault.query.filter_by(created_by=current_user.id).all()])
+        
+        # Get distinct vault IDs where user is a member
+        member_vault_ids = set([m.vault_id for m in FamilyMember.query.filter_by(user_id=current_user.id, status='active').all()])
+        
+        # Union of both sets gives unique vault count
+        total_vaults = len(created_vault_ids | member_vault_ids)
+        
         # Get subscription info and storage limits
         user_subscription = UserSubscription.query.filter_by(user_id=current_user.id).first()
         subscription_plan = user_subscription.plan.name if user_subscription and user_subscription.plan else 'Free'
@@ -263,6 +275,7 @@ def get_dashboard(current_user):
             'total_photos': total_photos,
             'enhanced_photos': enhanced_photos,
             'albums': 0,
+            'vaults': total_vaults,
             'storage_used': total_size_mb,
             'storage_limit_mb': storage_limit_mb,  # -1 for unlimited
             'storage_usage_percent': storage_usage_percent,

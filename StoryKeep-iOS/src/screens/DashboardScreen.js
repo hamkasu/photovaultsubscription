@@ -230,25 +230,25 @@ export default function DashboardScreen({ navigation }) {
 
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Ionicons name="images" size={32} color="#E85D75" />
+          <Ionicons name="images" size={42} color="#E85D75" />
           <Text style={styles.statNumber}>{stats?.total_photos || 0}</Text>
           <Text style={styles.statLabel}>Total Photos</Text>
         </View>
 
         <View style={styles.statCard}>
-          <Ionicons name="sparkles" size={32} color="#E85D75" />
+          <Ionicons name="sparkles" size={42} color="#E85D75" />
           <Text style={styles.statNumber}>{stats?.enhanced_photos || 0}</Text>
           <Text style={styles.statLabel}>Colorized</Text>
         </View>
 
-        <View style={styles.statCard}>
-          <Ionicons name="folder" size={32} color="#E85D75" />
-          <Text style={styles.statNumber}>{stats?.albums || 0}</Text>
-          <Text style={styles.statLabel}>Albums</Text>
+        <View style={[styles.statCard, styles.highlightedStat]}>
+          <Ionicons name="people" size={42} color="#E85D75" />
+          <Text style={styles.statNumber}>{stats?.vaults || 0}</Text>
+          <Text style={styles.statLabel}>Vaults</Text>
         </View>
 
         <View style={styles.statCard}>
-          <Ionicons name="cloud" size={32} color="#E85D75" />
+          <Ionicons name="cloud" size={42} color="#E85D75" />
           <Text style={styles.statNumber}>
             {stats?.storage_used ? `${stats.storage_used}MB` : '0MB'}
           </Text>
@@ -431,6 +431,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     alignItems: 'center',
+  },
+  highlightedStat: {
+    borderWidth: 3,
+    borderColor: '#00FF9D',
+    borderRadius: 20,
+    padding: 10,
   },
   statNumber: {
     fontSize: 20,
