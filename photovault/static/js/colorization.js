@@ -65,6 +65,7 @@ class ColorizationManager {
     async checkIfGrayscale() {
         if (!this.currentPhotoId) return;
 
+        const loadingId = window.startLoading('Checking photo type');
         try {
             const response = await fetch(`${this.apiBase}/check-grayscale`, {
                 method: 'POST',
@@ -82,6 +83,8 @@ class ColorizationManager {
         } catch (error) {
             console.error('Error checking grayscale:', error);
             this.disableColorizationOptions();
+        } finally {
+            window.stopLoading(loadingId);
         }
     }
 
@@ -135,6 +138,7 @@ class ColorizationManager {
         this.isProcessing = true;
         this.showProgress('Colorizing photo...', 0);
 
+        const loadingId = window.startLoading('Colorizing photo');
         try {
             const response = await fetch(`${this.apiBase}/colorize`, {
                 method: 'POST',
@@ -157,6 +161,7 @@ class ColorizationManager {
             console.error('Colorization error:', error);
             this.showMessage('Failed to colorize photo', 'error');
         } finally {
+            window.stopLoading(loadingId);
             this.isProcessing = false;
             this.hideProgress();
         }
@@ -174,6 +179,7 @@ class ColorizationManager {
         this.isProcessing = true;
         this.showProgress('AI is analyzing and colorizing your photo...', 0);
 
+        const loadingId = window.startLoading('AI colorizing photo');
         try {
             const response = await fetch(`${this.apiBase}/colorize-ai`, {
                 method: 'POST',
@@ -204,6 +210,7 @@ class ColorizationManager {
             console.error('AI colorization error:', error);
             this.showMessage('Failed to AI-colorize photo', 'error');
         } finally {
+            window.stopLoading(loadingId);
             this.isProcessing = false;
             this.hideProgress();
         }
@@ -221,6 +228,7 @@ class ColorizationManager {
         this.isProcessing = true;
         this.showProgress('AI is analyzing your photo...', 0);
 
+        const loadingId = window.startLoading('AI analyzing photo');
         try {
             const response = await fetch(`${this.apiBase}/enhance-analyze`, {
                 method: 'POST',
@@ -246,6 +254,7 @@ class ColorizationManager {
             console.error('Enhancement analysis error:', error);
             this.showMessage('Failed to analyze photo', 'error');
         } finally {
+            window.stopLoading(loadingId);
             this.isProcessing = false;
             this.hideProgress();
         }

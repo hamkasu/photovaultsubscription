@@ -282,6 +282,7 @@ class VoiceMemoRecorder {
             this.showSavingStatus();
             
             // Upload to server
+            const loadingId = window.startLoading('Saving voice memo');
             const response = await fetch(`/api/photos/${this.photoId}/voice-memos`, {
                 method: 'POST',
                 body: formData,
@@ -304,6 +305,7 @@ class VoiceMemoRecorder {
             console.error('Error saving voice memo:', error);
             this.showError('Failed to save voice memo');
         } finally {
+            window.stopLoading(loadingId);
             this.hideSavingStatus();
         }
     }
@@ -332,6 +334,7 @@ class VoiceMemoRecorder {
     }
     
     async loadVoiceMemos() {
+        const loadingId = window.startLoading('Loading voice memos');
         try {
             const response = await fetch(`/api/photos/${this.photoId}/voice-memos`);
             const result = await response.json();
@@ -344,6 +347,8 @@ class VoiceMemoRecorder {
             
         } catch (error) {
             console.error('Error loading voice memos:', error);
+        } finally {
+            window.stopLoading(loadingId);
         }
     }
     
@@ -445,6 +450,7 @@ class VoiceMemoRecorder {
             return;
         }
         
+        const loadingId = window.startLoading('Deleting voice memo');
         try {
             const response = await fetch(`/api/voice-memos/${memoId}`, {
                 method: 'DELETE',
@@ -465,6 +471,8 @@ class VoiceMemoRecorder {
         } catch (error) {
             console.error('Error deleting voice memo:', error);
             this.showError('Failed to delete voice memo');
+        } finally {
+            window.stopLoading(loadingId);
         }
     }
     

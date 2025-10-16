@@ -291,6 +291,7 @@ function saveEdit() {
     // Get CSRF token from meta tag if available
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
+    const loadingId = window.startLoading('Saving edits');
     fetch(`/api/photos/${photoId}/annotate`, {
         method: 'POST',
         headers: {
@@ -316,6 +317,9 @@ function saveEdit() {
     .catch(error => {
         console.error('Save error:', error);
         alert('Save error: ' + error.message);
+    })
+    .finally(() => {
+        window.stopLoading(loadingId);
     });
 }
 

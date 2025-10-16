@@ -42,6 +42,7 @@ async function uploadFiles(files) {
         progressElement.className = 'alert alert-info'; // Reset class
     }
 
+    const loadingId = window.startLoading(`Uploading ${files.length} photo(s)`);
     try {
         const response = await fetch('/api/upload', {
             method: 'POST',
@@ -99,6 +100,7 @@ async function uploadFiles(files) {
         }
         // Do not reload on error
     } finally {
+        window.stopLoading(loadingId);
         // Ensure progress is hidden if it was a simple success that triggered reload
         // The timeout in the success block handles this.
         // If hiding is needed for other cases, add logic here.
@@ -110,6 +112,7 @@ async function deletePhoto(photoId) {
         return;
     }
 
+    const loadingId = window.startLoading('Deleting photo');
     try {
         const response = await fetch(`/api/delete/${photoId}`, {
             method: 'DELETE',
@@ -132,6 +135,8 @@ async function deletePhoto(photoId) {
     } catch (error) {
         console.error('Delete error:', error);
         alert('Delete error: ' + (error.message || 'Network error'));
+    } finally {
+        window.stopLoading(loadingId);
     }
 }
 
