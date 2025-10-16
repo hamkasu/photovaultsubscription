@@ -230,6 +230,12 @@
 [x] 245. Restart both workflows with fixes - COMPLETED: PhotoVault Server and Expo Server running successfully with updated code
     - PhotoVault Server: Running on port 5000 with sharpen limit increased
     - Expo Server: Running with tunnel at exp://xxnze50-anonymous-8081.exp.direct with optimized logout
+[x] 254. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
+[x] 255. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 743 packages successfully
+[x] 256. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
+[x] 257. Final verification - COMPLETED: Both servers running successfully with no critical errors
+    - PhotoVault Server: Running on port 5000 with database initialized
+    - Expo Server: Running with tunnel ready and Metro bundler running
 [x] 205. Fix iOS gallery using dashboard pattern - COMPLETED: Updated /api/photos to use exact same URL pattern as dashboard (/uploads/{user_id}/{filename})
 [x] 206. Restart PhotoVault Server with gallery fix - COMPLETED: Server running on port 5000 with simplified gallery endpoint
 [x] 207. Make Gallery fetch from working dashboard endpoint - COMPLETED: Updated GalleryScreen.js to fetch image from /api/dashboard instead of broken /api/photos
