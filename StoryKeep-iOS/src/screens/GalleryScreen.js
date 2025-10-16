@@ -404,7 +404,7 @@ export default function GalleryScreen({ navigation }) {
           <Text style={styles.photoDate} numberOfLines={1}>
             {formatDate(item.created_at)}
           </Text>
-          {!selectionMode && (
+          {!selectionMode && authToken && (
             <TouchableOpacity
               style={styles.shareIconButton}
               onPress={(e) => handleSharePhoto(item, e)}

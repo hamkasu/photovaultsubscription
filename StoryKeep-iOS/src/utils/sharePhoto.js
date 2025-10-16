@@ -6,6 +6,11 @@ const BASE_URL = 'https://web-production-535bd.up.railway.app';
 
 export const sharePhoto = async (photo, authToken, preferEnhanced = false) => {
   try {
+    if (!authToken) {
+      Alert.alert('Error', 'Please wait for authentication to complete');
+      return false;
+    }
+
     const hasEnhanced = !!photo.edited_url;
     
     let selectedVersion = 'original';
