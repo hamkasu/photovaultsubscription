@@ -242,6 +242,8 @@
 [x] 261. Add Sharpening to Toolkit dropdown - COMPLETED: Integrated into navigation menu between Enhancement and Montage
 [x] 262. Test and restart PhotoVault Server - COMPLETED: Server running successfully on port 5000 with sharpening page
 [x] 263. Architect review of sharpening feature - COMPLETED: PASS - Feature follows existing patterns and production-ready
+[x] 264. Fix sharpening endpoint URL error - COMPLETED: Changed endpoint from /colorization/sharpen to /sharpen
+[x] 265. Architect review of endpoint fix - COMPLETED: PASS - Endpoint URL now matches backend route
 [x] 254. Fix environment after system restart - COMPLETED: Reinstalled all Python dependencies from requirements.txt
 [x] 255. Install Expo in StoryKeep-iOS directory - COMPLETED: Installed expo and 743 packages successfully
 [x] 256. Restart both workflows - COMPLETED: PhotoVault Server running on port 5000, Expo Server with tunnel ready and Metro bundler running
