@@ -1369,6 +1369,7 @@ def assign_face_to_person(face_id):
         }), 500
 
 @photo_bp.route('/api/photos/<int:photo_id>/enhance', methods=['POST'])
+@csrf.exempt
 @login_required
 def enhance_photo_api(photo_id):
     """
@@ -1406,7 +1407,7 @@ def enhance_photo_api(photo_id):
         
         # Get enhancement settings from request
         data = request.get_json()
-        enhancement_settings = data.get('settings', {})
+        enhancement_type = data.get('enhancement_type', '')
         
         # Generate filename for enhanced version using username.enhanced.date.randomnumber format
         from werkzeug.utils import secure_filename as sanitize_name
@@ -1424,12 +1425,31 @@ def enhance_photo_api(photo_id):
         # Enhanced image path (temp local path)
         temp_enhanced_filepath = os.path.join(user_upload_dir, enhanced_filename)
         
-        # Apply enhancements using the backend OpenCV system (saves to temp local)
-        output_path, applied_settings = enhancer.auto_enhance_photo(
-            full_file_path, 
-            temp_enhanced_filepath, 
-            enhancement_settings
-        )
+        # Handle different enhancement types
+        if enhancement_type == 'sharpen':
+            # Handle sharpen enhancement specifically
+            from photovault.utils.image_enhancement import sharpen_image
+            amount = float(data.get('amount', 1.5))
+            radius = float(data.get('radius', 2.0))
+            threshold = int(data.get('threshold', 3))
+            method = data.get('method', 'unsharp')
+            
+            output_path, applied_settings = sharpen_image(
+                full_file_path,
+                temp_enhanced_filepath,
+                radius=radius,
+                amount=amount,
+                threshold=threshold,
+                method=method
+            )
+        else:
+            # Apply general enhancements using the backend OpenCV system
+            enhancement_settings = data.get('settings', {})
+            output_path, applied_settings = enhancer.auto_enhance_photo(
+                full_file_path, 
+                temp_enhanced_filepath, 
+                enhancement_settings
+            )
         
         # Upload to App Storage for persistence
         enhanced_filepath = temp_enhanced_filepath  # Default to local
