@@ -363,7 +363,7 @@ document.getElementById('applySharpening').addEventListener('click', async funct
     try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         
-        const response = await fetch('/colorization/sharpen', {
+        const response = await fetch('/sharpen', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
