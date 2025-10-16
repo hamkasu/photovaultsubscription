@@ -14,7 +14,7 @@ The frontend uses HTML5, CSS3, JavaScript (vanilla + jQuery patterns) with Jinja
 ### Technical Implementations
 The backend is built with Flask 3.0.3, PostgreSQL (via Neon on Replit), and SQLAlchemy 2.0.25 for ORM. Alembic via Flask-Migrate handles database migrations. Flask-Login manages authentication, and Flask-WTF + WTForms are used for forms. Gunicorn 21.2.0 serves the application in production. Image processing uses Pillow 11.3.0 with pillow-heif 1.1.1 for HEIC/HEIF support, and OpenCV 4.12.0.88 (headless), with NumPy and scikit-image. AI integration leverages Google Gemini API (gemini-2.0-flash-exp) for intelligent photo colorization and analysis. Replit Object Storage is used for persistent image storage with local storage fallback.
 
-The iOS Digitizer App is a professional photo digitalization tool built with React Native/Expo, featuring:
+The Mobile Digitizer App (iOS & Android) is a professional photo digitalization tool built with React Native/Expo, featuring:
 - Smart camera with real-time edge detection, visual guides, and auto-capture.
 - Batch capture mode.
 - Flash control.
@@ -32,6 +32,14 @@ The iOS Digitizer App is a professional photo digitalization tool built with Rea
 Voice memo recording and playback are supported using expo-av (.m4a format), with secure playback and automatic temp file cleanup.
 
 Profile picture uploads support HEIC/HEIF formats (iOS default) with automatic conversion to JPEG for universal compatibility. The upload endpoint uses a temp file pattern with robust error handling to prevent corrupted files.
+
+### Cross-Platform Mobile Support
+The mobile app is fully cross-platform, supporting both iOS and Android with platform-specific adaptations:
+- **iOS**: Face ID/Touch ID biometric authentication, iOS-specific UI patterns
+- **Android**: Fingerprint/Face Unlock biometric authentication, Material Design patterns, hardware back button support
+- **StatusBar**: Platform-optimized status bar configuration
+- **KeyboardAvoidingView**: Platform-specific keyboard handling (iOS: padding, Android: height)
+- **Permissions**: Platform-appropriate permission requests for camera, storage, and biometric access
 
 ### Feature Specifications
 - **Authentication & Authorization**: User registration, login, password reset, session management, admin/superuser roles, subscription-based access.
