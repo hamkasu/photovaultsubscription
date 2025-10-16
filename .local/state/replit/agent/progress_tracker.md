@@ -256,6 +256,8 @@
 [x] 261. Final verification - COMPLETED: Both servers running successfully with no critical errors
     - PhotoVault Server: Running on port 5000 with database initialized
     - Expo Server: Running with tunnel ready and Metro bundler running
+[x] 262. Fix web sharpening 404 error - COMPLETED: Changed endpoint from /sharpen to /api/colorization/sharpen in sharpening.html
+[x] 263. Restart PhotoVault Server with sharpening fix - COMPLETED: Server running on port 5000 with corrected endpoint
 [x] 258. Implement vault creator protection - COMPLETED: Updated error message to "Cannot downgrade creator"
 [x] 259. Add is_creator flag to members list - COMPLETED: Backend now includes is_creator flag in vault detail API response
 [x] 260. Fix iOS creator identification - COMPLETED: Changed from checking role === 'owner' to using is_creator flag
