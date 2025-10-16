@@ -797,3 +797,16 @@ System recovered from latest restart and all services operational:
 - **Expo Server**: Running with tunnel and QR code ready for mobile testing
 - **All Features Working**: Authentication, Dashboard, Gallery, Camera, Family Vaults, Voice Memos, Downloads
 - **Ready for Development**: Full environment restored and ready for building and testing
+
+[x] 436. Fix enhancement authorization error - COMPLETED: Added web enhancement endpoint with session-based auth
+[x] 437. Create /api/colorization/enhance endpoint - COMPLETED: New endpoint with @login_required decorator
+[x] 438. Update frontend to use correct endpoint - COMPLETED: Changed from /api/photos/${photoId}/enhance to /api/colorization/enhance
+[x] 439. Restart PhotoVault Server with enhancement fix - COMPLETED: Server running with new endpoint
+
+## ✅ ENHANCEMENT AUTHORIZATION FIX - 439 TASKS COMPLETED
+Fixed web enhancement failing with "Authorization token is missing" error:
+- **Root Cause**: Frontend was calling mobile API endpoint requiring JWT token, not session-based auth
+- **Solution**: Created dedicated web endpoint `/api/colorization/enhance` with `@login_required` decorator
+- **Authentication**: Uses same session-based auth as colorization (CSRF token, not JWT)
+- **Frontend Updated**: Changed to call `/api/colorization/enhance` with photo_id in request body
+- **Result**: Enhancement now works like colorization with proper session authentication

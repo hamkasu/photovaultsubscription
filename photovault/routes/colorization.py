@@ -308,6 +308,110 @@ def colorize_photo_ai():
         }), 500
 
 
+@colorization_bp.route('/enhance', methods=['POST'])
+@login_required
+def enhance_photo():
+    """
+    Apply image enhancement to a photo (web endpoint)
+    
+    Request JSON:
+        {
+            "photo_id": int,  # Photo ID to enhance
+            "settings": {}    # Enhancement settings
+        }
+    
+    Returns:
+        {
+            "success": bool,
+            "photo_id": int,
+            "enhanced_url": str,
+            "message": str
+        }
+    """
+    try:
+        from photovault.utils.image_enhancement import enhancer
+        import random
+        
+        data = request.get_json()
+        
+        if not data or 'photo_id' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'photo_id is required'
+            }), 400
+        
+        photo_id = data['photo_id']
+        settings = data.get('settings', {})
+        
+        # Get photo from database
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        
+        if not photo:
+            return jsonify({
+                'success': False,
+                'error': 'Photo not found or unauthorized'
+            }), 404
+        
+        # Get file paths
+        original_path = photo.file_path
+        
+        if not os.path.exists(original_path):
+            return jsonify({
+                'success': False,
+                'error': 'Original photo file not found'
+            }), 404
+        
+        # Generate enhanced filename
+        from werkzeug.utils import secure_filename as sanitize_name
+        date = datetime.now().strftime('%Y%m%d')
+        random_number = random.randint(100000, 999999)
+        safe_username = sanitize_name(current_user.username)
+        enhanced_filename = f"{safe_username}.{date}.enh.{random_number}.jpg"
+        
+        logger.info(f"Enhancing photo {photo_id}: original='{photo.filename}', enhanced='{enhanced_filename}'")
+        
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_upload_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_upload_folder, exist_ok=True)
+        enhanced_filepath = os.path.join(user_upload_folder, enhanced_filename)
+        
+        # Apply enhancements
+        output_path, applied_settings = enhancer.auto_enhance_photo(
+            original_path,
+            enhanced_filepath,
+            settings
+        )
+        
+        # Update database with enhanced version
+        photo.edited_filename = enhanced_filename
+        photo.edited_path = enhanced_filepath
+        photo.enhancement_metadata = {
+            'enhancement': {
+                'settings': applied_settings,
+                'timestamp': str(datetime.now())
+            }
+        }
+        db.session.commit()
+        
+        logger.info(f"Photo {photo_id} enhanced successfully")
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo.id,
+            'enhanced_url': f'/uploads/{current_user.id}/{enhanced_filename}',
+            'settings_applied': applied_settings,
+            'message': 'Photo enhanced successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Enhancement failed: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @colorization_bp.route('/enhance-analyze', methods=['POST'])
 @login_required
 def analyze_enhancement():

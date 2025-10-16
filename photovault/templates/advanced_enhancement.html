@@ -603,13 +603,16 @@ function applyEnhancement() {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/api/photos/${photoId}/enhance`, {
+    fetch('/api/colorization/enhance', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
         },
-        body: JSON.stringify({ settings: settings })
+        body: JSON.stringify({ 
+            photo_id: photoId,
+            settings: settings 
+        })
     })
     .then(response => response.json())
     .then(data => {
