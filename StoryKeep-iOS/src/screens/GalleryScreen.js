@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI, vaultAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
+import { sharePhoto } from '../utils/sharePhoto';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -352,6 +353,11 @@ export default function GalleryScreen({ navigation }) {
     return `${Math.floor(diffDays / 365)}y ago`;
   };
 
+  const handleSharePhoto = async (photo, event) => {
+    event.stopPropagation();
+    await sharePhoto(photo, authToken, !!photo.edited_url);
+  };
+
   const renderPhoto = ({ item, index }) => {
     // Get the image URL - prefer thumbnail, fallback to url or original_url
     const imageUrl = item.thumbnail_url || item.url || item.original_url;
@@ -398,6 +404,14 @@ export default function GalleryScreen({ navigation }) {
           <Text style={styles.photoDate} numberOfLines={1}>
             {formatDate(item.created_at)}
           </Text>
+          {!selectionMode && (
+            <TouchableOpacity
+              style={styles.shareIconButton}
+              onPress={(e) => handleSharePhoto(item, e)}
+            >
+              <Ionicons name="share-social" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Top right badges - Colorized */}
@@ -788,11 +802,19 @@ const styles = StyleSheet.create({
     padding: 8,
     paddingBottom: 6,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   photoDate: {
     color: '#fff',
     fontSize: 11,
     fontWeight: '500',
+    flex: 1,
+  },
+  shareIconButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   enhancedBadge: {
     position: 'absolute',
