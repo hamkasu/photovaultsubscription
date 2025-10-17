@@ -28,6 +28,7 @@ The Mobile Digitizer App (iOS & Android) is a professional photo digitalization 
 - Device photo library upload via Expo ImagePicker for direct vault uploads.
 - Gallery bulk share to family vaults with efficient bulk API endpoint, loading overlay, and intelligent retry logic for failed photos.
 - Enhanced dashboard with 30% larger stat icons (42px), Vaults stat display with green highlight, and accurate vault counting using set-based deduplication to prevent double-counting of creators who are also members.
+- **Performance Optimization**: Thumbnail generation (300x300) on backend with FileSystem-based caching (100MB limit). Two-stage loading in PhotoDetailScreen (thumbnail preview → full resolution on demand) with real download progress tracking. Gallery preloads first 20 thumbnails for instant display, with network fallback for uncached images. All cached via FileSystem.createDownloadResumable() with automatic cleanup of oldest files.
 
 Voice memo recording and playback are supported using expo-av (.m4a format), with secure playback and automatic temp file cleanup.
 
