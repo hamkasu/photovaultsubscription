@@ -16,7 +16,7 @@ CALMIC SDN BHD - "Committed to Excellence"
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StoryKeep - Save Your Family Stories</title>
+    <title>StoryKeep - Preserve Your Family's Legacy</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -37,14 +37,14 @@ CALMIC SDN BHD - "Committed to Excellence"
             min-height: 90vh;
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, rgba(44, 44, 44, 0.9) 0%, rgba(44, 44, 44, 0.6) 100%), 
+            background: linear-gradient(135deg, rgba(101, 78, 63, 0.95) 0%, rgba(44, 44, 44, 0.85) 100%), 
                         url('{{ url_for('static', filename='img/hero-home.jpg') }}') center/cover;
             color: white;
             padding: 4rem 0;
         }
         
         .hero-content {
-            max-width: 800px;
+            max-width: 900px;
             animation: fadeInUp 1s ease-out;
         }
         
@@ -60,18 +60,38 @@ CALMIC SDN BHD - "Committed to Excellence"
         }
         
         .hero-title {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 800;
-            line-height: 1.2;
+            line-height: 1.1;
             margin-bottom: 1.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
         }
         
         .hero-subtitle {
-            font-size: 1.5rem;
-            line-height: 1.6;
-            margin-bottom: 3rem;
+            font-size: 1.6rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
             opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .hero-features {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .hero-feature-item i {
+            color: #f4a261;
+            font-size: 1.3rem;
         }
         
         .cta-buttons {
@@ -94,14 +114,14 @@ CALMIC SDN BHD - "Committed to Excellence"
         }
         
         .btn-primary-hero {
-            background: #ff6b6b;
+            background: #e76f51;
             color: white;
         }
         
         .btn-primary-hero:hover {
-            background: #ff5252;
+            background: #d65a3d;
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 8px 20px rgba(231, 111, 81, 0.4);
             color: white;
         }
         
@@ -121,12 +141,12 @@ CALMIC SDN BHD - "Committed to Excellence"
         
         .features-section {
             padding: 6rem 0;
-            background: #f8f9fa;
+            background: #fefefe;
         }
         
         .section-title {
             text-align: center;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             font-weight: 700;
             margin-bottom: 1rem;
             color: #2c2c2c;
@@ -134,58 +154,64 @@ CALMIC SDN BHD - "Committed to Excellence"
         
         .section-subtitle {
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: #6c757d;
             margin-bottom: 4rem;
-            max-width: 600px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
         
         .feature-card {
             background: white;
-            border-radius: 16px;
-            padding: 3rem 2rem;
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
             text-align: center;
             transition: all 0.3s ease;
-            border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             height: 100%;
         }
         
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            border-color: #f4a261;
         }
         
         .feature-icon {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             margin: 0 auto 1.5rem;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 2.5rem;
         }
         
-        .feature-icon.icon-camera {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .feature-icon.icon-digitize {
+            background: linear-gradient(135deg, #e76f51 0%, #f4a261 100%);
             color: white;
         }
         
-        .feature-icon.icon-upload {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        .feature-icon.icon-voice {
+            background: linear-gradient(135deg, #264653 0%, #2a9d8f 100%);
             color: white;
         }
         
-        .feature-icon.icon-security {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        .feature-icon.icon-restore {
+            background: linear-gradient(135deg, #e9c46a 0%, #f4a261 100%);
+            color: white;
+        }
+
+        .feature-icon.icon-vault {
+            background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
             color: white;
         }
         
         .feature-title {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             margin-bottom: 1rem;
             color: #2c2c2c;
@@ -193,8 +219,120 @@ CALMIC SDN BHD - "Committed to Excellence"
         
         .feature-description {
             color: #6c757d;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .comparison-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, #264653 0%, #2c2c2c 100%);
+            color: white;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .comparison-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: #f4a261;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .comparison-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .comparison-card li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
             font-size: 1rem;
             line-height: 1.6;
+        }
+
+        .comparison-card li i {
+            color: #f4a261;
+            margin-top: 0.3rem;
+        }
+
+        .usecases-section {
+            padding: 6rem 0;
+            background: #f8f9fa;
+        }
+
+        .usecase-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border-left: 5px solid #e76f51;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .usecase-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .usecase-icon {
+            font-size: 3rem;
+            color: #e76f51;
+            margin-bottom: 1.5rem;
+        }
+
+        .usecase-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c2c2c;
+            margin-bottom: 1rem;
+        }
+
+        .usecase-scenario {
+            font-size: 1.1rem;
+            color: #495057;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .usecase-description {
+            font-size: 1.05rem;
+            color: #6c757d;
+            line-height: 1.7;
+        }
+
+        .usecase-features {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .usecase-feature-tag {
+            background: #fef3f0;
+            color: #e76f51;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
         
         .stats-section {
@@ -211,7 +349,7 @@ CALMIC SDN BHD - "Committed to Excellence"
         .stat-number {
             font-size: 3.5rem;
             font-weight: 800;
-            color: #ff6b6b;
+            color: #f4a261;
             line-height: 1;
             margin-bottom: 0.5rem;
         }
@@ -225,11 +363,16 @@ CALMIC SDN BHD - "Committed to Excellence"
         
         @media (max-width: 768px) {
             .hero-title {
-                font-size: 2.5rem;
+                font-size: 2.8rem;
             }
             
             .hero-subtitle {
-                font-size: 1.2rem;
+                font-size: 1.3rem;
+            }
+
+            .hero-features {
+                flex-direction: column;
+                gap: 1rem;
             }
             
             .btn-hero {
@@ -244,11 +387,19 @@ CALMIC SDN BHD - "Committed to Excellence"
             }
             
             .section-title {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
             
             .stat-number {
                 font-size: 2.5rem;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .usecase-card {
+                padding: 2rem;
             }
         }
     </style>
@@ -277,6 +428,12 @@ CALMIC SDN BHD - "Committed to Excellence"
                         <a class="nav-link" href="#features">Features</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#why-storykeep">Why StoryKeep</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#use-cases">Use Cases</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
                     </li>
                     {% if current_user.is_authenticated %}
@@ -300,14 +457,29 @@ CALMIC SDN BHD - "Committed to Excellence"
     <section class="hero-section">
         <div class="container">
             <div class="hero-content">
-                <h1 class="hero-title">Don't Just Scan the Photo. Save the Story.</h1>
-                <p class="hero-subtitle">StoryKeep: The app that brings your family's history to life with photos, voices, and memories.</p>
+                <h1 class="hero-title">Turn Family Photos Into Living Memories</h1>
+                <p class="hero-subtitle">Digitize old photo albums, restore faded pictures with AI, and capture the voices behind every story—all in one place.</p>
                 
+                <div class="hero-features">
+                    <div class="hero-feature-item">
+                        <i class="fas fa-camera-retro"></i>
+                        <span>AI Photo Digitization</span>
+                    </div>
+                    <div class="hero-feature-item">
+                        <i class="fas fa-microphone"></i>
+                        <span>Voice Story Capture</span>
+                    </div>
+                    <div class="hero-feature-item">
+                        <i class="fas fa-magic"></i>
+                        <span>AI Restoration</span>
+                    </div>
+                </div>
+
                 {% if not current_user.is_authenticated %}
                 <div class="cta-buttons">
                     <a href="{{ url_for('auth.register') }}" class="btn-hero btn-primary-hero">
-                        <i class="fas fa-rocket"></i>
-                        Get Started Free
+                        <i class="fas fa-heart"></i>
+                        Start Preserving History
                     </a>
                     <a href="{{ url_for('auth.login') }}" class="btn-hero btn-secondary-hero">
                         <i class="fas fa-sign-in-alt"></i>
@@ -322,10 +494,137 @@ CALMIC SDN BHD - "Committed to Excellence"
                     </a>
                     <a href="{{ url_for('upload.upload_page') }}" class="btn-hero btn-secondary-hero">
                         <i class="fas fa-camera"></i>
-                        Take Photos
+                        Digitize Photos
                     </a>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <h2 class="section-title">Preserve Your Heritage</h2>
+            <p class="section-subtitle">StoryKeep goes beyond photo storage—it's a complete family history preservation platform</p>
+            
+            <div class="row g-4 mb-5">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon icon-digitize">
+                            <i class="fas fa-camera-retro"></i>
+                        </div>
+                        <h3 class="feature-title">AI Photo Digitization</h3>
+                        <p class="feature-description">Photograph old albums and our AI automatically detects and extracts individual photos—saving hours of manual work.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon icon-voice">
+                            <i class="fas fa-microphone"></i>
+                        </div>
+                        <h3 class="feature-title">Voice Story Capture</h3>
+                        <p class="feature-description">Record voice memos attached to each photo. Capture grandma's stories while you still can—preserve the voices behind the memories.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon icon-restore">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h3 class="feature-title">AI Restoration</h3>
+                        <p class="feature-description">Bring old photos back to life. Colorize black & white images, sharpen blurry pictures, and enhance faded family heirlooms with one click.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon icon-vault">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="feature-title">Family Vaults</h3>
+                        <p class="feature-description">Create shared collections where family members can contribute photos and stories. Unite scattered memories across generations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="comparison-section" id="why-storykeep">
+        <div class="container">
+            <h2 class="section-title" style="color: white;">Why StoryKeep Is Different</h2>
+            <p class="section-subtitle" style="color: rgba(255,255,255,0.9);">Not just another cloud storage app—it's purpose-built for family history</p>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <h4><i class="fas fa-cloud"></i> Other Cloud Storage</h4>
+                    <ul>
+                        <li><i class="fas fa-circle" style="font-size: 0.4rem;"></i> Store recent digital photos</li>
+                        <li><i class="fas fa-circle" style="font-size: 0.4rem;"></i> Auto-backup from phones</li>
+                        <li><i class="fas fa-circle" style="font-size: 0.4rem;"></i> Face recognition</li>
+                        <li><i class="fas fa-circle" style="font-size: 0.4rem;"></i> Photo editing tools</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card">
+                    <h4><i class="fas fa-heart"></i> StoryKeep</h4>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Digitize physical photo albums</li>
+                        <li><i class="fas fa-check"></i> Capture and attach voice stories</li>
+                        <li><i class="fas fa-check"></i> AI restore old, damaged photos</li>
+                        <li><i class="fas fa-check"></i> Colorize black & white images</li>
+                        <li><i class="fas fa-check"></i> Collaborative family collections</li>
+                        <li><i class="fas fa-check"></i> Preserve oral family history</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="usecases-section" id="use-cases">
+        <div class="container">
+            <h2 class="section-title">Real Stories, Real Impact</h2>
+            <p class="section-subtitle">See how families are using StoryKeep to preserve their legacy</p>
+
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="usecase-card">
+                        <div class="usecase-icon"><i class="fas fa-book-open"></i></div>
+                        <h3 class="usecase-title">Grandma's Photo Albums</h3>
+                        <p class="usecase-scenario">"My grandmother has boxes of old family photos, but her memory is fading. I want to preserve not just the pictures, but her stories about each one."</p>
+                        <p class="usecase-description">Use StoryKeep to photograph entire albums—our AI extracts each photo automatically. Then record grandma describing who's in each picture and what was happening. Years from now, your family will hear her voice telling the stories.</p>
+                        <div class="usecase-features">
+                            <span class="usecase-feature-tag">📸 AI Photo Detection</span>
+                            <span class="usecase-feature-tag">🎤 Voice Recording</span>
+                            <span class="usecase-feature-tag">☁️ Secure Backup</span>
+                        </div>
+                    </div>
+
+                    <div class="usecase-card">
+                        <div class="usecase-icon"><i class="fas fa-palette"></i></div>
+                        <h3 class="usecase-title">Faded Family Heirlooms</h3>
+                        <p class="usecase-scenario">"I have my great-grandparents' wedding photo from 1920. It's black and white, faded, and hard to see. I wish I could see it how it looked originally."</p>
+                        <p class="usecase-description">Upload your precious heirloom and let our AI work its magic. Colorize black & white photos to see what colors people wore. Sharpen blurry details. Enhance faded areas. Turn your family treasures into vibrant memories again.</p>
+                        <div class="usecase-features">
+                            <span class="usecase-feature-tag">🎨 AI Colorization</span>
+                            <span class="usecase-feature-tag">✨ Photo Enhancement</span>
+                            <span class="usecase-feature-tag">🔍 Detail Sharpening</span>
+                        </div>
+                    </div>
+
+                    <div class="usecase-card">
+                        <div class="usecase-icon"><i class="fas fa-home"></i></div>
+                        <h3 class="usecase-title">Scattered Family Memories</h3>
+                        <p class="usecase-scenario">"My siblings and I each have different photos from family events. Some are with mom, some with dad, others with cousins. How do we bring them all together?"</p>
+                        <p class="usecase-description">Create a Family Vault and invite relatives to contribute. Everyone can add their photos, share stories, and preserve memories together. Perfect for family reunions, memorials, or just staying connected across generations.</p>
+                        <div class="usecase-features">
+                            <span class="usecase-feature-tag">👨‍👩‍👧‍👦 Family Vaults</span>
+                            <span class="usecase-feature-tag">🤝 Collaborative Sharing</span>
+                            <span class="usecase-feature-tag">📚 Organized Collections</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -337,57 +636,19 @@ CALMIC SDN BHD - "Committed to Excellence"
                 <div class="col-md-4">
                     <div class="stat-item">
                         <div class="stat-number">100K+</div>
-                        <div class="stat-label">Photos Stored</div>
+                        <div class="stat-label">Photos Preserved</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-item">
                         <div class="stat-number">5K+</div>
-                        <div class="stat-label">Happy Users</div>
+                        <div class="stat-label">Families Connected</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-item">
-                        <div class="stat-number">99.9%</div>
-                        <div class="stat-label">Uptime</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features-section" id="features">
-        <div class="container">
-            <h2 class="section-title">Powerful Features</h2>
-            <p class="section-subtitle">Everything you need to manage your photo library professionally</p>
-            
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon icon-camera">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <h3 class="feature-title">Full Screen Camera</h3>
-                        <p class="feature-description">Professional camera experience with landscape mode and tap-to-capture functionality for the perfect shot every time.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon icon-upload">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <h3 class="feature-title">Auto Upload</h3>
-                        <p class="feature-description">Photos are automatically uploaded and intelligently organized after capture, so you never lose a moment.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon icon-security">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3 class="feature-title">Secure Storage</h3>
-                        <p class="feature-description">Your photos are safely stored with professional-grade security and encrypted backups.</p>
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Stories Captured</div>
                     </div>
                 </div>
             </div>
@@ -410,7 +671,7 @@ CALMIC SDN BHD - "Committed to Excellence"
                             <small style="font-size: 0.75rem; opacity: 0.8;">by Calmic Sdn Bhd</small>
                         </div>
                     </div>
-                    <p style="opacity: 0.8;">Save your family stories with photos, voices, and memories</p>
+                    <p style="opacity: 0.8;">Preserve your family's legacy with photos, voices, and memories</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p style="opacity: 0.8; margin-bottom: 0;">© 2025 Calmic Sdn Bhd</p>
