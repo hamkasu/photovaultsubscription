@@ -361,44 +361,39 @@ export default function PhotoDetailScreen({ route, navigation }) {
       const data = await response.json();
       
       if (data.success) {
-        Alert.alert(
-          'Animation Created!',
-          'Your animated video has been created. Download it now?',
-          [
-            { text: 'Later', style: 'cancel' },
+        // Automatically save the animated video to gallery
+        try {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'Cannot save video without permission');
+            setLoading(false);
+            return;
+          }
+          
+          const videoUrl = BASE_URL + data.animated_url;
+          const fileUri = FileSystem.documentDirectory + `animation_${photo.id}_${Date.now()}.mp4`;
+          
+          console.log('📥 Downloading animated video from:', videoUrl);
+          
+          const { uri } = await FileSystem.downloadAsync(
+            videoUrl,
+            fileUri,
             {
-              text: 'Download',
-              onPress: async () => {
-                try {
-                  const { status } = await MediaLibrary.requestPermissionsAsync();
-                  if (status !== 'granted') {
-                    Alert.alert('Permission Denied', 'Cannot save video without permission');
-                    return;
-                  }
-                  
-                  const videoUrl = BASE_URL + data.animated_url;
-                  const fileUri = FileSystem.documentDirectory + `animation_${photo.id}.mp4`;
-                  
-                  const { uri } = await FileSystem.downloadAsync(
-                    videoUrl,
-                    fileUri,
-                    {
-                      headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                      },
-                    }
-                  );
-                  
-                  const asset = await MediaLibrary.createAssetAsync(uri, { mediaType: 'video' });
-                  Alert.alert('Success', 'Animated video saved to your library!');
-                } catch (error) {
-                  Alert.alert('Error', 'Failed to save video');
-                  console.error('Download error:', error);
-                }
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
               },
-            },
-          ]
-        );
+            }
+          );
+          
+          console.log('💾 Saving animated video to gallery from:', uri);
+          const asset = await MediaLibrary.createAssetAsync(uri, { mediaType: 'video' });
+          
+          Alert.alert('Success', 'Animated video created and saved to your gallery!');
+          console.log('✅ Animated video saved successfully');
+        } catch (error) {
+          Alert.alert('Error', 'Animation created but failed to save to gallery');
+          console.error('❌ Video save error:', error);
+        }
       } else {
         Alert.alert('Error', data.error || 'Animation failed');
       }
