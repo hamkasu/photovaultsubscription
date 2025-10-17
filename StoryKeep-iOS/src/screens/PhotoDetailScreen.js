@@ -387,8 +387,20 @@ export default function PhotoDetailScreen({ route, navigation }) {
           
           console.log('💾 Saving video to gallery. File:', downloadResult.uri);
           
-          // Use saveToLibraryAsync instead of createAssetAsync for videos
-          await MediaLibrary.saveToLibraryAsync(downloadResult.uri);
+          // Create asset first
+          const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+          
+          // Try to create/get StoryKeep album
+          try {
+            const album = await MediaLibrary.getAlbumAsync('StoryKeep');
+            if (album) {
+              await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+            } else {
+              await MediaLibrary.createAlbumAsync('StoryKeep', asset, false);
+            }
+          } catch (albumError) {
+            console.log('ℹ️ Album operation skipped, video saved to library:', albumError.message);
+          }
           
           // Clean up temp file after saving
           await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
