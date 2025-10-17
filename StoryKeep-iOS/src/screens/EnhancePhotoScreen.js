@@ -24,7 +24,7 @@ export default function EnhancePhotoScreen({ route, navigation }) {
   const [processing, setProcessing] = useState(false);
   const [showOriginal, setShowOriginal] = useState(true);
   const [authToken, setAuthToken] = useState(null);
-  const [isBlackAndWhite, setIsBlackAndWhite] = useState(null);
+  const [isBlackAndWhite, setIsBlackAndWhite] = useState(false);
   const [detectingColor, setDetectingColor] = useState(true);
   
   // Sharpen controls modal state
@@ -58,15 +58,15 @@ export default function EnhancePhotoScreen({ route, navigation }) {
         setIsBlackAndWhite(response.is_grayscale);
         console.log(`Photo ${photo.id} grayscale check: ${response.is_grayscale}`);
       } else {
-        // On error, enable colorization (conservative approach)
-        console.warn('Grayscale check failed, enabling colorization by default');
-        setIsBlackAndWhite(true);
+        // On error, disable colorization (buttons stay disabled)
+        console.warn('Grayscale check failed, colorization disabled');
+        setIsBlackAndWhite(false);
       }
       
     } catch (error) {
       console.error('Error detecting image color:', error);
-      // On error, enable colorization (conservative approach)
-      setIsBlackAndWhite(true);
+      // On error, disable colorization (buttons stay disabled)
+      setIsBlackAndWhite(false);
     } finally {
       setDetectingColor(false);
     }
@@ -243,19 +243,19 @@ export default function EnhancePhotoScreen({ route, navigation }) {
           <EnhancementOption
             icon="color-palette"
             title="Colorize (DNN)"
-            description="Fast colorization using DNN"
+            description={detectingColor ? "Checking photo..." : "Fast colorization using DNN"}
             onPress={() => handleColorize(false)}
             color="#4CAF50"
-            disabled={!isBlackAndWhite}
+            disabled={detectingColor || !isBlackAndWhite}
           />
 
           <EnhancementOption
             icon="sparkles-outline"
             title="Colorize (AI)"
-            description="Intelligent AI-powered colorization"
+            description={detectingColor ? "Checking photo..." : "Intelligent AI-powered colorization"}
             onPress={() => handleColorize(true)}
             color="#9C27B0"
-            disabled={!isBlackAndWhite}
+            disabled={detectingColor || !isBlackAndWhite}
           />
         </View>
 
