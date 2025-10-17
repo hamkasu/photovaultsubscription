@@ -371,11 +371,11 @@ export default function PhotoDetailScreen({ route, navigation }) {
           }
           
           const videoUrl = BASE_URL + data.animated_url;
-          const fileUri = FileSystem.documentDirectory + `animation_${photo.id}_${Date.now()}.mp4`;
+          const fileUri = FileSystem.cacheDirectory + `animation_${photo.id}_${Date.now()}.mp4`;
           
           console.log('📥 Downloading animated video from:', videoUrl);
           
-          const { uri } = await FileSystem.downloadAsync(
+          const downloadResult = await FileSystem.downloadAsync(
             videoUrl,
             fileUri,
             {
@@ -385,13 +385,18 @@ export default function PhotoDetailScreen({ route, navigation }) {
             }
           );
           
-          console.log('💾 Saving animated video to gallery from:', uri);
-          const asset = await MediaLibrary.createAssetAsync(uri, { mediaType: 'video' });
+          console.log('💾 Saving video to gallery. File:', downloadResult.uri);
           
-          Alert.alert('Success', 'Animated video created and saved to your gallery!');
+          // Use saveToLibraryAsync instead of createAssetAsync for videos
+          await MediaLibrary.saveToLibraryAsync(downloadResult.uri);
+          
+          // Clean up temp file after saving
+          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
+          
+          Alert.alert('Success', 'Animated video saved to your gallery!');
           console.log('✅ Animated video saved successfully');
         } catch (error) {
-          Alert.alert('Error', 'Animation created but failed to save to gallery');
+          Alert.alert('Error', 'Animation created but failed to save to gallery: ' + error.message);
           console.error('❌ Video save error:', error);
         }
       } else {
