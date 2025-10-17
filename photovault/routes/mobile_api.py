@@ -505,11 +505,16 @@ def get_photos(current_user):
         # Build photo list - EXACT SAME URL PATTERN AS DASHBOARD
         photos_list = []
         for photo in paginated_photos:
+            # Extract thumbnail filename from thumbnail_path if it exists
+            thumbnail_filename = None
+            if photo.thumbnail_path:
+                thumbnail_filename = os.path.basename(photo.thumbnail_path)
+            
             photo_data = {
                 'id': photo.id,
                 'filename': photo.filename,
                 'url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
-                'thumbnail_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+                'thumbnail_url': f'/uploads/{current_user.id}/{thumbnail_filename}' if thumbnail_filename else f'/uploads/{current_user.id}/{photo.filename}',
                 'created_at': photo.created_at.isoformat() if photo.created_at else None,
                 'file_size': photo.file_size,
                 'has_edited': photo.edited_filename is not None,
@@ -556,13 +561,18 @@ def get_photo_detail(current_user, photo_id):
         if not photo:
             return jsonify({'error': 'Photo not found'}), 404
         
+        # Extract thumbnail filename from thumbnail_path if it exists
+        thumbnail_filename = None
+        if photo.thumbnail_path:
+            thumbnail_filename = os.path.basename(photo.thumbnail_path)
+        
         # Build photo data - same format as get_photos
         photo_data = {
             'id': photo.id,
             'filename': photo.filename,
             'original_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
             'url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
-            'thumbnail_url': f'/uploads/{current_user.id}/{photo.filename}' if photo.filename else None,
+            'thumbnail_url': f'/uploads/{current_user.id}/{thumbnail_filename}' if thumbnail_filename else f'/uploads/{current_user.id}/{photo.filename}',
             'created_at': photo.created_at.isoformat() if photo.created_at else None,
             'file_size': photo.file_size,
             'has_edited': photo.edited_filename is not None,
