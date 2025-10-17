@@ -32,6 +32,9 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [aiMetadata, setAIMetadata] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
   
   // Pinch zoom states
   const scale = new Animated.Value(1);
@@ -67,6 +70,13 @@ export default function PhotoDetailScreen({ route, navigation }) {
       }
     };
   }, []);
+
+  // Reset image loading state when switching between original/edited
+  useEffect(() => {
+    setImageLoading(true);
+    setImageError(false);
+    setLoadProgress(0);
+  }, [showOriginal]);
 
   const loadData = async () => {
     const token = await AsyncStorage.getItem('authToken');
@@ -665,6 +675,42 @@ export default function PhotoDetailScreen({ route, navigation }) {
 
   const composedGesture = Gesture.Race(doubleTapGesture, pinchGesture);
 
+  const retryImageLoad = () => {
+    setImageLoading(true);
+    setImageError(false);
+    setLoadProgress(0);
+  };
+
+  const handleImageLoadStart = () => {
+    console.log('📥 Image loading started...');
+    setImageLoading(true);
+    setImageError(false);
+    // Simulate progress for visual feedback
+    const interval = setInterval(() => {
+      setLoadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 100);
+  };
+
+  const handleImageLoadEnd = () => {
+    console.log('✅ Image loaded successfully');
+    setImageLoading(false);
+    setImageError(false);
+    setLoadProgress(100);
+  };
+
+  const handleImageError = (error) => {
+    console.error('❌ Image load error:', error);
+    setImageLoading(false);
+    setImageError(true);
+    setLoadProgress(0);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -679,30 +725,57 @@ export default function PhotoDetailScreen({ route, navigation }) {
 
       <ScrollView>
         <View style={styles.imageContainer}>
-          {imageUrl && authToken ? (
-            <GestureDetector gesture={composedGesture}>
-              <Animated.Image 
-                source={{ 
-                  uri: imageUrl,
-                  headers: {
-                    Authorization: `Bearer ${authToken}`
-                  }
-                }} 
-                style={[
-                  styles.image,
-                  {
-                    transform: [{ scale: scale }]
-                  }
-                ]}
-                resizeMode="contain"
-              />
-            </GestureDetector>
+          {imageError ? (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle-outline" size={64} color="#E85D75" />
+              <Text style={styles.errorText}>Failed to load image</Text>
+              <Text style={styles.errorSubtext}>Check your connection and try again</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={retryImageLoad}>
+                <Ionicons name="refresh" size={20} color="#fff" />
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : imageUrl && authToken ? (
+            <>
+              <GestureDetector gesture={composedGesture}>
+                <Animated.Image 
+                  source={{ 
+                    uri: imageUrl,
+                    headers: {
+                      Authorization: `Bearer ${authToken}`
+                    }
+                  }} 
+                  style={[
+                    styles.image,
+                    {
+                      transform: [{ scale: scale }]
+                    }
+                  ]}
+                  resizeMode="contain"
+                  onLoadStart={handleImageLoadStart}
+                  onLoadEnd={handleImageLoadEnd}
+                  onError={handleImageError}
+                />
+              </GestureDetector>
+              {imageLoading && (
+                <View style={styles.loadingOverlay}>
+                  <View style={styles.loadingBarContainer}>
+                    <View style={styles.loadingBar}>
+                      <View style={[styles.loadingBarFill, { width: `${loadProgress}%` }]} />
+                    </View>
+                    <Text style={styles.loadingText}>{loadProgress}%</Text>
+                  </View>
+                  <Text style={styles.loadingSubtext}>Loading image...</Text>
+                </View>
+              )}
+            </>
           ) : (
             <View style={styles.image}>
               <ActivityIndicator size="large" color="#E85D75" />
+              <Text style={styles.loadingText}>Preparing...</Text>
             </View>
           )}
-          {currentScale > 1 && (
+          {currentScale > 1 && !imageLoading && (
             <View style={styles.zoomIndicator}>
               <Text style={styles.zoomText}>{currentScale.toFixed(1)}x</Text>
             </View>
@@ -1502,5 +1575,79 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
     fontStyle: 'italic',
+  },
+  errorContainer: {
+    height: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 15,
+    marginBottom: 5,
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E85D75',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingBarContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  loadingBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  loadingBarFill: {
+    height: '100%',
+    backgroundColor: '#E85D75',
+    borderRadius: 4,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#E85D75',
+    marginTop: 5,
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
   },
 });
