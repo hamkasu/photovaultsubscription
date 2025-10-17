@@ -389,7 +389,7 @@ export default function PhotoDetailScreen({ route, navigation }) {
                     }
                   );
                   
-                  const asset = await MediaLibrary.createAssetAsync(uri);
+                  const asset = await MediaLibrary.createAssetAsync(uri, { mediaType: 'video' });
                   Alert.alert('Success', 'Animated video saved to your library!');
                 } catch (error) {
                   Alert.alert('Error', 'Failed to save video');
