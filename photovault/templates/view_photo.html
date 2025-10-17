@@ -1111,7 +1111,7 @@ function createAnimation() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
     // Make API request
-    fetch('/api/colorization/animate', {
+    fetch('/api/photos/{{ photo.id }}/animate', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
