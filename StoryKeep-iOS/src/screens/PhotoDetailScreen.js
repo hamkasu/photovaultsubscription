@@ -313,6 +313,103 @@ export default function PhotoDetailScreen({ route, navigation }) {
     await sharePhoto(photo, authToken, !showOriginal);
   };
 
+  const handleAnimate = () => {
+    Alert.alert(
+      'Animate Photo',
+      'Choose animation effect:',
+      [
+        {
+          text: 'Ken Burns (Zoom & Pan)',
+          onPress: () => createAnimation('ken_burns'),
+        },
+        {
+          text: 'Parallax 3D',
+          onPress: () => createAnimation('parallax'),
+        },
+        {
+          text: 'Cinemagraph',
+          onPress: () => createAnimation('cinemagraph'),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const createAnimation = async (effectType) => {
+    try {
+      setLoading(true);
+      
+      const settings = {
+        duration: 5,
+        ...(effectType === 'ken_burns' && { zoom_direction: 'in', pan_direction: 'center' }),
+        ...(effectType === 'parallax' && { intensity: 0.05 }),
+        ...(effectType === 'cinemagraph' && { motion_area: 'center', motion_type: 'wave' }),
+      };
+      
+      const response = await fetch(`${BASE_URL}/api/photos/${photo.id}/animate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          effect_type: effectType,
+          settings,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        Alert.alert(
+          'Animation Created!',
+          'Your animated video has been created. Download it now?',
+          [
+            { text: 'Later', style: 'cancel' },
+            {
+              text: 'Download',
+              onPress: async () => {
+                try {
+                  const { status } = await MediaLibrary.requestPermissionsAsync();
+                  if (status !== 'granted') {
+                    Alert.alert('Permission Denied', 'Cannot save video without permission');
+                    return;
+                  }
+                  
+                  const videoUrl = BASE_URL + data.animated_url;
+                  const fileUri = FileSystem.documentDirectory + `animation_${photo.id}.mp4`;
+                  
+                  const { uri } = await FileSystem.downloadAsync(
+                    videoUrl,
+                    fileUri,
+                    {
+                      headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                      },
+                    }
+                  );
+                  
+                  const asset = await MediaLibrary.createAssetAsync(uri);
+                  Alert.alert('Success', 'Animated video saved to your library!');
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to save video');
+                  console.error('Download error:', error);
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Error', data.error || 'Animation failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create animation');
+      console.error('Animation error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Simple debugging voice memo functions
   const startRecording = async () => {
     try {
@@ -630,6 +727,11 @@ export default function PhotoDetailScreen({ route, navigation }) {
           <TouchableOpacity style={styles.actionButton} onPress={handleEnhance}>
             <Ionicons name="sparkles" size={24} color="#E85D75" />
             <Text style={styles.actionText}>Enhance</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={handleAnimate}>
+            <Ionicons name="videocam" size={24} color="#E85D75" />
+            <Text style={styles.actionText}>Animate</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

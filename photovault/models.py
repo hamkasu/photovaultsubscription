@@ -48,6 +48,8 @@ class Photo(db.Model):
     thumbnail_path = db.Column(db.String(500))
     edited_filename = db.Column(db.String(255))  # For edited versions
     edited_path = db.Column(db.String(500))  # For edited versions
+    animated_filename = db.Column(db.String(255))  # For animated video versions
+    animated_path = db.Column(db.String(500))  # For animated video versions
     file_size = db.Column(db.Integer)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)

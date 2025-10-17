@@ -2948,3 +2948,117 @@ def bulk_delete_photos_mobile(current_user):
         logger.error(f"📋 TRACEBACK:\n{error_trace}")
         db.session.rollback()
         return jsonify({'success': False, 'error': f'Bulk delete failed: {str(e)}'}), 500
+
+
+@mobile_api_bp.route('/photos/<int:photo_id>/animate', methods=['POST'])
+@csrf.exempt
+@token_required
+def animate_photo_mobile(current_user, photo_id):
+    """
+    Mobile API endpoint to create animated video from photo with JWT authentication
+    
+    Request JSON:
+        {
+            "effect_type": "ken_burns" | "parallax" | "cinemagraph",
+            "settings": {
+                # Effect-specific settings
+            }
+        }
+    
+    Returns:
+        {
+            "success": bool,
+            "photo_id": int,
+            "animated_url": str,
+            "effect_type": str
+        }
+    """
+    try:
+        from photovault.utils.animation import animator
+        import uuid
+        
+        logger.info(f"🎬 Animation request: photo_id={photo_id}, user={current_user.username}")
+        
+        # Get photo and verify ownership
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        if not photo:
+            logger.warning(f"❌ Photo {photo_id} not found or access denied for user {current_user.id}")
+            return jsonify({'success': False, 'error': 'Photo not found or access denied'}), 404
+        
+        # Get request data
+        data = request.get_json() or {}
+        effect_type = data.get('effect_type', 'ken_burns')
+        settings = data.get('settings', {})
+        
+        # Validate effect type
+        valid_effects = ['ken_burns', 'parallax', 'cinemagraph']
+        if effect_type not in valid_effects:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid effect type. Must be one of: {", ".join(valid_effects)}'
+            }), 400
+        
+        logger.info(f"📸 Found photo: filename={photo.filename}, file_path={photo.file_path}")
+        
+        # Construct full file path
+        user_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(current_user.id))
+        if os.path.isabs(photo.file_path):
+            full_file_path = photo.file_path
+        else:
+            full_file_path = os.path.join(user_upload_dir, photo.file_path)
+        
+        logger.info(f"📂 Full file path: {full_file_path}")
+        
+        # Check if file exists
+        if not os.path.exists(full_file_path):
+            logger.error(f"❌ File not found on disk: {full_file_path}")
+            return jsonify({'success': False, 'error': 'Photo file not found'}), 404
+        
+        # Generate unique filename for animated video
+        unique_id = str(uuid.uuid4())[:8]
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        animated_filename = f"{current_user.id}_{unique_id}_animated_{effect_type}_{timestamp}.mp4"
+        
+        # Create user folder
+        os.makedirs(user_upload_dir, exist_ok=True)
+        animated_path = os.path.join(user_upload_dir, animated_filename)
+        
+        logger.info(f"🎬 Creating {effect_type} animation: {animated_filename}")
+        
+        # Create animation
+        success, message = animator.create_animation(
+            full_file_path,
+            animated_path,
+            effect_type,
+            settings
+        )
+        
+        if not success:
+            logger.error(f"❌ Animation failed: {message}")
+            return jsonify({'success': False, 'error': message}), 500
+        
+        # Update photo record
+        photo.animated_filename = animated_filename
+        photo.animated_path = animated_path
+        db.session.commit()
+        
+        logger.info(f"✅ Animation created successfully: {animated_filename}")
+        
+        # Generate URL for mobile app
+        animated_url = f"/uploads/{current_user.id}/{animated_filename}"
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo.id,
+            'animated_url': animated_url,
+            'effect_type': effect_type,
+            'message': f'{effect_type.replace("_", " ").title()} animation created successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Animation failed: {str(e)}")
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"📋 TRACEBACK:\n{error_trace}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': f'Animation failed: {str(e)}'}), 500

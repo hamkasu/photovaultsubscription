@@ -44,6 +44,9 @@ CALMIC SDN BHD - "Committed to Excellence"
                             <button class="btn btn-outline-primary" onclick="autoDetectPhotos()" title="Auto-detect photos" id="autoDetectBtn">
                                 <i class="bi bi-search"></i> Auto-Detect
                             </button>
+                            <button class="btn btn-outline-purple" data-bs-toggle="modal" data-bs-target="#animatePhotoModal" title="Animate photo">
+                                <i class="bi bi-camera-video"></i> Animate
+                            </button>
                         </div>
                         
                         <!-- View Operations Group -->
@@ -949,6 +952,204 @@ function showExtractedPhotos(extractedPhotos) {
     // Remove modal from DOM when closed
     modal.addEventListener('hidden.bs.modal', () => {
         document.body.removeChild(modal);
+    });
+}
+</script>
+
+<!-- Animate Photo Modal -->
+<div class="modal fade" id="animatePhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Animate Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Create an animated video from your photo using motion effects.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Effect Type</label>
+                    <select class="form-select" id="animationEffectType">
+                        <option value="ken_burns">Ken Burns (Zoom & Pan)</option>
+                        <option value="parallax">Parallax 3D</option>
+                        <option value="cinemagraph">Cinemagraph</option>
+                    </select>
+                    <small class="text-muted" id="effectDescription">Classic documentary-style zoom and pan effect</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Duration (seconds)</label>
+                    <input type="range" class="form-range" id="animationDuration" min="3" max="10" value="5" step="1">
+                    <small class="text-muted">Duration: <span id="durationValue">5</span> seconds</small>
+                </div>
+                
+                <!-- Ken Burns Settings -->
+                <div id="kenBurnsSettings">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Zoom Direction</label>
+                        <select class="form-select" id="zoomDirection">
+                            <option value="in">Zoom In</option>
+                            <option value="out">Zoom Out</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pan Direction</label>
+                        <select class="form-select" id="panDirection">
+                            <option value="center">Center (No Pan)</option>
+                            <option value="left">Pan Left</option>
+                            <option value="right">Pan Right</option>
+                            <option value="up">Pan Up</option>
+                            <option value="down">Pan Down</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Parallax Settings -->
+                <div id="parallaxSettings" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motion Intensity</label>
+                        <select class="form-select" id="parallaxIntensity">
+                            <option value="0.03">Subtle</option>
+                            <option value="0.05" selected>Normal</option>
+                            <option value="0.08">Strong</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Cinemagraph Settings -->
+                <div id="cinemagraphSettings" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motion Area</label>
+                        <select class="form-select" id="motionArea">
+                            <option value="center">Center</option>
+                            <option value="top">Top</option>
+                            <option value="bottom">Bottom</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motion Type</label>
+                        <select class="form-select" id="motionType">
+                            <option value="wave">Wave</option>
+                            <option value="shimmer">Shimmer</option>
+                            <option value="pulse">Pulse</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="animationProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <p class="text-center mt-2 mb-0">Creating animation...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createAnimation()">
+                    <i class="bi bi-camera-video"></i> Create Animation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Animation modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const effectType = document.getElementById('animationEffectType');
+    const durationSlider = document.getElementById('animationDuration');
+    const durationValue = document.getElementById('durationValue');
+    const effectDescription = document.getElementById('effectDescription');
+    
+    const descriptions = {
+        'ken_burns': 'Classic documentary-style zoom and pan effect',
+        'parallax': '3D depth-based layered movement for immersive feel',
+        'cinemagraph': 'Subtle motion in one area while rest stays still'
+    };
+    
+    // Update settings visibility based on effect type
+    effectType.addEventListener('change', function() {
+        document.getElementById('kenBurnsSettings').style.display = 
+            this.value === 'ken_burns' ? 'block' : 'none';
+        document.getElementById('parallaxSettings').style.display = 
+            this.value === 'parallax' ? 'block' : 'none';
+        document.getElementById('cinemagraphSettings').style.display = 
+            this.value === 'cinemagraph' ? 'block' : 'none';
+        effectDescription.textContent = descriptions[this.value];
+    });
+    
+    // Update duration display
+    durationSlider.addEventListener('input', function() {
+        durationValue.textContent = this.value;
+    });
+});
+
+function createAnimation() {
+    const effectType = document.getElementById('animationEffectType').value;
+    const duration = parseInt(document.getElementById('animationDuration').value);
+    
+    // Build settings based on effect type
+    let settings = { duration };
+    
+    if (effectType === 'ken_burns') {
+        settings.zoom_direction = document.getElementById('zoomDirection').value;
+        settings.pan_direction = document.getElementById('panDirection').value;
+    } else if (effectType === 'parallax') {
+        settings.intensity = parseFloat(document.getElementById('parallaxIntensity').value);
+    } else if (effectType === 'cinemagraph') {
+        settings.motion_area = document.getElementById('motionArea').value;
+        settings.motion_type = document.getElementById('motionType').value;
+    }
+    
+    // Show progress
+    document.getElementById('animationProgress').style.display = 'block';
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Make API request
+    fetch('/api/colorization/animate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            photo_id: {{ photo.id }},
+            effect_type: effectType,
+            settings: settings
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('animationProgress').style.display = 'none';
+        
+        if (data.success) {
+            // Show success message and animated video
+            alert('Animation created successfully! The video is ready to download.');
+            
+            // Create download link
+            const downloadUrl = data.animated_url;
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `animated_${effectType}_{{ photo.original_name }}.mp4`;
+            link.click();
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('animatePhotoModal')).hide();
+            
+            // Reload page to show animated version
+            location.reload();
+        } else {
+            alert('Animation failed: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        document.getElementById('animationProgress').style.display = 'none';
+        alert('Animation failed: ' + error.message);
     });
 }
 </script>

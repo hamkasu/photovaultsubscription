@@ -752,3 +752,137 @@ def check_grayscale():
         }), 500
 
 
+
+
+@colorization_bp.route('/animate', methods=['POST'])
+@login_required
+def animate_photo():
+    """
+    Create animated video from photo using motion effects
+    
+    Request JSON:
+        {
+            "photo_id": int,  # Photo ID to animate
+            "effect_type": "ken_burns" | "parallax" | "cinemagraph",
+            "settings": {
+                # For Ken Burns:
+                "duration": 5,  # seconds
+                "zoom_direction": "in" | "out",
+                "pan_direction": "center" | "left" | "right" | "up" | "down"
+                
+                # For Parallax:
+                "duration": 5,
+                "intensity": 0.05  # 0.0 to 0.1
+                
+                # For Cinemagraph:
+                "duration": 5,
+                "motion_area": "center" | "top" | "bottom" | "left" | "right",
+                "motion_type": "wave" | "shimmer" | "pulse"
+            }
+        }
+    
+    Returns:
+        {
+            "success": bool,
+            "photo_id": int,
+            "animated_url": str,
+            "effect_type": str,
+            "message": str
+        }
+    """
+    try:
+        from photovault.utils.animation import animator
+        import uuid
+        
+        data = request.get_json()
+        
+        if not data or 'photo_id' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'photo_id is required'
+            }), 400
+        
+        photo_id = data['photo_id']
+        effect_type = data.get('effect_type', 'ken_burns')
+        settings = data.get('settings', {})
+        
+        # Validate effect type
+        valid_effects = ['ken_burns', 'parallax', 'cinemagraph']
+        if effect_type not in valid_effects:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid effect type. Must be one of: {", ".join(valid_effects)}'
+            }), 400
+        
+        # Get photo from database
+        photo = Photo.query.filter_by(id=photo_id, user_id=current_user.id).first()
+        
+        if not photo:
+            return jsonify({
+                'success': False,
+                'error': 'Photo not found or unauthorized'
+            }), 404
+        
+        # Get original file path
+        original_path = photo.file_path
+        
+        if not os.path.exists(original_path):
+            return jsonify({
+                'success': False,
+                'error': 'Original photo file not found'
+            }), 404
+        
+        # Generate unique filename for animated video
+        unique_id = str(uuid.uuid4())[:8]
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        animated_filename = f"{current_user.id}_{unique_id}_animated_{effect_type}_{timestamp}.mp4"
+        
+        # Create user folder for uploads
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+        user_folder = os.path.join(upload_folder, str(current_user.id))
+        os.makedirs(user_folder, exist_ok=True)
+        
+        animated_path = os.path.join(user_folder, animated_filename)
+        
+        logger.info(f"Creating {effect_type} animation for photo {photo_id}")
+        
+        # Create animation
+        success, message = animator.create_animation(
+            original_path,
+            animated_path,
+            effect_type,
+            settings
+        )
+        
+        if not success:
+            return jsonify({
+                'success': False,
+                'error': message
+            }), 500
+        
+        # Update photo record with animated video
+        photo.animated_filename = animated_filename
+        photo.animated_path = animated_path
+        db.session.commit()
+        
+        logger.info(f"Animation created: {animated_filename}")
+        
+        # Generate URL for animated video
+        animated_url = f"/uploads/{current_user.id}/{animated_filename}"
+        
+        return jsonify({
+            'success': True,
+            'photo_id': photo.id,
+            'animated_url': animated_url,
+            'effect_type': effect_type,
+            'message': f'{effect_type.replace("_", " ").title()} animation created successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Animation creation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
