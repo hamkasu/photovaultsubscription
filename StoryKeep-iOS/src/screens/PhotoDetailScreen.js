@@ -17,6 +17,7 @@ import { Audio } from 'expo-av';
 import { photoAPI, voiceMemoAPI, commentAPI } from '../services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { sharePhoto } from '../utils/sharePhoto';
@@ -255,38 +256,73 @@ export default function PhotoDetailScreen({ route, navigation }) {
 
   const handleDownload = async () => {
     try {
+      console.log('📥 Starting download...');
       setLoading(true);
+      
+      // Check media library permission
       const { status } = await MediaLibrary.requestPermissionsAsync();
       
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Cannot save photo without permission');
+        Alert.alert('Permission Denied', 'Cannot save photo without media library permission');
+        setLoading(false);
         return;
       }
 
-      const relativePath = showOriginal ? photo.url : (photo.edited_url || photo.url);
-      const imageUrl = BASE_URL + relativePath;
-      const fileUri = FileSystem.documentDirectory + `photo_${photo.id}.jpg`;
+      // Determine which version to download
+      const relativePath = showOriginal ? (photo.original_url || photo.url) : (photo.edited_url || photo.url);
+      const imageUrl = relativePath?.startsWith('http') ? relativePath : `${BASE_URL}${relativePath}`;
+      const fileUri = FileSystem.documentDirectory + `photo_download_${photo.id}_${Date.now()}.jpg`;
       
       console.log('📥 Downloading photo from:', imageUrl);
+      console.log('📁 Saving to:', fileUri);
       
-      const { uri } = await FileSystem.downloadAsync(
-        imageUrl, 
+      // Download with progress callback
+      const downloadResumable = FileSystem.createDownloadResumable(
+        imageUrl,
         fileUri,
         {
           headers: {
             'Authorization': `Bearer ${authToken}`
           }
+        },
+        (downloadProgress) => {
+          const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+          console.log(`📊 Download progress: ${Math.round(progress * 100)}%`);
         }
       );
+
+      const result = await downloadResumable.downloadAsync();
       
-      console.log('💾 Saving to library from:', uri);
-      const asset = await MediaLibrary.createAssetAsync(uri);
+      if (!result || !result.uri) {
+        throw new Error('Download failed - no file received');
+      }
+
+      console.log('✅ Downloaded to:', result.uri);
+      console.log('💾 Saving to media library...');
       
+      const asset = await MediaLibrary.createAssetAsync(result.uri);
+      
+      console.log('✅ Photo saved successfully, asset:', asset.id);
       Alert.alert('Success', 'Photo saved to your library!');
-      console.log('✅ Photo saved successfully');
+      
+      // Clean up temp file
+      setTimeout(async () => {
+        try {
+          await FileSystem.deleteAsync(result.uri, { idempotent: true });
+          console.log('🗑️ Cleaned up temporary file');
+        } catch (cleanupError) {
+          console.warn('⚠️ Could not delete temp file:', cleanupError);
+        }
+      }, 1000);
+      
     } catch (error) {
-      Alert.alert('Error', 'Failed to save photo');
       console.error('❌ Download error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        authToken: authToken ? 'present' : 'missing'
+      });
+      Alert.alert('Download Failed', `Failed to save photo: ${error.message}\n\nPlease check your connection and try again.`);
     } finally {
       setLoading(false);
     }
@@ -399,7 +435,6 @@ export default function PhotoDetailScreen({ route, navigation }) {
                 text: 'Share/Save',
                 onPress: async () => {
                   try {
-                    const { default: Sharing } = await import('expo-sharing');
                     const isAvailable = await Sharing.isAvailableAsync();
                     
                     if (isAvailable) {
@@ -414,7 +449,7 @@ export default function PhotoDetailScreen({ route, navigation }) {
                     }
                   } catch (shareError) {
                     console.error('❌ Share error:', shareError);
-                    Alert.alert('Error', 'Failed to share video');
+                    Alert.alert('Error', 'Failed to share video: ' + shareError.message);
                   }
                 },
               },
