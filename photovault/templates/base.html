@@ -337,8 +337,12 @@ CALMIC SDN BHD - "Committed to Excellence"
                 const method = args[1]?.method || 'GET';
                 
                 // Start loading counter for ALL requests (GET, POST, PUT, DELETE, etc.)
-                const operationName = url.split('/').pop() || 'request';
-                const loadingId = window.startLoading(`${method} ${operationName}`);
+                // Safety check: ensure window.startLoading exists
+                let loadingId = null;
+                if (typeof window.startLoading === 'function') {
+                    const operationName = url.split('/').pop() || 'request';
+                    loadingId = window.startLoading(`${method} ${operationName}`);
+                }
                 
                 // Add CSRF token for mutating requests
                 if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
@@ -359,7 +363,9 @@ CALMIC SDN BHD - "Committed to Excellence"
                         throw error;
                     })
                     .finally(() => {
-                        if (loadingId !== null) window.stopLoading(loadingId);
+                        if (loadingId !== null && typeof window.stopLoading === 'function') {
+                            window.stopLoading(loadingId);
+                        }
                     });
             };
         }
