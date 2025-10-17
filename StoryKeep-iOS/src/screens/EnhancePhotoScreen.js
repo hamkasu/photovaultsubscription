@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { photoAPI } from '../services/api';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 
 const { width } = Dimensions.get('window');
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
@@ -141,6 +143,124 @@ export default function EnhancePhotoScreen({ route, navigation }) {
     }
   };
 
+  const handleAnimate = () => {
+    Alert.alert(
+      'Animate Photo',
+      'Choose animation effect:',
+      [
+        {
+          text: 'Ken Burns (Zoom & Pan)',
+          onPress: () => createAnimation('ken_burns'),
+        },
+        {
+          text: 'Parallax 3D',
+          onPress: () => createAnimation('parallax'),
+        },
+        {
+          text: 'Cinemagraph',
+          onPress: () => createAnimation('cinemagraph'),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const createAnimation = async (effectType) => {
+    try {
+      setProcessing(true);
+      
+      const settings = {
+        duration: 5,
+        ...(effectType === 'ken_burns' && { zoom_direction: 'in', pan_direction: 'center' }),
+        ...(effectType === 'parallax' && { intensity: 0.05 }),
+        ...(effectType === 'cinemagraph' && { motion_area: 'center', motion_type: 'wave' }),
+      };
+      
+      const response = await fetch(`${BASE_URL}/api/photos/${photo.id}/animate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          effect_type: effectType,
+          settings,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Download and share the video
+        try {
+          const videoUrl = BASE_URL + data.animated_url;
+          const fileUri = FileSystem.cacheDirectory + `animation_${photo.id}_${Date.now()}.mp4`;
+          
+          console.log('📥 Downloading animated video from:', videoUrl);
+          
+          const downloadResult = await FileSystem.downloadAsync(
+            videoUrl,
+            fileUri,
+            {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+              },
+            }
+          );
+          
+          console.log('✅ Video downloaded:', downloadResult.uri);
+          
+          // Show options: Save or Share
+          Alert.alert(
+            'Animation Created!',
+            'Your animated video is ready. Save it to your gallery using the Share button.',
+            [
+              {
+                text: 'Share/Save',
+                onPress: async () => {
+                  try {
+                    const isAvailable = await Sharing.isAvailableAsync();
+                    
+                    if (isAvailable) {
+                      await Sharing.shareAsync(downloadResult.uri, {
+                        mimeType: 'video/mp4',
+                        dialogTitle: 'Save Animated Video',
+                        UTI: 'public.movie'
+                      });
+                      console.log('✅ Video shared successfully');
+                    } else {
+                      Alert.alert('Error', 'Sharing is not available on this device');
+                    }
+                  } catch (shareError) {
+                    console.error('❌ Share error:', shareError);
+                    Alert.alert('Error', 'Failed to share video: ' + shareError.message);
+                  }
+                },
+              },
+              {
+                text: 'Later',
+                style: 'cancel',
+                onPress: () => {
+                  console.log('ℹ️ Video kept in cache:', downloadResult.uri);
+                }
+              },
+            ]
+          );
+        } catch (error) {
+          Alert.alert('Error', 'Failed to download animation: ' + error.message);
+          console.error('❌ Download error:', error);
+        }
+      } else {
+        Alert.alert('Error', data.error || 'Animation failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create animation');
+      console.error('Animation error:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const EnhancementOption = ({ icon, title, description, onPress, color, disabled = false }) => (
     <TouchableOpacity
       style={[styles.option, disabled && styles.optionDisabled]}
@@ -256,6 +376,14 @@ export default function EnhancePhotoScreen({ route, navigation }) {
             onPress={() => handleColorize(true)}
             color="#9C27B0"
             disabled={detectingColor || !isBlackAndWhite}
+          />
+
+          <EnhancementOption
+            icon="film"
+            title="Animate"
+            description="Create animated video with Ken Burns, Parallax or Cinemagraph effects"
+            onPress={handleAnimate}
+            color="#2196F3"
           />
         </View>
 
