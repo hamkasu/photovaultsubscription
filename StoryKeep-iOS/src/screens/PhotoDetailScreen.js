@@ -361,15 +361,8 @@ export default function PhotoDetailScreen({ route, navigation }) {
       const data = await response.json();
       
       if (data.success) {
-        // Automatically save the animated video to gallery
+        // Download and share the video (Expo Go limitation workaround)
         try {
-          const { status } = await MediaLibrary.requestPermissionsAsync();
-          if (status !== 'granted') {
-            Alert.alert('Permission Denied', 'Cannot save video without permission');
-            setLoading(false);
-            return;
-          }
-          
           const videoUrl = BASE_URL + data.animated_url;
           const fileUri = FileSystem.cacheDirectory + `animation_${photo.id}_${Date.now()}.mp4`;
           
@@ -385,31 +378,49 @@ export default function PhotoDetailScreen({ route, navigation }) {
             }
           );
           
-          console.log('💾 Saving video to gallery. File:', downloadResult.uri);
+          console.log('✅ Video downloaded:', downloadResult.uri);
           
-          // Create asset first
-          const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
-          
-          // Try to create/get StoryKeep album
-          try {
-            const album = await MediaLibrary.getAlbumAsync('StoryKeep');
-            if (album) {
-              await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-            } else {
-              await MediaLibrary.createAlbumAsync('StoryKeep', asset, false);
-            }
-          } catch (albumError) {
-            console.log('ℹ️ Album operation skipped, video saved to library:', albumError.message);
-          }
-          
-          // Clean up temp file after saving
-          await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
-          
-          Alert.alert('Success', 'Animated video saved to your gallery!');
-          console.log('✅ Animated video saved successfully');
+          // Show options: Save or Share
+          Alert.alert(
+            'Animation Created!',
+            'Your animated video is ready. Save it to your gallery using the Share button.',
+            [
+              {
+                text: 'Share/Save',
+                onPress: async () => {
+                  try {
+                    const { default: Sharing } = await import('expo-sharing');
+                    const isAvailable = await Sharing.isAvailableAsync();
+                    
+                    if (isAvailable) {
+                      await Sharing.shareAsync(downloadResult.uri, {
+                        mimeType: 'video/mp4',
+                        dialogTitle: 'Save Animated Video',
+                        UTI: 'public.movie'
+                      });
+                      console.log('✅ Video shared successfully');
+                    } else {
+                      Alert.alert('Error', 'Sharing is not available on this device');
+                    }
+                  } catch (shareError) {
+                    console.error('❌ Share error:', shareError);
+                    Alert.alert('Error', 'Failed to share video');
+                  }
+                },
+              },
+              {
+                text: 'Later',
+                style: 'cancel',
+                onPress: () => {
+                  // Keep file in cache for later
+                  console.log('ℹ️ Video kept in cache:', downloadResult.uri);
+                }
+              },
+            ]
+          );
         } catch (error) {
-          Alert.alert('Error', 'Animation created but failed to save to gallery: ' + error.message);
-          console.error('❌ Video save error:', error);
+          Alert.alert('Error', 'Failed to download animation: ' + error.message);
+          console.error('❌ Download error:', error);
         }
       } else {
         Alert.alert('Error', data.error || 'Animation failed');
