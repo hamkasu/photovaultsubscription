@@ -20,6 +20,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import { sharePhoto } from '../utils/sharePhoto';
 import { useLoading } from '../contexts/LoadingContext';
+import { downloadImage } from '../utils/imageCache';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -36,6 +37,7 @@ export default function GalleryScreen({ navigation }) {
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, isDownloading: false });
   const { startLoading, stopLoading } = useLoading();
+  const [cachedThumbnails, setCachedThumbnails] = useState({});
   
   // Vault sharing states
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -50,6 +52,39 @@ export default function GalleryScreen({ navigation }) {
   useEffect(() => {
     applyFilter();
   }, [filter, allPhotos]);
+  
+  // Preload thumbnails when photos are loaded
+  useEffect(() => {
+    if (displayPhotos.length > 0 && authToken) {
+      preloadThumbnails();
+    }
+  }, [displayPhotos, authToken]);
+  
+  const preloadThumbnails = async () => {
+    // Only preload first 20 thumbnails for performance
+    const photosToPreload = displayPhotos.slice(0, 20);
+    
+    for (const photo of photosToPreload) {
+      const thumbnailUrl = photo.thumbnail_url || photo.url || photo.original_url;
+      const fullUrl = thumbnailUrl?.startsWith('http') 
+        ? thumbnailUrl 
+        : thumbnailUrl?.startsWith('/') 
+          ? `${BASE_URL}${thumbnailUrl}`
+          : thumbnailUrl;
+      
+      if (fullUrl && !cachedThumbnails[photo.id]) {
+        try {
+          const cachedUri = await downloadImage(
+            fullUrl,
+            { Authorization: `Bearer ${authToken}` }
+          );
+          setCachedThumbnails(prev => ({ ...prev, [photo.id]: cachedUri }));
+        } catch (error) {
+          console.warn(`Failed to cache thumbnail for photo ${photo.id}:`, error.message);
+        }
+      }
+    }
+  };
 
   const loadPhotos = async () => {
     const loadingId = !refreshing ? startLoading('Loading gallery...') : null;
@@ -364,17 +399,16 @@ export default function GalleryScreen({ navigation }) {
   };
 
   const renderPhoto = ({ item, index }) => {
-    // Get the image URL - prefer thumbnail, fallback to url or original_url
-    const imageUrl = item.thumbnail_url || item.url || item.original_url;
-    
-    // Construct full URL if it's a relative path
-    const fullImageUrl = imageUrl?.startsWith('http') 
-      ? imageUrl 
-      : imageUrl?.startsWith('/') 
-        ? `${BASE_URL}${imageUrl}`
-        : imageUrl;
-
     const isSelected = selectedPhotos.includes(item.id);
+    const cachedUri = cachedThumbnails[item.id];
+    
+    // Fallback to network image with headers if not cached
+    const thumbnailUrl = item.thumbnail_url || item.url || item.original_url;
+    const fullImageUrl = thumbnailUrl?.startsWith('http') 
+      ? thumbnailUrl 
+      : thumbnailUrl?.startsWith('/') 
+        ? `${BASE_URL}${thumbnailUrl}`
+        : thumbnailUrl;
 
     return (
       <TouchableOpacity
@@ -387,7 +421,13 @@ export default function GalleryScreen({ navigation }) {
           }
         }}
       >
-        {fullImageUrl && authToken ? (
+        {cachedUri ? (
+          <Image
+            source={{ uri: cachedUri }}
+            style={styles.photoImage}
+            resizeMode="cover"
+          />
+        ) : fullImageUrl && authToken ? (
           <Image
             source={{ 
               uri: fullImageUrl,

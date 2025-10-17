@@ -21,6 +21,7 @@ import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { sharePhoto } from '../utils/sharePhoto';
+import { downloadImage } from '../utils/imageCache';
 
 const { width } = Dimensions.get('window');
 const BASE_URL = 'https://web-production-535bd.up.railway.app';
@@ -36,6 +37,8 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [cachedImageUri, setCachedImageUri] = useState(null);
+  const [loadingThumbnail, setLoadingThumbnail] = useState(true);
   
   // Pinch zoom states
   const scale = new Animated.Value(1);
@@ -77,12 +80,62 @@ export default function PhotoDetailScreen({ route, navigation }) {
     setImageLoading(true);
     setImageError(false);
     setLoadProgress(0);
-  }, [showOriginal]);
+    setCachedImageUri(null);
+    loadImage();
+  }, [showOriginal, authToken]);
 
   const loadData = async () => {
     const token = await AsyncStorage.getItem('authToken');
     setAuthToken(token);
     loadAIMetadata();
+  };
+  
+  // Load image with caching and real progress
+  const loadImage = async () => {
+    if (!authToken) return;
+    
+    try {
+      setImageLoading(true);
+      setImageError(false);
+      setLoadProgress(0);
+      
+      const imageUrl = showOriginal ? originalImageUrl : (editedImageUrl || originalImageUrl);
+      const thumbnailUrl = getImageUrl(photo.thumbnail_url);
+      
+      // Load thumbnail first for instant feedback
+      if (thumbnailUrl && thumbnailUrl !== imageUrl) {
+        console.log('📸 Loading thumbnail first:', thumbnailUrl);
+        setLoadingThumbnail(true);
+        try {
+          const thumbUri = await downloadImage(
+            thumbnailUrl,
+            { Authorization: `Bearer ${authToken}` },
+            (progress) => setLoadProgress(Math.min(progress, 50)) // Show up to 50% for thumbnail
+          );
+          setCachedImageUri(thumbUri);
+          setLoadingThumbnail(false);
+        } catch (thumbError) {
+          console.warn('⚠️ Thumbnail load failed, loading full image:', thumbError);
+        }
+      }
+      
+      // Then load full resolution image
+      console.log('📥 Loading full resolution image:', imageUrl);
+      const fullResUri = await downloadImage(
+        imageUrl,
+        { Authorization: `Bearer ${authToken}` },
+        (progress) => setLoadProgress(50 + (progress / 2)) // Show 50-100% for full image
+      );
+      
+      setCachedImageUri(fullResUri);
+      setImageLoading(false);
+      setLoadProgress(100);
+      console.log('✅ Image fully loaded');
+    } catch (error) {
+      console.error('❌ Image load error:', error);
+      setImageError(true);
+      setImageLoading(false);
+    }
   };
 
   const loadAIMetadata = async () => {
@@ -714,36 +767,8 @@ export default function PhotoDetailScreen({ route, navigation }) {
     setImageLoading(true);
     setImageError(false);
     setLoadProgress(0);
-  };
-
-  const handleImageLoadStart = () => {
-    console.log('📥 Image loading started...');
-    setImageLoading(true);
-    setImageError(false);
-    // Simulate progress for visual feedback
-    const interval = setInterval(() => {
-      setLoadProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 100);
-  };
-
-  const handleImageLoadEnd = () => {
-    console.log('✅ Image loaded successfully');
-    setImageLoading(false);
-    setImageError(false);
-    setLoadProgress(100);
-  };
-
-  const handleImageError = (error) => {
-    console.error('❌ Image load error:', error);
-    setImageLoading(false);
-    setImageError(true);
-    setLoadProgress(0);
+    setCachedImageUri(null);
+    loadImage();
   };
 
   return (
@@ -770,16 +795,11 @@ export default function PhotoDetailScreen({ route, navigation }) {
                 <Text style={styles.retryButtonText}>Retry</Text>
               </TouchableOpacity>
             </View>
-          ) : imageUrl && authToken ? (
+          ) : cachedImageUri ? (
             <>
               <GestureDetector gesture={composedGesture}>
                 <Animated.Image 
-                  source={{ 
-                    uri: imageUrl,
-                    headers: {
-                      Authorization: `Bearer ${authToken}`
-                    }
-                  }} 
+                  source={{ uri: cachedImageUri }} 
                   style={[
                     styles.image,
                     {
@@ -787,9 +807,6 @@ export default function PhotoDetailScreen({ route, navigation }) {
                     }
                   ]}
                   resizeMode="contain"
-                  onLoadStart={handleImageLoadStart}
-                  onLoadEnd={handleImageLoadEnd}
-                  onError={handleImageError}
                 />
               </GestureDetector>
               {imageLoading && (
@@ -798,9 +815,11 @@ export default function PhotoDetailScreen({ route, navigation }) {
                     <View style={styles.loadingBar}>
                       <View style={[styles.loadingBarFill, { width: `${loadProgress}%` }]} />
                     </View>
-                    <Text style={styles.loadingText}>{loadProgress}%</Text>
+                    <Text style={styles.loadingText}>{Math.round(loadProgress)}%</Text>
                   </View>
-                  <Text style={styles.loadingSubtext}>Loading image...</Text>
+                  <Text style={styles.loadingSubtext}>
+                    {loadingThumbnail ? 'Loading preview...' : 'Loading full quality...'}
+                  </Text>
                 </View>
               )}
             </>
