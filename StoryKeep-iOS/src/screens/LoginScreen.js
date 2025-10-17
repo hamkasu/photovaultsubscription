@@ -38,14 +38,12 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem('authToken', response.token);
         await AsyncStorage.setItem('userData', JSON.stringify(response.user));
         
-        // Save credentials securely for biometric login if not already saved
         if (!skipBiometricSave) {
           const biometricEnabled = await AsyncStorage.getItem('biometricEnabled');
           if (biometricEnabled === 'true') {
             await SecureStore.setItemAsync('userEmail', loginEmail);
             await SecureStore.setItemAsync('userPassword', loginPassword);
           } else {
-            // Ask user if they want to enable biometric login
             const hasHardware = await LocalAuthentication.hasHardwareAsync();
             const isEnrolled = await LocalAuthentication.isEnrolledAsync();
             
@@ -72,8 +70,6 @@ export default function LoginScreen({ navigation }) {
             }
           }
         }
-        
-        // Navigation will be handled automatically by App.js when auth state changes
       }
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
@@ -110,7 +106,6 @@ export default function LoginScreen({ navigation }) {
         const savedPassword = await SecureStore.getItemAsync('userPassword');
         
         if (savedEmail && savedPassword) {
-          // Pass credentials directly to avoid stale state closure issue
           handleLogin(true, savedEmail, savedPassword);
         } else {
           Alert.alert('Error', 'No saved credentials found. Please login with email and password.');
@@ -135,7 +130,8 @@ export default function LoginScreen({ navigation }) {
         />
         
         <Text style={styles.title}>Welcome to StoryKeep</Text>
-        <Text style={styles.subtitle}>Save Your Family Stories</Text>
+        <Text style={styles.subtitle}>Turn Family Photos Into Living Memories</Text>
+        <Text style={styles.features}>📸 Digitize • 🎨 Restore • 🎤 Capture Stories</Text>
 
         <View style={styles.form}>
           <TextInput
@@ -198,13 +194,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2c2c2c',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#654E3F',
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  features: {
+    fontSize: 14,
+    color: '#8B6F47',
     marginBottom: 40,
+    fontWeight: '500',
   },
   form: {
     width: '100%',
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#E85D75',
+    backgroundColor: '#E76F51',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -234,7 +237,7 @@ const styles = StyleSheet.create({
   },
   biometricText: {
     fontSize: 16,
-    color: '#E85D75',
+    color: '#E76F51',
   },
   linkText: {
     textAlign: 'center',
@@ -243,7 +246,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   linkBold: {
-    color: '#E85D75',
+    color: '#E76F51',
     fontWeight: 'bold',
   },
 });

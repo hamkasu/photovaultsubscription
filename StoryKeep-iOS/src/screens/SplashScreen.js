@@ -23,40 +23,25 @@ export default function SplashScreen({ onFinish }) {
 
     const playChimeSound = async () => {
       try {
-        // Set audio mode for playback
         await Audio.setAudioModeAsync({
           playsInSilentModeIOS: true,
           staysActiveInBackground: false,
         });
 
-        // TODO: Add a custom chime sound
-        // To add a gentle chime:
-        // 1. Download a free chime from https://pixabay.com/sound-effects/search/chime/
-        //    Recommended: "Chime sound" (1 second) or "Silver chime" (2 seconds)
-        // 2. Save the .mp3 file as 'chime.mp3' in: StoryKeep-iOS/src/assets/sounds/
-        // 3. Uncomment the lines below:
-        
         const { sound: chimeSound } = await Audio.Sound.createAsync(
            require('../assets/sounds/chime.mp3'),
            { shouldPlay: true, volume: 0.5 }
          );
          sound = chimeSound;
         
-        // For now, splash screen runs without sound to avoid errors
-        // Uncomment the above code once you add the sound file
-        
       } catch (error) {
-        // Silently fail if audio can't play - don't block the splash screen
         console.log('Audio playback failed:', error);
       }
     };
 
-    // Play chime when splash screen appears (currently disabled until sound file added)
     playChimeSound();
 
-    // Start animations
     Animated.sequence([
-      // Logo fade-in and scale
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
@@ -70,9 +55,7 @@ export default function SplashScreen({ onFinish }) {
           useNativeDriver: true,
         }),
       ]),
-      // Wait a bit
       Animated.delay(300),
-      // Tagline slide-up and fade-in
       Animated.parallel([
         Animated.timing(taglineOpacity, {
           toValue: 1,
@@ -85,16 +68,13 @@ export default function SplashScreen({ onFinish }) {
           useNativeDriver: true,
         }),
       ]),
-      // Wait before transitioning
       Animated.delay(1500),
     ]).start(() => {
-      // Animation complete, trigger transition
       if (onFinish) {
         onFinish();
       }
     });
 
-    // Cleanup: unload sound when component unmounts
     return () => {
       if (sound) {
         sound.unloadAsync();
@@ -104,13 +84,12 @@ export default function SplashScreen({ onFinish }) {
 
   return (
     <LinearGradient
-      colors={['#FF6B9D', '#FFA07A', '#FFB6C1']}
+      colors={['#654E3F', '#8B6F47', '#A17F5C']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
     >
       <View style={styles.content}>
-        {/* Logo Animation */}
         <Animated.View
           style={[
             styles.logoContainer,
@@ -127,7 +106,6 @@ export default function SplashScreen({ onFinish }) {
           />
         </Animated.View>
 
-        {/* App Name */}
         <Animated.Text
           style={[
             styles.appName,
@@ -139,7 +117,6 @@ export default function SplashScreen({ onFinish }) {
           StoryKeep
         </Animated.Text>
 
-        {/* Tagline Animation */}
         <Animated.View
           style={[
             styles.taglineContainer,
@@ -149,7 +126,8 @@ export default function SplashScreen({ onFinish }) {
             },
           ]}
         >
-          <Text style={styles.tagline}>Preserving Memories, Forever</Text>
+          <Text style={styles.tagline}>Turn Family Photos Into Living Memories</Text>
+          <Text style={styles.subtag}>Digitize • Restore • Preserve</Text>
         </Animated.View>
       </View>
     </LinearGradient>
@@ -192,15 +170,27 @@ const styles = StyleSheet.create({
   },
   taglineContainer: {
     paddingHorizontal: 40,
+    alignItems: 'center',
   },
   tagline: {
     fontSize: 18,
     color: '#FFFFFF',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+    marginBottom: 8,
+  },
+  subtag: {
+    fontSize: 14,
+    color: '#F4A261',
+    textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

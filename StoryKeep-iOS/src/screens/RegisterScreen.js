@@ -63,7 +63,7 @@ export default function RegisterScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join StoryKeep today</Text>
+          <Text style={styles.subtitle}>Start Preserving Your Family's Legacy</Text>
 
           <View style={styles.form}>
             <TextInput
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#E85D75',
+    backgroundColor: '#E76F51',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   linkBold: {
-    color: '#E85D75',
+    color: '#E76F51',
     fontWeight: 'bold',
   },
 });
