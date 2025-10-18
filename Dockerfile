@@ -25,16 +25,5 @@ ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=main.py
 
 # Start gunicorn - migrations handled in create_app()
-# Bind to 0.0.0.0:PORT for Railway compatibility
-# Use exec to ensure proper signal handling
-CMD exec gunicorn wsgi:app \
-    --bind 0.0.0.0:$PORT \
-    --workers 1 \
-    --threads 4 \
-    --worker-class sync \
-    --timeout 120 \
-    --log-level debug \
-    --access-logfile - \
-    --error-logfile - \
-    --capture-output \
-    --enable-stdio-inheritance
+# Use shell form to allow PORT variable expansion
+CMD gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 120 --log-level debug --access-logfile - --error-logfile -
