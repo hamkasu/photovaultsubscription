@@ -1,0 +1,51 @@
+You reached the start of the range
+Oct 18, 2025, 10:29 PM
+Starting Container
+2025-10-18 14:30:01,446 INFO: PhotoVault startup [in /app/photovault/config.py:221]
+[2025-10-18 14:30:01,446] INFO in config: PhotoVault startup
+[2025-10-18 14:30:01,727] INFO in app_storage_service: Not in Replit environment, skipping App Storage initialization
+2025-10-18 14:30:01,727 INFO: Not in Replit environment, skipping App Storage initialization [in /app/photovault/services/app_storage_service.py:22]
+[2025-10-18 14:30:02,039] INFO in image_enhancement: OpenCV available - full image enhancement features enabled
+2025-10-18 14:30:02,039 INFO: OpenCV available - full image enhancement features enabled [in /app/photovault/utils/image_enhancement.py:19]
+[2025-10-18 14:30:02,057] INFO in face_detection: Haar cascade face detector loaded
+2025-10-18 14:30:02,057 INFO: Haar cascade face detector loaded [in /app/photovault/utils/face_detection.py:42]
+2025-10-18 14:30:02,058 INFO: DNN model file not found - using Haar cascade only [in /app/photovault/utils/face_detection.py:64]
+[2025-10-18 14:30:02,058] INFO in face_detection: DNN model file not found - using Haar cascade only
+[2025-10-18 14:30:02,058] INFO in face_detection: Face detection initialized successfully
+2025-10-18 14:30:02,058 INFO: Face detection initialized successfully [in /app/photovault/utils/face_detection.py:27]
+[2025-10-18 14:30:02,061] INFO in face_recognition: OpenCV face recognizer initialized
+2025-10-18 14:30:02,061 INFO: OpenCV face recognizer initialized [in /app/photovault/utils/face_recognition.py:46]
+[2025-10-18 14:30:02,087] INFO in photo_detection: OpenCV available for photo detection
+2025-10-18 14:30:02,087 INFO: OpenCV available for photo detection [in /app/photovault/utils/photo_detection.py:18]
+2025-10-18 14:30:02,080 INFO: No cached encodings found - starting fresh [in /app/photovault/utils/face_recognition.py:76]
+2025-10-18 14:30:02,080 INFO: Face recognition models loaded [in /app/photovault/utils/face_recognition.py:58]
+[2025-10-18 14:30:02,080] INFO in face_recognition: Face recognition initialized successfully
+2025-10-18 14:30:02,080 INFO: Face recognition initialized successfully [in /app/photovault/utils/face_recognition.py:31]
+[2025-10-18 14:30:02,080] INFO in face_recognition: No cached encodings found - starting fresh
+[2025-10-18 14:30:02,080] INFO in face_recognition: Face recognition models loaded
+Stopping Container
+Starting Container
+2025-10-18 14:30:21,043 INFO: Face detection initialized successfully [in /app/photovault/utils/face_detection.py:27]
+[2025-10-18 14:30:21,043] INFO in face_detection: DNN model file not found - using Haar cascade only
+[2025-10-18 14:30:21,043] INFO in face_detection: Face detection initialized successfully
+2025-10-18 14:30:21,046 INFO: OpenCV face recognizer initialized [in /app/photovault/utils/face_recognition.py:46]
+[2025-10-18 14:30:21,046] INFO in face_recognition: OpenCV face recognizer initialized
+2025-10-18 14:30:20,368 INFO: PhotoVault startup [in /app/photovault/config.py:221]
+[2025-10-18 14:30:20,368] INFO in config: PhotoVault startup
+2025-10-18 14:30:20,687 INFO: Not in Replit environment, skipping App Storage initialization [in /app/photovault/services/app_storage_service.py:22]
+[2025-10-18 14:30:21,043] INFO in face_detection: Haar cascade face detector loaded
+2025-10-18 14:30:21,043 INFO: Haar cascade face detector loaded [in /app/photovault/utils/face_detection.py:42]
+[2025-10-18 14:30:20,687] INFO in app_storage_service: Not in Replit environment, skipping App Storage initialization
+2025-10-18 14:30:21,043 INFO: DNN model file not found - using Haar cascade only [in /app/photovault/utils/face_detection.py:64]
+2025-10-18 14:30:21,022 INFO: OpenCV available - full image enhancement features enabled [in /app/photovault/utils/image_enhancement.py:19]
+[2025-10-18 14:30:21,022] INFO in image_enhancement: OpenCV available - full image enhancement features enabled
+[2025-10-18 14:30:21,061] INFO in face_recognition: Face recognition models loaded
+2025-10-18 14:30:21,061 INFO: Face recognition models loaded [in /app/photovault/utils/face_recognition.py:58]
+[2025-10-18 14:30:21,062] INFO in face_recognition: No cached encodings found - starting fresh
+2025-10-18 14:30:21,062 INFO: No cached encodings found - starting fresh [in /app/photovault/utils/face_recognition.py:76]
+[2025-10-18 14:30:21,062] INFO in face_recognition: Face recognition initialized successfully
+2025-10-18 14:30:21,062 INFO: Face recognition initialized successfully [in /app/photovault/utils/face_recognition.py:31]
+2025-10-18 14:30:21,068 INFO: OpenCV available for photo detection [in /app/photovault/utils/photo_detection.py:18]
+[2025-10-18 14:30:21,068] INFO in photo_detection: OpenCV available for photo detection
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
