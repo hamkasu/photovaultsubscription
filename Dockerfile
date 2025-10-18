@@ -24,6 +24,5 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=main.py
 
-# Start gunicorn - migrations handled in create_app()
-# Use shell form to allow PORT variable expansion
-CMD gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 120 --log-level debug --access-logfile - --error-logfile -
+# Start gunicorn with explicit shell and debugging
+CMD ["/bin/sh", "-c", "echo 'DEBUG: Starting Gunicorn...' && echo \"DEBUG: PORT=$PORT\" && echo \"DEBUG: Binding to 0.0.0.0:${PORT:-8080}\" && which gunicorn && gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 120 --log-level debug --access-logfile - --error-logfile -"]
