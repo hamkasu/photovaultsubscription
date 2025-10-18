@@ -1,0 +1,86 @@
+Starting Container
+2025-10-18 13:21:06,951 INFO: Not in Replit environment, skipping App Storage initialization [in /app/photovault/services/app_storage_service.py:22]
+[2025-10-18 13:21:07,205] INFO in image_enhancement: OpenCV available - full image enhancement features enabled
+2025-10-18 13:21:07,205 INFO: OpenCV available - full image enhancement features enabled [in /app/photovault/utils/image_enhancement.py:19]
+[2025-10-18 13:21:07,221] INFO in face_detection: Haar cascade face detector loaded
+2025-10-18 13:21:07,221 INFO: Haar cascade face detector loaded [in /app/photovault/utils/face_detection.py:42]
+[2025-10-18 13:21:07,222] INFO in face_detection: DNN model file not found - using Haar cascade only
+2025-10-18 13:21:07,222 INFO: DNN model file not found - using Haar cascade only [in /app/photovault/utils/face_detection.py:64]
+[2025-10-18 13:21:07,222] INFO in face_detection: Face detection initialized successfully
+2025-10-18 13:21:07,222 INFO: Face detection initialized successfully [in /app/photovault/utils/face_detection.py:27]
+[2025-10-18 13:21:07,225] INFO in face_recognition: OpenCV face recognizer initialized
+2025-10-18 13:21:07,225 INFO: OpenCV face recognizer initialized [in /app/photovault/utils/face_recognition.py:46]
+[2025-10-18 13:21:06,707] INFO in config: PhotoVault startup
+2025-10-18 13:21:06,707 INFO: PhotoVault startup [in /app/photovault/config.py:221]
+[2025-10-18 13:21:06,951] INFO in app_storage_service: Not in Replit environment, skipping App Storage initialization
+[2025-10-18 13:21:07,238] INFO in face_recognition: Face recognition models loaded
+2025-10-18 13:21:07,238 INFO: Face recognition models loaded [in /app/photovault/utils/face_recognition.py:58]
+[2025-10-18 13:21:07,238] INFO in face_recognition: No cached encodings found - starting fresh
+2025-10-18 13:21:07,238 INFO: No cached encodings found - starting fresh [in /app/photovault/utils/face_recognition.py:76]
+2025-10-18 13:21:07,238 INFO: Face recognition initialized successfully [in /app/photovault/utils/face_recognition.py:31]
+[2025-10-18 13:21:07,238] INFO in face_recognition: Face recognition initialized successfully
+[2025-10-18 13:21:07,244] INFO in photo_detection: OpenCV available for photo detection
+2025-10-18 13:21:07,244 INFO: OpenCV available for photo detection [in /app/photovault/utils/photo_detection.py:18]
+INFO:photovault:Attempting direct column addition as fallback...
+[2025-10-18 13:21:12,829] INFO in __init__: Database connection verified (production mode)
+INFO:photovault:Database connection verified (production mode)
+2025-10-18 13:21:12,829 INFO: Database connection verified (production mode) [in /app/photovault/__init__.py:364]
+[2025-10-18 13:21:12,830] INFO in __init__: Running database migrations automatically...
+2025-10-18 13:21:12,830 INFO: Running database migrations automatically... [in /app/photovault/__init__.py:377]
+INFO:photovault:Running database migrations automatically...
+2025-10-18 13:21:12,834 WARNING: Auto-migration via Alembic failed: 'NoneType' object is not iterable [in /app/photovault/__init__.py:382]
+[2025-10-18 13:21:12,834] WARNING in __init__: Auto-migration via Alembic failed: 'NoneType' object is not iterable
+WARNING:photovault:Auto-migration via Alembic failed: 'NoneType' object is not iterable
+[2025-10-18 13:21:12,834] INFO in __init__: Attempting direct column addition as fallback...
+2025-10-18 13:21:12,834 INFO: Attempting direct column addition as fallback... [in /app/photovault/__init__.py:383]
+2025-10-18 13:21:16,514 INFO: ✅ Database schema updated successfully [in /app/photovault/__init__.py:403]
+[2025-10-18 13:21:16,514] INFO in __init__: ✅ Database schema updated successfully
+INFO:photovault:✅ Database schema updated successfully
+2025-10-18 13:21:18,294 INFO: Subscription plans: created 0, updated 5 [in /app/photovault/__init__.py:152]
+[2025-10-18 13:21:18,294] INFO in __init__: Subscription plans: created 0, updated 5
+INFO:photovault:Subscription plans: created 0, updated 5
+Stopping Container
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/c5a5f6e9-27d5-49ef-b614-e77e90a00199/vol_90higakl92hhukc3
+Starting Container
+2025-10-18 13:21:34,378 INFO: OpenCV available - full image enhancement features enabled [in /app/photovault/utils/image_enhancement.py:19]
+[2025-10-18 13:21:34,378] INFO in image_enhancement: OpenCV available - full image enhancement features enabled
+[2025-10-18 13:21:34,396] INFO in face_detection: Haar cascade face detector loaded
+2025-10-18 13:21:34,396 INFO: Haar cascade face detector loaded [in /app/photovault/utils/face_detection.py:42]
+[2025-10-18 13:21:34,397] INFO in face_detection: DNN model file not found - using Haar cascade only
+2025-10-18 13:21:34,397 INFO: DNN model file not found - using Haar cascade only [in /app/photovault/utils/face_detection.py:64]
+[2025-10-18 13:21:34,397] INFO in face_detection: Face detection initialized successfully
+2025-10-18 13:21:34,397 INFO: Face detection initialized successfully [in /app/photovault/utils/face_detection.py:27]
+2025-10-18 13:21:34,400 INFO: OpenCV face recognizer initialized [in /app/photovault/utils/face_recognition.py:46]
+[2025-10-18 13:21:34,400] INFO in face_recognition: OpenCV face recognizer initialized
+[2025-10-18 13:21:33,750] INFO in config: PhotoVault startup
+2025-10-18 13:21:33,750 INFO: PhotoVault startup [in /app/photovault/config.py:221]
+[2025-10-18 13:21:34,044] INFO in app_storage_service: Not in Replit environment, skipping App Storage initialization
+2025-10-18 13:21:34,044 INFO: Not in Replit environment, skipping App Storage initialization [in /app/photovault/services/app_storage_service.py:22]
+2025-10-18 13:21:34,420 INFO: OpenCV available for photo detection [in /app/photovault/utils/photo_detection.py:18]
+[2025-10-18 13:21:34,420] INFO in photo_detection: OpenCV available for photo detection
+2025-10-18 13:21:34,414 INFO: Face recognition models loaded [in /app/photovault/utils/face_recognition.py:58]
+[2025-10-18 13:21:34,414] INFO in face_recognition: Face recognition models loaded
+2025-10-18 13:21:34,414 INFO: No cached encodings found - starting fresh [in /app/photovault/utils/face_recognition.py:76]
+[2025-10-18 13:21:34,414] INFO in face_recognition: No cached encodings found - starting fresh
+[2025-10-18 13:21:34,414] INFO in face_recognition: Face recognition initialized successfully
+2025-10-18 13:21:34,414 INFO: Face recognition initialized successfully [in /app/photovault/utils/face_recognition.py:31]
+[2025-10-18 13:21:40,477] INFO in __init__: Database connection verified (production mode)
+INFO:photovault:Database connection verified (production mode)
+2025-10-18 13:21:40,477 INFO: Database connection verified (production mode) [in /app/photovault/__init__.py:364]
+2025-10-18 13:21:40,477 INFO: Running database migrations automatically... [in /app/photovault/__init__.py:377]
+[2025-10-18 13:21:40,477] INFO in __init__: Running database migrations automatically...
+INFO:photovault:Running database migrations automatically...
+2025-10-18 13:21:40,481 WARNING: Auto-migration via Alembic failed: 'NoneType' object is not iterable [in /app/photovault/__init__.py:382]
+[2025-10-18 13:21:40,481] WARNING in __init__: Auto-migration via Alembic failed: 'NoneType' object is not iterable
+WARNING:photovault:Auto-migration via Alembic failed: 'NoneType' object is not iterable
+[2025-10-18 13:21:40,481] INFO in __init__: Attempting direct column addition as fallback...
+INFO:photovault:Attempting direct column addition as fallback...
+2025-10-18 13:21:40,481 INFO: Attempting direct column addition as fallback... [in /app/photovault/__init__.py:383]
+2025-10-18 13:21:44,335 INFO: ✅ Database schema updated successfully [in /app/photovault/__init__.py:403]
+[2025-10-18 13:21:44,335] INFO in __init__: ✅ Database schema updated successfully
+INFO:photovault:✅ Database schema updated successfully
+2025-10-18 13:21:46,216 INFO: Subscription plans: created 0, updated 5 [in /app/photovault/__init__.py:152]
+[2025-10-18 13:21:46,216] INFO in __init__: Subscription plans: created 0, updated 5
+INFO:photovault:Subscription plans: created 0, updated 5
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
