@@ -1,0 +1,67 @@
+Starting Container
+2025-10-18 13:58:20,336 INFO: PhotoVault startup [in /app/photovault/config.py:221]
+[2025-10-18 13:58:20,336] INFO in config: PhotoVault startup
+2025-10-18 13:58:20,809 INFO: Not in Replit environment, skipping App Storage initialization [in /app/photovault/services/app_storage_service.py:22]
+[2025-10-18 13:58:20,809] INFO in app_storage_service: Not in Replit environment, skipping App Storage initialization
+[2025-10-18 13:58:21,232] INFO in image_enhancement: OpenCV available - full image enhancement features enabled
+2025-10-18 13:58:21,232 INFO: OpenCV available - full image enhancement features enabled [in /app/photovault/utils/image_enhancement.py:19]
+[2025-10-18 13:58:21,252] INFO in face_detection: Haar cascade face detector loaded
+2025-10-18 13:58:21,252 INFO: Haar cascade face detector loaded [in /app/photovault/utils/face_detection.py:42]
+[2025-10-18 13:58:21,253] INFO in face_detection: DNN model file not found - using Haar cascade only
+2025-10-18 13:58:21,253 INFO: DNN model file not found - using Haar cascade only [in /app/photovault/utils/face_detection.py:64]
+[2025-10-18 13:58:21,253] INFO in face_detection: Face detection initialized successfully
+2025-10-18 13:58:21,253 INFO: Face detection initialized successfully [in /app/photovault/utils/face_detection.py:27]
+2025-10-18 13:58:21,256 INFO: OpenCV face recognizer initialized [in /app/photovault/utils/face_recognition.py:46]
+[2025-10-18 13:58:21,256] INFO in face_recognition: OpenCV face recognizer initialized
+2025-10-18 13:58:21,273 INFO: Face recognition models loaded [in /app/photovault/utils/face_recognition.py:58]
+[2025-10-18 13:58:21,273] INFO in face_recognition: Face recognition models loaded
+[2025-10-18 13:58:21,273] INFO in face_recognition: No cached encodings found - starting fresh
+2025-10-18 13:58:21,273 INFO: No cached encodings found - starting fresh [in /app/photovault/utils/face_recognition.py:76]
+[2025-10-18 13:58:21,273] INFO in face_recognition: Face recognition initialized successfully
+2025-10-18 13:58:21,273 INFO: Face recognition initialized successfully [in /app/photovault/utils/face_recognition.py:31]
+2025-10-18 13:58:21,278 INFO: OpenCV available for photo detection [in /app/photovault/utils/photo_detection.py:18]
+[2025-10-18 13:58:21,278] INFO in photo_detection: OpenCV available for photo detection
+[2025-10-18 13:58:27,201] INFO in __init__: Note: Migrations should be run separately before app startup
+INFO:photovault:Note: Migrations should be run separately before app startup
+[2025-10-18 13:58:27,201] INFO in __init__: Database connection verified (production mode)
+INFO:photovault:Database connection verified (production mode)
+2025-10-18 13:58:27,201 INFO: Database connection verified (production mode) [in /app/photovault/__init__.py:364]
+2025-10-18 13:58:27,201 INFO: Note: Migrations should be run separately before app startup [in /app/photovault/__init__.py:365]
+2025-10-18 13:58:29,000 INFO: Subscription plans: created 0, updated 5 [in /app/photovault/__init__.py:152]
+[2025-10-18 13:58:29,000] INFO in __init__: Subscription plans: created 0, updated 5
+INFO:photovault:Subscription plans: created 0, updated 5
+Stopping Container
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/0ee46eeb-da81-48b3-a77b-10bffdeb34ca/vol_90higakl92hhukc3
+2025-10-18 13:58:46,423 INFO: PhotoVault startup [in /app/photovault/config.py:221]
+[2025-10-18 13:58:46,423] INFO in config: PhotoVault startup
+[2025-10-18 13:58:46,733] INFO in app_storage_service: Not in Replit environment, skipping App Storage initialization
+2025-10-18 13:58:46,733 INFO: Not in Replit environment, skipping App Storage initialization [in /app/photovault/services/app_storage_service.py:22]
+[2025-10-18 13:58:47,053] INFO in image_enhancement: OpenCV available - full image enhancement features enabled
+2025-10-18 13:58:47,053 INFO: OpenCV available - full image enhancement features enabled [in /app/photovault/utils/image_enhancement.py:19]
+[2025-10-18 13:58:47,071] INFO in face_detection: Haar cascade face detector loaded
+2025-10-18 13:58:47,071 INFO: Haar cascade face detector loaded [in /app/photovault/utils/face_detection.py:42]
+2025-10-18 13:58:47,072 INFO: DNN model file not found - using Haar cascade only [in /app/photovault/utils/face_detection.py:64]
+[2025-10-18 13:58:47,072] INFO in face_detection: DNN model file not found - using Haar cascade only
+[2025-10-18 13:58:47,072] INFO in face_detection: Face detection initialized successfully
+2025-10-18 13:58:47,072 INFO: Face detection initialized successfully [in /app/photovault/utils/face_detection.py:27]
+[2025-10-18 13:58:47,075] INFO in face_recognition: OpenCV face recognizer initialized
+2025-10-18 13:58:47,075 INFO: OpenCV face recognizer initialized [in /app/photovault/utils/face_recognition.py:46]
+[2025-10-18 13:58:47,092] INFO in face_recognition: Face recognition models loaded
+2025-10-18 13:58:47,092 INFO: Face recognition models loaded [in /app/photovault/utils/face_recognition.py:58]
+[2025-10-18 13:58:47,093] INFO in face_recognition: No cached encodings found - starting fresh
+2025-10-18 13:58:47,093 INFO: No cached encodings found - starting fresh [in /app/photovault/utils/face_recognition.py:76]
+[2025-10-18 13:58:47,093] INFO in face_recognition: Face recognition initialized successfully
+2025-10-18 13:58:47,093 INFO: Face recognition initialized successfully [in /app/photovault/utils/face_recognition.py:31]
+[2025-10-18 13:58:47,100] INFO in photo_detection: OpenCV available for photo detection
+2025-10-18 13:58:47,100 INFO: OpenCV available for photo detection [in /app/photovault/utils/photo_detection.py:18]
+2025-10-18 13:58:53,179 INFO: Database connection verified (production mode) [in /app/photovault/__init__.py:364]
+[2025-10-18 13:58:53,179] INFO in __init__: Database connection verified (production mode)
+INFO:photovault:Database connection verified (production mode)
+[2025-10-18 13:58:53,179] INFO in __init__: Note: Migrations should be run separately before app startup
+2025-10-18 13:58:53,179 INFO: Note: Migrations should be run separately before app startup [in /app/photovault/__init__.py:365]
+INFO:photovault:Note: Migrations should be run separately before app startup
+2025-10-18 13:58:55,038 INFO: Subscription plans: created 0, updated 5 [in /app/photovault/__init__.py:152]
+[2025-10-18 13:58:55,038] INFO in __init__: Subscription plans: created 0, updated 5
+INFO:photovault:Subscription plans: created 0, updated 5
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.

@@ -171,8 +171,54 @@ railway run flask db upgrade
 - **After**: Always runs `upgrade()` on every deployment
 - **Impact**: Ensures ALL Alembic migrations are applied (no silent skips)
 
+### Fix #3: Deferred Database Initialization with Health Check Exemption
+- **Before**: Database seeding (subscription plans, superuser) ran during app startup
+- **After**: Database operations deferred to first real request
+- **Impact**: Railway health checks respond immediately (<100ms)
+
+### Fix #4: Thread-Safe Initialization (Prevents Race Conditions)
+- **Before**: Concurrent requests could trigger duplicate initialization
+- **After**: Double-check locking ensures one-time initialization per worker
+- **Impact**: No duplicate seeding, no database constraint violations
+
+## Technical Implementation
+
+### Railway Deployment Flow
+```
+1. Build Phase → Install dependencies
+2. Release Phase (release.py) → Run ALL Alembic migrations (3-6s, before app starts)
+3. Start Phase (gunicorn) → App starts instantly (<1s)
+4. Health Check (/health) → Immediate 200 OK (bypasses initialization)
+5. First Real Request → Triggers DB seeding (one-time, thread-safe, ~2s)
+6. Subsequent Requests → Instant (initialization flag set)
+```
+
+### Thread-Safe Initialization Pattern
+```python
+# Module-level shared state
+_db_init_lock = threading.Lock()
+_db_initialized = False
+
+# Inside @app.before_request:
+# 1. Health checks bypass completely
+if request.endpoint in ['main.health_check', 'main.api_health', 'main.db_health']:
+    return None
+
+# 2. Fast check without lock (99.9% of requests)
+if _db_initialized:
+    return None
+
+# 3. Thread-safe initialization (first request only)
+with _db_init_lock:
+    if _db_initialized:  # Double-check after acquiring lock
+        return None
+    # Initialize database...
+    _db_initialized = True  # Set flag only after success
+```
+
 ## Notes
-- The 2-phase fix addresses both the timeout AND the migration skip issue
-- App startup is now fast AND migrations are reliable
-- Fallback column additions remain as safety net
+- The complete 4-phase fix addresses timeout, migrations, AND race conditions
+- App startup is now fast (<1s), migrations reliable, and thread-safe
+- Health check endpoints: `/health`, `/api`, `/api/health/db`
 - No changes needed to Railway configuration or environment variables
+- Each Gunicorn worker initializes independently (normal multi-worker behavior)

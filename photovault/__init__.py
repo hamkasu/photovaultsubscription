@@ -8,6 +8,11 @@ from flask import Flask
 from photovault.extensions import db, login_manager, migrate, csrf
 from photovault.config import config
 import os
+import threading
+
+# Thread-safe lock for one-time database initialization
+_db_init_lock = threading.Lock()
+_db_initialized = False
 
 # Register HEIC decoder for iOS image support
 try:
@@ -348,32 +353,52 @@ def create_app(config_class=None):
         
         return None
     
-    # Initialize database - with improved error handling for Railway/production
-    with app.app_context():
-        try:
-            # Only run create_all in development - production should use migrations
-            # Use FLASK_CONFIG as authoritative source of environment
-            is_development = os.environ.get('FLASK_CONFIG', 'development') == 'development'
+    # Defer database initialization to first NON-HEALTH-CHECK request
+    # Health checks respond immediately, initialization happens on first real request
+    @app.before_request
+    def initialize_database_on_first_request():
+        """Initialize database on first request (thread-safe, skip health checks for Railway)"""
+        global _db_initialized
+        from flask import request
+        
+        # Skip initialization for health check endpoints (fast response for Railway)
+        health_check_endpoints = ['main.health_check', 'main.api_health', 'main.db_health']
+        if request.endpoint in health_check_endpoints:
+            return None
+        
+        # Fast check without lock - avoid lock contention on every request
+        if _db_initialized:
+            return None
+        
+        # Thread-safe initialization using lock
+        with _db_init_lock:
+            # Double-check after acquiring lock (another thread may have initialized)
+            if _db_initialized:
+                return None
             
-            if is_development:
-                db.create_all()
-                app.logger.info("Database tables initialized successfully (development mode)")
-            else:
-                # In production, verify database connectivity (fast check)
-                db.session.execute(db.text('SELECT 1'))
-                app.logger.info("Database connection verified (production mode)")
-                app.logger.info("Note: Migrations should be run separately before app startup")
-            
-            # Seed default subscription plans (only if db connection works)
-            _seed_subscription_plans(app)
-            
-            # Bootstrap superuser account if environment variables are set
-            _create_superuser_if_needed(app)
-        except Exception as e:
-            # Log error but don't crash the app - allow it to start even if DB init fails
-            # This allows health checks to work and helps diagnose Railway deployment issues
-            app.logger.error(f"Database initialization error: {str(e)}")
-            app.logger.error("App will continue to start, but database operations may fail")
-            # In production, this will be caught by health checks
+            try:
+                is_development = os.environ.get('FLASK_CONFIG', 'development') == 'development'
+                
+                if is_development:
+                    db.create_all()
+                    app.logger.info("Database tables initialized (development mode)")
+                else:
+                    # Quick connectivity check in production
+                    db.session.execute(db.text('SELECT 1'))
+                    app.logger.info("Database connection verified (production mode)")
+                
+                # Seed subscription plans (deferred to first request)
+                _seed_subscription_plans(app)
+                
+                # Bootstrap superuser (deferred to first request)
+                _create_superuser_if_needed(app)
+                
+                # Mark as initialized only after successful completion
+                _db_initialized = True
+                
+            except Exception as e:
+                app.logger.error(f"Database initialization error: {str(e)}")
+                app.logger.error("Will retry on next non-health-check request")
+                # Don't set _db_initialized - allow retry on next request
     
     return app
