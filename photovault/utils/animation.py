@@ -395,5 +395,156 @@ class PhotoAnimator:
             return False, f"Animation failed: {str(e)}"
 
 
+    def create_animated_gif(
+        self,
+        input_path: str,
+        output_path: str,
+        animation_type: str = 'kenburns',
+        duration: float = 3.0,
+        speed: float = 1.0
+    ) -> str:
+        """
+        Create an animated GIF with various effects
+        
+        Args:
+            input_path: Path to input image
+            output_path: Path for output GIF
+            animation_type: Type of animation (kenburns, fadeinout, slideshow, parallax, vintage)
+            duration: Duration in seconds
+            speed: Speed multiplier
+            
+        Returns:
+            Path to created GIF
+        """
+        try:
+            from PIL import Image, ImageEnhance, ImageFilter
+            import math
+            
+            logger.info(f"Creating {animation_type} GIF animation: duration={duration}s, speed={speed}x")
+            
+            # Load image
+            img = Image.open(input_path)
+            if img.mode not in ('RGB', 'P'):
+                img = img.convert('RGB')
+            
+            # Calculate frames
+            fps = max(5, int(10 * speed))
+            total_frames = max(10, int(duration * fps))
+            
+            frames = []
+            width, height = img.size
+            
+            # Generate frames based on animation type
+            for i in range(total_frames):
+                progress = i / total_frames
+                
+                if animation_type == 'kenburns':
+                    frame = self._create_kenburns_frame(img, progress)
+                elif animation_type == 'fadeinout':
+                    frame = self._create_fade_frame(img, progress)
+                elif animation_type == 'slideshow':
+                    frame = self._create_slideshow_frame(img, progress, width, height)
+                elif animation_type == 'parallax':
+                    frame = self._create_parallax_frame(img, progress, width, height)
+                elif animation_type == 'vintage':
+                    frame = self._create_vintage_frame(img)
+                else:
+                    frame = img.copy()
+                
+                frames.append(frame)
+            
+            # Save as animated GIF
+            frame_duration = int(1000 / fps)
+            frames[0].save(
+                output_path,
+                save_all=True,
+                append_images=frames[1:],
+                duration=frame_duration,
+                loop=0,
+                optimize=True
+            )
+            
+            logger.info(f"✅ Animated GIF created: {output_path}")
+            return output_path
+            
+        except Exception as e:
+            logger.error(f"❌ GIF creation failed: {str(e)}")
+            raise
+    
+    def _create_kenburns_frame(self, img: Image.Image, progress: float) -> Image.Image:
+        """Create a single Ken Burns frame"""
+        width, height = img.size
+        scale = 1.0 + (0.3 * progress)
+        new_size = (int(width * scale), int(height * scale))
+        scaled = img.resize(new_size, Image.Resampling.LANCZOS)
+        
+        left = (scaled.width - width) // 2
+        top = (scaled.height - height) // 2
+        pan_x = int((scaled.width - width) * 0.1 * progress)
+        pan_y = int((scaled.height - height) * 0.1 * progress)
+        
+        return scaled.crop((left + pan_x, top + pan_y, left + pan_x + width, top + pan_y + height))
+    
+    def _create_fade_frame(self, img: Image.Image, progress: float) -> Image.Image:
+        """Create a single fade frame"""
+        opacity = 0.3 + 0.7 * abs((progress * 2) % 2 - 1)
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        return Image.blend(background, img, opacity)
+    
+    def _create_slideshow_frame(self, img: Image.Image, progress: float, width: int, height: int) -> Image.Image:
+        """Create a single slideshow frame"""
+        slide_progress = (progress * 2) % 2
+        if slide_progress > 1:
+            slide_progress = 2 - slide_progress
+        
+        canvas_width = int(width * 1.2)
+        canvas = Image.new('RGB', (canvas_width, height), (240, 240, 240))
+        x_offset = int(width * 0.2 * slide_progress)
+        canvas.paste(img, (x_offset, 0))
+        return canvas.crop((0, 0, width, height))
+    
+    def _create_parallax_frame(self, img: Image.Image, progress: float, width: int, height: int) -> Image.Image:
+        """Create a single parallax frame"""
+        import math
+        
+        scale = 1.2
+        scaled = img.resize((int(width * scale), int(height * scale)), Image.Resampling.LANCZOS)
+        y_offset = int(20 * math.sin(progress * math.pi * 2))
+        
+        left = (scaled.width - width) // 2
+        top = max(0, min((scaled.height - height) // 2 + y_offset, scaled.height - height))
+        return scaled.crop((left, top, left + width, top + height))
+    
+    def _create_vintage_frame(self, img: Image.Image) -> Image.Image:
+        """Create a single vintage film frame with jitter"""
+        import random
+        from PIL import ImageEnhance
+        
+        width, height = img.size
+        canvas = Image.new('RGB', (width + 10, height + 10), (20, 15, 10))
+        
+        jitter_x = random.randint(-2, 2)
+        jitter_y = random.randint(-2, 2)
+        brightness_factor = 0.85 + random.random() * 0.3
+        
+        sepia_img = img.copy()
+        enhancer = ImageEnhance.Color(sepia_img)
+        sepia_img = enhancer.enhance(0.3)
+        
+        brightness_enhancer = ImageEnhance.Brightness(sepia_img)
+        sepia_img = brightness_enhancer.enhance(brightness_factor)
+        
+        contrast_enhancer = ImageEnhance.Contrast(sepia_img)
+        sepia_img = contrast_enhancer.enhance(1.2)
+        
+        canvas.paste(sepia_img, (5 + jitter_x, 5 + jitter_y))
+        frame = canvas.crop((5, 5, 5 + width, 5 + height))
+        
+        if random.random() > 0.7:
+            frame = frame.filter(ImageFilter.BLUR)
+        
+        return frame
+
+
 # Singleton instance
 animator = PhotoAnimator()

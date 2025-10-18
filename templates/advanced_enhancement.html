@@ -243,6 +243,44 @@ CALMIC SDN BHD - "Committed to Excellence"
                     </div>
                     {% endif %}
 
+                    <!-- Animation Effects -->
+                    <div class="tool-section">
+                        <h6 class="text-dark mb-3">
+                            <i class="bi bi-film"></i> Animation Effects
+                        </h6>
+                        
+                        <p class="text-dark small mb-3">Add dynamic animation effects to bring your photos to life.</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-dark">Animation Type:</label>
+                            <select class="form-select form-select-sm" id="animationType">
+                                <option value="kenburns">Ken Burns (Pan & Zoom)</option>
+                                <option value="fadeinout">Fade In/Out</option>
+                                <option value="slideshow">Slideshow Transition</option>
+                                <option value="parallax">Parallax Effect</option>
+                                <option value="vintage">Vintage Film Effect</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-dark">Duration: <span id="animationDurationValue">3</span>s</label>
+                            <input type="range" class="form-range" id="animationDuration" min="1" max="10" step="0.5" value="3">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-dark">Speed: <span id="animationSpeedValue">Normal</span></label>
+                            <input type="range" class="form-range" id="animationSpeed" min="0.5" max="2" step="0.1" value="1">
+                        </div>
+                        
+                        <button class="btn btn-enhance w-100 mb-2" onclick="previewAnimation()">
+                            <i class="bi bi-play-circle"></i> Preview Animation
+                        </button>
+                        
+                        <button class="btn btn-enhance w-100 mb-2" onclick="createAnimatedGIF()">
+                            <i class="bi bi-file-earmark-image"></i> Create Animated GIF
+                        </button>
+                    </div>
+
                     <!-- Colorization -->
                     <div class="tool-section">
                         <h6 class="text-dark mb-3">
@@ -511,6 +549,25 @@ function setupEventListeners() {
             });
         }
     });
+    
+    // Animation sliders
+    const animationDuration = document.getElementById('animationDuration');
+    if (animationDuration) {
+        animationDuration.addEventListener('input', function() {
+            document.getElementById('animationDurationValue').textContent = this.value;
+        });
+    }
+    
+    const animationSpeed = document.getElementById('animationSpeed');
+    if (animationSpeed) {
+        animationSpeed.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            let label = 'Normal';
+            if (value < 0.8) label = 'Slow';
+            else if (value > 1.2) label = 'Fast';
+            document.getElementById('animationSpeedValue').textContent = label;
+        });
+    }
     
     // Canvas drawing events
     if (canvas) {
@@ -844,6 +901,183 @@ function applyColorization() {
         hideProcessing();
         showAlert('Colorization failed: ' + error.message, 'danger');
         console.error('Colorization error:', error);
+    });
+}
+
+// ===== ANIMATION FUNCTIONS =====
+let animationInterval = null;
+
+function previewAnimation() {
+    if (!photoId) {
+        alert('No photo selected');
+        return;
+    }
+    
+    const animationType = document.getElementById('animationType').value;
+    const duration = parseFloat(document.getElementById('animationDuration').value);
+    const speed = parseFloat(document.getElementById('animationSpeed').value);
+    
+    // Clear any existing animation
+    stopAnimation();
+    
+    // Get the image element
+    const mainImage = document.getElementById('mainImage');
+    
+    // Apply animation based on type
+    switch(animationType) {
+        case 'kenburns':
+            applyKenBurnsAnimation(mainImage, duration, speed);
+            break;
+        case 'fadeinout':
+            applyFadeAnimation(mainImage, duration, speed);
+            break;
+        case 'slideshow':
+            applySlideshowAnimation(mainImage, duration, speed);
+            break;
+        case 'parallax':
+            applyParallaxAnimation(mainImage, duration, speed);
+            break;
+        case 'vintage':
+            applyVintageFilmAnimation(mainImage, duration, speed);
+            break;
+    }
+    
+    showAlert('Animation preview started! Click again to restart or change settings.', 'info');
+}
+
+function applyKenBurnsAnimation(element, duration, speed) {
+    // Ken Burns effect - slow pan and zoom
+    element.style.transition = `transform ${duration / speed}s ease-in-out`;
+    element.style.transformOrigin = 'center center';
+    
+    let scale = 1.0;
+    let direction = 1;
+    
+    animationInterval = setInterval(() => {
+        scale = direction > 0 ? 1.3 : 1.0;
+        const translateX = (Math.random() - 0.5) * 10;
+        const translateY = (Math.random() - 0.5) * 10;
+        
+        element.style.transform = `scale(${scale}) translate(${translateX}%, ${translateY}%)`;
+        direction *= -1;
+    }, (duration / speed) * 1000);
+}
+
+function applyFadeAnimation(element, duration, speed) {
+    // Fade in and out effect
+    element.style.transition = `opacity ${duration / (2 * speed)}s ease-in-out`;
+    
+    let opacity = 1.0;
+    
+    animationInterval = setInterval(() => {
+        opacity = opacity === 1.0 ? 0.3 : 1.0;
+        element.style.opacity = opacity;
+    }, (duration / speed) * 500);
+}
+
+function applySlideshowAnimation(element, duration, speed) {
+    // Slideshow transition effect
+    element.style.transition = `transform ${duration / (2 * speed)}s ease-in-out`;
+    
+    let position = 0;
+    
+    animationInterval = setInterval(() => {
+        position = position === 0 ? -10 : 0;
+        element.style.transform = `translateX(${position}%)`;
+    }, (duration / speed) * 500);
+}
+
+function applyParallaxAnimation(element, duration, speed) {
+    // Parallax scrolling effect
+    element.style.transition = `transform ${duration / speed}s linear`;
+    
+    let offset = 0;
+    
+    animationInterval = setInterval(() => {
+        offset = (offset + 2) % 100;
+        const scale = 1.1 + Math.sin(offset * 0.05) * 0.1;
+        element.style.transform = `scale(${scale}) translateY(${Math.sin(offset * 0.1) * 5}%)`;
+    }, 50 / speed);
+}
+
+function applyVintageFilmAnimation(element, duration, speed) {
+    // Vintage film effect with slight jitter
+    let jitterX = 0;
+    let jitterY = 0;
+    
+    animationInterval = setInterval(() => {
+        jitterX = (Math.random() - 0.5) * 2;
+        jitterY = (Math.random() - 0.5) * 2;
+        const brightness = 0.9 + Math.random() * 0.2;
+        
+        element.style.transform = `translate(${jitterX}px, ${jitterY}px)`;
+        element.style.filter = `brightness(${brightness}) sepia(0.3) contrast(1.1)`;
+    }, 100 / speed);
+}
+
+function stopAnimation() {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+    }
+    
+    // Reset styles
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+        mainImage.style.transition = '';
+        mainImage.style.transform = '';
+        mainImage.style.opacity = '1';
+        mainImage.style.filter = '';
+    }
+}
+
+function createAnimatedGIF() {
+    if (!photoId) {
+        alert('No photo selected');
+        return;
+    }
+    
+    const animationType = document.getElementById('animationType').value;
+    const duration = parseFloat(document.getElementById('animationDuration').value);
+    const speed = parseFloat(document.getElementById('animationSpeed').value);
+    
+    showProcessing();
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    fetch(`/api/animation/create-gif`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            photo_id: photoId,
+            animation_type: animationType,
+            duration: duration,
+            speed: speed
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideProcessing();
+        if (data.success) {
+            // Create download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = data.gif_url;
+            downloadLink.download = data.filename;
+            downloadLink.click();
+            
+            showAlert('Animated GIF created successfully! Download started.', 'success');
+        } else {
+            showAlert('GIF creation failed: ' + (data.error || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        hideProcessing();
+        showAlert('GIF creation failed: ' + error.message, 'danger');
+        console.error('Animation error:', error);
     });
 }
 </script>
