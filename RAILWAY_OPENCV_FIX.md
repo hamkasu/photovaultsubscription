@@ -12,21 +12,20 @@ This occurred when the app tried to import cv2 (OpenCV) in `photovault/utils/fac
 OpenCV requires system libraries (even the headless version) that aren't installed by default in Railway's Docker environment. The missing library `libGL.so.1` is part of the OpenGL/Mesa graphics libraries.
 
 ## Solution
-Updated `nixpacks.toml` to install required system packages during the build phase:
+Updated `nixpacks.toml` to install required Nix packages during the build phase:
 
 ```toml
 [phases.setup]
-aptPkgs = ["libgl1-mesa-glx", "libglib2.0-0", "libsm6", "libxext6", "libxrender-dev", "libgomp1", "libgthread-2.0-0"]
+nixPkgs = ["libGL", "glib", "libsm", "libxext", "libxrender", "gcc"]
 ```
 
 ### System Packages Installed:
-- **libgl1-mesa-glx**: Provides libGL.so.1 (OpenGL library)
-- **libglib2.0-0**: GLib library required by OpenCV
-- **libsm6**: X11 Session Management library
-- **libxext6**: X11 extensions library
-- **libxrender-dev**: X11 Render extension library
-- **libgomp1**: GNU OpenMP library (parallel processing)
-- **libgthread-2.0-0**: GLib threading library
+- **libGL**: Provides libGL.so.1 (OpenGL library) required by OpenCV
+- **glib**: GLib library required by OpenCV
+- **libsm**: X11 Session Management library
+- **libxext**: X11 extensions library
+- **libxrender**: X11 Render extension library
+- **gcc**: GNU Compiler Collection (includes libgomp for parallel processing)
 
 ## Deployment Instructions
 
