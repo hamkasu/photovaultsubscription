@@ -12,7 +12,7 @@ None configured yet (will be added as needed)
 The frontend uses HTML5, CSS3, JavaScript (vanilla + jQuery patterns) with Jinja2 templating, and Bootstrap patterns for responsive design. A unified photo card component system ensures consistent display with a responsive CSS Grid layout (4-column desktop, 3-column tablet, 2-column mobile). Action buttons (View, Download, Edit, Delete) and filename/timestamp overlays are standardized.
 
 ### Technical Implementations
-The backend is built with Flask 3.0.3, PostgreSQL (via Neon on Replit), and SQLAlchemy 2.0.25 for ORM. Alembic via Flask-Migrate handles database migrations. Flask-Login manages authentication, and Flask-WTF + WTForms are used for forms. Gunicorn 21.2.0 serves the application in production. Image processing uses Pillow 11.3.0 with pillow-heif 1.1.1 for HEIC/HEIF support, and OpenCV 4.12.0.88 (headless), with NumPy and scikit-image. AI integration leverages Google Gemini API (gemini-2.0-flash-exp) for intelligent photo colorization and analysis. Replit Object Storage is used for persistent image storage with local storage fallback.
+The backend is built with Flask 3.0.3, PostgreSQL (via Neon on Replit), and SQLAlchemy 2.0.25 for ORM. Alembic via Flask-Migrate handles database migrations. Flask-Login manages authentication, and Flask-WTF + WTForms are used for forms. Gunicorn 21.2.0 serves the application in production. Image processing uses Pillow 11.3.0 with pillow-heif 1.1.1 for HEIC/HEIF support, OpenCV 4.12.0.88 (headless) with NumPy and scikit-image, and MediaPipe for facial landmark detection and animation. AI integration leverages Google Gemini API (gemini-2.0-flash-exp) for intelligent photo colorization and analysis. Replit Object Storage is used for persistent image storage with local storage fallback. System dependencies include libglvnd for OpenGL support required by OpenCV.
 
 The Mobile Digitizer App (iOS & Android) is a professional photo digitalization tool built with React Native/Expo, featuring:
 - Smart camera with real-time edge detection, visual guides, and auto-capture.
@@ -45,7 +45,12 @@ The mobile app is fully cross-platform, supporting both iOS and Android with pla
 ### Feature Specifications
 - **Authentication & Authorization**: User registration, login, password reset, session management, admin/superuser roles, subscription-based access.
 - **Photo Management**: Upload with metadata extraction, automatic face detection and tagging, enhancement, restoration, colorization, AI smart tagging, gallery organization, search, and filtering. Includes bulk deletion.
-- **Photo Animation**: Professional photo animation studio with Ken Burns zoom/pan effect, Parallax 3D depth animation, and Vintage film-style effects. Uses OpenCV-powered utilities (`PhotoAnimator` class) for creating animated GIFs with customizable duration, speed, zoom direction, and pan direction settings. Accessible via Toolkit → Animation menu.
+- **Photo Animation**: Professional photo animation studio with multiple effects:
+  - **Living Portrait**: AI-powered facial animation using MediaPipe that makes people smile and move naturally with blinking and subtle head movements
+  - **Ken Burns**: Classic zoom/pan cinematic effect
+  - **Parallax 3D**: Depth-based layered movement
+  - **Vintage**: Film-style animation with grain
+  - Uses OpenCV and MediaPipe for creating animated GIFs with customizable duration, speed, and effect-specific settings. Accessible via Toolkit → Animation menu.
 - **Family Vaults**: Shared collections, member invitations, stories, and collaborative management.
 - **Subscription System**: Multiple pricing tiers (Free, Basic, Standard, Pro, Premium) with feature-based access, Stripe payment integration, and Malaysian pricing (MYR) with SST.
 - **Admin Features**: CSV/Excel export of user data, batch user operations.
