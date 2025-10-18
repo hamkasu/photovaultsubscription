@@ -1,59 +1,17 @@
-import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, Animated } from 'react-native';
+import React from 'react';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { useLoading } from '../contexts/LoadingContext';
 
 const LoadingOverlay = () => {
   const { isLoading, loadingCount } = useLoading();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-
-  useEffect(() => {
-    if (isLoading) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 0.8,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [isLoading]);
 
   if (!isLoading) return null;
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
-    >
+    <View style={styles.container}>
       <ActivityIndicator size="small" color="#fff" />
       <Text style={styles.count}>{loadingCount}</Text>
-    </Animated.View>
+    </View>
   );
 };
 

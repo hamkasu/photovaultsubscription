@@ -1,10 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  Animated,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,11 +12,6 @@ import { Audio } from 'expo-av';
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen({ onFinish }) {
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0.8)).current;
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const taglineTranslateY = useRef(new Animated.Value(30)).current;
-
   useEffect(() => {
     let sound = null;
 
@@ -41,41 +35,15 @@ export default function SplashScreen({ onFinish }) {
 
     playChimeSound();
 
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(logoScale, {
-          toValue: 1,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.delay(300),
-      Animated.parallel([
-        Animated.timing(taglineOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(taglineTranslateY, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.delay(1500),
-    ]).start(() => {
+    // Show splash for 2.5 seconds then finish (no animations)
+    const timer = setTimeout(() => {
       if (onFinish) {
         onFinish();
       }
-    });
+    }, 2500);
 
     return () => {
+      clearTimeout(timer);
       if (sound) {
         sound.unloadAsync();
       }
@@ -90,45 +58,22 @@ export default function SplashScreen({ onFinish }) {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            {
-              opacity: logoOpacity,
-              transform: [{ scale: logoScale }],
-            },
-          ]}
-        >
+        <View style={styles.logoContainer}>
           <Image
             source={require('../assets/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-        </Animated.View>
+        </View>
 
-        <Animated.Text
-          style={[
-            styles.appName,
-            {
-              opacity: logoOpacity,
-            },
-          ]}
-        >
+        <Text style={styles.appName}>
           StoryKeep
-        </Animated.Text>
+        </Text>
 
-        <Animated.View
-          style={[
-            styles.taglineContainer,
-            {
-              opacity: taglineOpacity,
-              transform: [{ translateY: taglineTranslateY }],
-            },
-          ]}
-        >
+        <View style={styles.taglineContainer}>
           <Text style={styles.tagline}>Turn Family Photos Into Living Memories</Text>
           <Text style={styles.subtag}>Digitize • Restore • Preserve</Text>
-        </Animated.View>
+        </View>
       </View>
     </LinearGradient>
   );

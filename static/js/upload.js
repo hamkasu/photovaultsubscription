@@ -1343,7 +1343,7 @@ StoryKeepUploader.prototype.showMessage = function(message, type = 'info', timeo
 
 // Camera shutter effect for photo capture confirmation
 StoryKeepUploader.prototype.showCameraShutterEffect = function() {
-    // Create a full-screen white overlay for shutter effect
+    // Create a brief white flash for shutter effect (no animation)
     const shutterOverlay = document.createElement('div');
     shutterOverlay.style.cssText = `
         position: fixed;
@@ -1355,24 +1355,20 @@ StoryKeepUploader.prototype.showCameraShutterEffect = function() {
         z-index: 9999;
         opacity: 0.9;
         pointer-events: none;
-        transition: opacity 0.1s ease-out;
     `;
     
     document.body.appendChild(shutterOverlay);
     
-    // Fade out the overlay
+    // Remove overlay immediately
     setTimeout(() => {
-        shutterOverlay.style.opacity = '0';
-        setTimeout(() => {
-            document.body.removeChild(shutterOverlay);
-        }, 100);
+        document.body.removeChild(shutterOverlay);
     }, 100);
     
     // Optional: Camera shutter sound effect (uncomment if needed)
     // this.playCameraShutterSound();
 };
 
-// Enhanced success confirmation with icons and animations
+// Enhanced success confirmation (without animations)
 StoryKeepUploader.prototype.showSuccessConfirmation = function() {
     // Create enhanced success message with icon
     const successMessage = `
@@ -1387,30 +1383,6 @@ StoryKeepUploader.prototype.showSuccessConfirmation = function() {
         box.className = 'alert alert-success mt-3';
         box.innerHTML = successMessage;
         box.style.display = 'block';
-        box.style.animation = 'fadeInScale 0.5s ease-out';
-        
-        // Add temporary styling for the success animation
-        if (!document.getElementById('success-animation-style')) {
-            const style = document.createElement('style');
-            style.id = 'success-animation-style';
-            style.textContent = `
-                @keyframes fadeInScale {
-                    0% { 
-                        opacity: 0; 
-                        transform: scale(0.8); 
-                    }
-                    50% { 
-                        opacity: 1; 
-                        transform: scale(1.05); 
-                    }
-                    100% { 
-                        opacity: 1; 
-                        transform: scale(1); 
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
         
         // Show follow-up message after 3 seconds
         setTimeout(() => {

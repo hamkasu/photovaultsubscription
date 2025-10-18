@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Dimensions,
   TextInput,
-  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
@@ -19,7 +18,6 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { sharePhoto } from '../utils/sharePhoto';
 import { downloadImage } from '../utils/imageCache';
 
@@ -39,10 +37,6 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const [loadProgress, setLoadProgress] = useState(0);
   const [cachedImageUri, setCachedImageUri] = useState(null);
   const [loadingThumbnail, setLoadingThumbnail] = useState(true);
-  
-  // Pinch zoom states
-  const scale = new Animated.Value(1);
-  const [currentScale, setCurrentScale] = useState(1);
   
   // Simple voice memo debug states
   const [recording, setRecording] = useState(null);
@@ -725,44 +719,6 @@ export default function PhotoDetailScreen({ route, navigation }) {
   const editedImageUrl = getImageUrl(photo.edited_url);
   const imageUrl = showOriginal ? originalImageUrl : (editedImageUrl || originalImageUrl);
 
-  // Pinch zoom gesture
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate((e) => {
-      const newScale = currentScale * e.scale;
-      // Limit zoom between 1x and 5x
-      if (newScale >= 1 && newScale <= 5) {
-        scale.setValue(newScale);
-      }
-    })
-    .onEnd((e) => {
-      const newScale = currentScale * e.scale;
-      // Limit zoom between 1x and 5x
-      const clampedScale = Math.min(Math.max(newScale, 1), 5);
-      setCurrentScale(clampedScale);
-      
-      // If zoomed out past 1x, reset to 1x
-      if (clampedScale < 1.1) {
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-        }).start();
-        setCurrentScale(1);
-      }
-    });
-
-  // Double tap to reset zoom
-  const doubleTapGesture = Gesture.Tap()
-    .numberOfTaps(2)
-    .onEnd(() => {
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
-      setCurrentScale(1);
-    });
-
-  const composedGesture = Gesture.Race(doubleTapGesture, pinchGesture);
-
   const retryImageLoad = () => {
     setImageLoading(true);
     setImageError(false);
@@ -797,18 +753,11 @@ export default function PhotoDetailScreen({ route, navigation }) {
             </View>
           ) : cachedImageUri ? (
             <>
-              <GestureDetector gesture={composedGesture}>
-                <Animated.Image 
-                  source={{ uri: cachedImageUri }} 
-                  style={[
-                    styles.image,
-                    {
-                      transform: [{ scale: scale }]
-                    }
-                  ]}
-                  resizeMode="contain"
-                />
-              </GestureDetector>
+              <Image 
+                source={{ uri: cachedImageUri }} 
+                style={styles.image}
+                resizeMode="contain"
+              />
               {imageLoading && (
                 <View style={styles.loadingOverlay}>
                   <View style={styles.loadingBarContainer}>
