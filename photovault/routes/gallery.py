@@ -339,6 +339,45 @@ def uploaded_file(current_user, user_id, filename):
         # Check if this is a profile picture/avatar (not a photo)
         is_avatar = filename.startswith('avatar_')
         
+        # Check if this is an animated GIF (not stored in Photo table)
+        is_animated_gif = '.anim.' in filename and filename.endswith('.gif')
+        
+        # Handle animated GIFs separately - they're derivative files not in Photo table
+        if is_animated_gif:
+            current_app.logger.info(f"Serving animated GIF for user {user_id}: {filename}")
+            
+            # Try to serve animated GIF from App Storage first
+            app_storage_path = f"users/{user_id}/{filename}"
+            
+            if file_exists_enhanced(app_storage_path):
+                success, file_content = get_file_content(app_storage_path)
+                if success:
+                    return Response(
+                        file_content,
+                        mimetype='image/gif',
+                        headers={
+                            'Content-Disposition': f'inline; filename="{filename}"',
+                            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    )
+            
+            # Fallback to local filesystem for animated GIF
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', 'photovault/uploads')
+            gif_path = os.path.join(upload_folder, str(user_id), filename)
+            
+            if os.path.exists(gif_path):
+                current_app.logger.info(f"Serving animated GIF from local storage: {gif_path}")
+                response = send_file(gif_path, mimetype='image/gif')
+                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+                response.headers['Pragma'] = 'no-cache'
+                response.headers['Expires'] = '0'
+                return response
+            else:
+                current_app.logger.error(f"Animated GIF file not found: {gif_path}")
+                return send_file('static/img/placeholder.png', mimetype='image/png')
+        
         # Handle avatars separately - they're not in Photo table, they're in User table
         if is_avatar:
             from photovault.models import User
