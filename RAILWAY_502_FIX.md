@@ -27,14 +27,30 @@ CMD gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --worker-clas
 
 ## Deploy to Railway
 
-### Option 1: Using Git Push (Recommended)
+### Step 1: Commit the Fix
 ```bash
-git add Dockerfile
-git commit -m "Fix Railway 502 error - simplify Dockerfile CMD"
+git add Dockerfile RAILWAY_502_FIX.md
+git commit -m "Fix Railway 502: proper Gunicorn startup with debug logging"
 git push origin main
 ```
 
 Railway will automatically detect the push and rebuild your app.
+
+### Step 2: Watch the Deployment Logs
+In Railway dashboard, go to your deployment and watch for these key messages:
+
+**✅ Success indicators:**
+```
+[INFO] Booting worker with pid: 1
+[INFO] Listening at: http://0.0.0.0:XXXX
+[INFO] Using worker: sync
+PhotoVault WSGI: App created successfully, ready to handle requests
+```
+
+**❌ If you see errors:**
+- Check for `ImportError` or `ModuleNotFoundError`
+- Check for database connection errors
+- Check that PORT environment variable is set
 
 ### Option 2: Using Railway CLI
 ```bash
