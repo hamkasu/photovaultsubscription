@@ -24,5 +24,5 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=main.py
 
-# Start gunicorn with explicit shell and debugging
-CMD ["/bin/sh", "-c", "echo 'DEBUG: Starting Gunicorn...' && echo \"DEBUG: PORT=$PORT\" && echo \"DEBUG: Binding to 0.0.0.0:${PORT:-8080}\" && which gunicorn && gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 120 --log-level debug --access-logfile - --error-logfile -"]
+# Run migrations then start gunicorn
+CMD ["/bin/sh", "-c", "echo 'Running database migrations...' && python release.py && echo 'Starting Gunicorn...' && gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 120 --log-level info --access-logfile - --error-logfile -"]
