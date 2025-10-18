@@ -7,7 +7,7 @@ nixPkgs = ["libGL", "glib", "libsm", "libxext", "libxrender", "gcc"]
 cmd = "python release.py"
 
 [start]
-cmd = "gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --worker-class sync --timeout 120 --log-level debug --access-logfile - --error-logfile -"
+cmd = "gunicorn wsgi:app --preload --bind 0.0.0.0:$PORT --workers 2 --worker-class sync --timeout 120 --log-level info --access-logfile - --error-logfile -"
 
 [variables]
 NIXPACKS_PYTHON_VERSION = "3.11"
