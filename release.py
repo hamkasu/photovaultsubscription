@@ -109,7 +109,8 @@ def run_migrations():
         migration_success = False
         try:
             print("PhotoVault Release: Attempting Flask-Migrate upgrade...")
-            upgrade()
+            # Use 'heads' to handle multiple migration heads (branching)
+            upgrade('heads')
             print("PhotoVault Release: Database migrations completed successfully")
             migration_success = True
         except Exception as e:
