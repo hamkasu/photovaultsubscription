@@ -9,39 +9,34 @@ ImportError: libGL.so.1: cannot open shared object file: No such file or directo
 This occurred when the app tried to import cv2 (OpenCV) in `photovault/utils/face_detection.py`.
 
 ## Root Cause
-OpenCV requires system libraries (even the headless version) that aren't installed by default in Railway's Docker environment. The missing library `libGL.so.1` is part of the OpenGL/Mesa graphics libraries.
+OpenCV requires system libraries (even the headless version) that aren't installed by default in Railway's build environment. The missing library `libGL.so.1` is part of the OpenGL/Mesa graphics libraries.
 
 ## Solution
-Updated `nixpacks.toml` to install required Nix packages during the build phase:
-
-```toml
-[phases.setup]
-nixPkgs = ["libGL", "glib", "libsm", "libxext", "libxrender", "gcc"]
-```
+Created a `Dockerfile` with all required system dependencies. Railway automatically detects and uses Dockerfile when present.
 
 ### System Packages Installed:
-- **libGL**: Provides libGL.so.1 (OpenGL library) required by OpenCV
-- **glib**: GLib library required by OpenCV
-- **libsm**: X11 Session Management library
-- **libxext**: X11 extensions library
-- **libxrender**: X11 Render extension library
-- **gcc**: GNU Compiler Collection (includes libgomp for parallel processing)
+- **libgl1**: OpenGL library (provides libGL.so.1)
+- **libglib2.0-0**: GLib library required by OpenCV
+- **libsm6**: X11 Session Management library
+- **libxext6**: X11 extensions library
+- **libxrender1**: X11 Render extension library
+- **libgomp1**: GNU OpenMP library (parallel processing)
 
 ## Deployment Instructions
 
 ### Step 1: Push to GitHub
 ```bash
-git add nixpacks.toml
-git commit -m "Fix Railway OpenCV system dependencies"
+git add Dockerfile .dockerignore RAILWAY_OPENCV_FIX.md
+git commit -m "Fix Railway OpenCV dependencies using Dockerfile"
 git push origin main
 ```
 
 ### Step 2: Railway Auto-Deploy
-Railway will automatically detect the changes and:
-1. Rebuild the container with the new system packages
+Railway will automatically detect the Dockerfile and:
+1. Build a Docker image with all required system libraries
 2. Install all Python dependencies (including opencv-python-headless)
-3. Run the release script (python release.py)
-4. Start the application with gunicorn
+3. Run the release script (python release.py) on startup
+4. Start the application with gunicorn on the assigned PORT
 
 ### Step 3: Verify Deployment
 Once Railway finishes deploying:
@@ -58,7 +53,21 @@ Once Railway finishes deploying:
 ✅ Photo digitization/extraction  
 ✅ Any other OpenCV-dependent features  
 
-## Note
-This only needs to be deployed once. After Railway rebuilds with these system libraries, all OpenCV features will work correctly in production.
+## Why Dockerfile Instead of Nixpacks?
 
-The local Replit environment already has these libraries, so no changes are needed for local development.
+Initially attempted to use `nixpacks.toml` with Nix packages, but encountered:
+- Case-sensitive package naming issues
+- Some packages not available in Nix (e.g., exact libsm package name)
+- More complex configuration
+
+**Dockerfile approach is:**
+- ✅ More reliable and straightforward
+- ✅ Uses standard Debian packages (apt-get)
+- ✅ Easier to debug and maintain
+- ✅ Automatically detected by Railway
+
+## Note
+- This only needs to be deployed once
+- After Railway rebuilds with the Dockerfile, all OpenCV features will work correctly
+- The local Replit environment already has these libraries, so no changes needed for local development
+- The `nixpacks.toml` file is no longer needed (Railway will use Dockerfile instead)

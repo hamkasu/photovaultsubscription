@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+venv
+.venv
+env
+.env
+
+# Replit specific
+.replit
+replit.nix
+.upm
+.config
+.cache
+.local
+.breakpoints
+
+# Node/Expo (not needed in backend Docker)
+node_modules
+StoryKeep-iOS
+
+# Deployment configs (not needed in image)
+nixpacks.toml
+Procfile
+
+# Documentation
+*.md
+docs/
+
+# Assets (if large, adjust as needed)
+attached_assets/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Database (local only)
+*.db
+*.sqlite
