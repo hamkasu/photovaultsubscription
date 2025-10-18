@@ -45,6 +45,7 @@ The mobile app is fully cross-platform, supporting both iOS and Android with pla
 ### Feature Specifications
 - **Authentication & Authorization**: User registration, login, password reset, session management, admin/superuser roles, subscription-based access.
 - **Photo Management**: Upload with metadata extraction, automatic face detection and tagging, enhancement, restoration, colorization, AI smart tagging, gallery organization, search, and filtering. Includes bulk deletion.
+- **Photo Animation**: Professional photo animation studio with Ken Burns zoom/pan effect, Parallax 3D depth animation, and Vintage film-style effects. Uses OpenCV-powered utilities (`PhotoAnimator` class) for creating animated GIFs with customizable duration, speed, zoom direction, and pan direction settings. Accessible via Toolkit → Animation menu.
 - **Family Vaults**: Shared collections, member invitations, stories, and collaborative management.
 - **Subscription System**: Multiple pricing tiers (Free, Basic, Standard, Pro, Premium) with feature-based access, Stripe payment integration, and Malaysian pricing (MYR) with SST.
 - **Admin Features**: CSV/Excel export of user data, batch user operations.

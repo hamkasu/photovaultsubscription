@@ -95,8 +95,8 @@ def create_animated_gif():
         logger.info(f"Creating animated GIF for photo {photo_id}: type={animation_type}, duration={duration}, speed={speed}")
         
         # Import animation utility
-        from photovault.utils.animation import AnimationCreator
-        animator = AnimationCreator()
+        from photovault.utils.animation import PhotoAnimator
+        animator = PhotoAnimator()
         
         # Create animated GIF
         try:
