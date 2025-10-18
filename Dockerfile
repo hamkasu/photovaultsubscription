@@ -25,4 +25,4 @@ ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=main.py
 
 # Run database migrations on startup, then start gunicorn
-CMD python release.py && gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+CMD ["sh", "-c", "python release.py && gunicorn wsgi:app --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 120"]
