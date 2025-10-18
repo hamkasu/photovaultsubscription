@@ -409,7 +409,7 @@ class PhotoAnimator:
         Args:
             input_path: Path to input image
             output_path: Path for output GIF
-            animation_type: Type of animation (kenburns, fadeinout, slideshow, parallax, vintage)
+            animation_type: Type of animation (kenburns, fadeinout, slideshow, parallax, vintage, living)
             duration: Duration in seconds
             speed: Speed multiplier
             
@@ -435,23 +435,44 @@ class PhotoAnimator:
             width, height = img.size
             
             # Generate frames based on animation type
-            for i in range(total_frames):
-                progress = i / total_frames
+            if animation_type == 'living':
+                # Use FaceAnimator for living portrait effect
+                from photovault.utils.face_animator import FaceAnimator
+                face_animator = FaceAnimator()
                 
-                if animation_type == 'kenburns':
-                    frame = self._create_kenburns_frame(img, progress)
-                elif animation_type == 'fadeinout':
-                    frame = self._create_fade_frame(img, progress)
-                elif animation_type == 'slideshow':
-                    frame = self._create_slideshow_frame(img, progress, width, height)
-                elif animation_type == 'parallax':
-                    frame = self._create_parallax_frame(img, progress, width, height)
-                elif animation_type == 'vintage':
-                    frame = self._create_vintage_frame(img)
+                success = face_animator.create_living_portrait(
+                    input_path,
+                    output_path,
+                    duration=int(duration),
+                    smile_intensity=0.4,
+                    movement_amount=0.3,
+                    blink_enabled=True
+                )
+                
+                if success:
+                    logger.info(f"✅ Living portrait GIF created: {output_path}")
+                    return output_path
                 else:
-                    frame = img.copy()
-                
-                frames.append(frame)
+                    raise Exception("Failed to create living portrait animation")
+            else:
+                # Standard animations
+                for i in range(total_frames):
+                    progress = i / total_frames
+                    
+                    if animation_type == 'kenburns':
+                        frame = self._create_kenburns_frame(img, progress)
+                    elif animation_type == 'fadeinout':
+                        frame = self._create_fade_frame(img, progress)
+                    elif animation_type == 'slideshow':
+                        frame = self._create_slideshow_frame(img, progress, width, height)
+                    elif animation_type == 'parallax':
+                        frame = self._create_parallax_frame(img, progress, width, height)
+                    elif animation_type == 'vintage':
+                        frame = self._create_vintage_frame(img)
+                    else:
+                        frame = img.copy()
+                    
+                    frames.append(frame)
             
             # Save as animated GIF
             frame_duration = int(1000 / fps)

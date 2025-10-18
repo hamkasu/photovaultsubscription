@@ -26,7 +26,7 @@ def create_animated_gif():
     Request JSON:
         {
             "photo_id": int,
-            "animation_type": str,  # kenburns, fadeinout, slideshow, parallax, vintage
+            "animation_type": str,  # kenburns, fadeinout, slideshow, parallax, vintage, living
             "duration": float,      # Duration in seconds
             "speed": float          # Speed multiplier
         }
@@ -54,7 +54,7 @@ def create_animated_gif():
         speed = float(data.get('speed', 1.0))
         
         # Validate animation type
-        valid_types = ['kenburns', 'fadeinout', 'slideshow', 'parallax', 'vintage']
+        valid_types = ['kenburns', 'fadeinout', 'slideshow', 'parallax', 'vintage', 'living']
         if animation_type not in valid_types:
             return jsonify({
                 'success': False,

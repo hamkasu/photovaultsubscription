@@ -350,6 +350,10 @@ body {
                     <div class="effect-selector">
                         <h5><i class="bi bi-palette"></i> Animation Effect</h5>
                         <div class="effect-options">
+                            <div class="effect-button" data-effect="living">
+                                <i class="bi bi-emoji-smile"></i>
+                                <div>Living Portrait</div>
+                            </div>
                             <div class="effect-button active" data-effect="kenburns">
                                 <i class="bi bi-zoom-in"></i>
                                 <div>Ken Burns</div>
@@ -446,6 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let animationUrl = null;
 
     const effectDescriptions = {
+        'living': 'AI-powered facial animation that makes people smile and move naturally',
         'kenburns': 'Classic zoom and pan animation that adds cinematic movement to your photos',
         'parallax': '3D depth effect with layered movement for a dynamic perspective',
         'vintage': 'Nostalgic film-style animation with subtle flickering and grain'
