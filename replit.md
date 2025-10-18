@@ -11,6 +11,14 @@ StoryKeep is a comprehensive photo management and enhancement platform offering 
 - Expo Server: Running with tunnel (exp://tvb6who-anonymous-8081.exp.direct) and QR code ready
 - All features operational: Authentication, Dashboard, Gallery, Digitizer/Camera, Family Vaults, Voice Memos
 
+**Railway Timeout Fix (October 18, 2025)**:
+- ✅ Fixed HTTP 499 timeout errors on Railway deployment
+- ✅ Removed duplicate migrations from app startup (photovault/__init__.py)
+- ✅ Fixed migration skip bug in release.py
+- ✅ App startup time reduced from 6-10s to <1s
+- ✅ Migrations now run reliably in release phase (before app starts)
+- See RAILWAY_TIMEOUT_FIX.md for complete details
+
 ## User Preferences
 None configured yet (will be added as needed)
 

@@ -155,12 +155,24 @@ railway run flask db upgrade
 ```
 
 ## Files Modified
-- ✅ `photovault/__init__.py` - Removed duplicate migration code
-- ✅ `migrate.py` - Standalone migration script (backup option)
+- ✅ `photovault/__init__.py` - Removed duplicate migration code (lines 366-406)
+- ✅ `release.py` - Fixed early-exit bug that could skip Alembic migrations
 - ✅ `RAILWAY_TIMEOUT_FIX.md` - This deployment guide
 
+## Critical Fixes Applied
+
+### Fix #1: Removed Duplicate Migrations from App Startup
+- **Before**: Migrations ran twice (release.py + app init)
+- **After**: Migrations only run in release.py (before app starts)
+- **Impact**: 80% faster startup (6s → <1s)
+
+### Fix #2: Fixed Migration Skip Bug in release.py
+- **Before**: Early-exit logic skipped `upgrade()` if core columns existed
+- **After**: Always runs `upgrade()` on every deployment
+- **Impact**: Ensures ALL Alembic migrations are applied (no silent skips)
+
 ## Notes
-- The `release.py` script was already handling migrations correctly
-- The issue was the **duplicate** migration code in app initialization
-- Removing the duplicate cuts startup time by **80%** (6s → <1s)
+- The 2-phase fix addresses both the timeout AND the migration skip issue
+- App startup is now fast AND migrations are reliable
+- Fallback column additions remain as safety net
 - No changes needed to Railway configuration or environment variables
