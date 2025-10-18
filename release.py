@@ -78,7 +78,7 @@ def run_migrations():
             print(f"PhotoVault Release: Database connection failed: {str(e)}")
             return False
         
-        # Check if tables and required columns exist
+        # Check current schema status (informational only - don't skip migrations)
         try:
             inspector = db.inspect(db.engine)
             existing_tables = inspector.get_table_names()
@@ -86,9 +86,9 @@ def run_migrations():
             missing_tables = [table for table in required_tables if table not in existing_tables]
             
             if missing_tables:
-                print(f"PhotoVault Release: Missing tables: {missing_tables}")
+                print(f"PhotoVault Release: Missing tables detected: {missing_tables}")
             else:
-                # Check if user table has required columns (this is the critical fix)
+                # Check if user table has required columns
                 if 'user' in existing_tables:
                     user_columns = [col['name'] for col in inspector.get_columns('user')]
                     required_user_columns = ['is_active', 'is_admin', 'is_superuser', 'terms_accepted_at']
@@ -96,14 +96,15 @@ def run_migrations():
                     
                     if missing_columns:
                         print(f"PhotoVault Release: User table missing required columns: {missing_columns}")
-                        print("PhotoVault Release: Will run migration to add missing columns")
                     else:
-                        print("PhotoVault Release: All required tables and columns exist, skipping migration")
-                        return True
+                        print("PhotoVault Release: Core tables and columns exist - checking for pending migrations...")
                 else:
-                    print("PhotoVault Release: User table missing")
+                    print("PhotoVault Release: User table not found")
         except Exception as e:
-            print(f"PhotoVault Release: Could not check existing tables/columns: {str(e)}")
+            print(f"PhotoVault Release: Schema check warning: {str(e)}")
+        
+        # ALWAYS run migrations - even if tables exist, there may be new Alembic changes
+        print("PhotoVault Release: Running Alembic migrations to ensure schema is up-to-date...")
         
         # Try migrations first
         migration_success = False

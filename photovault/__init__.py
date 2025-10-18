@@ -359,51 +359,10 @@ def create_app(config_class=None):
                 db.create_all()
                 app.logger.info("Database tables initialized successfully (development mode)")
             else:
-                # In production, verify database connectivity
+                # In production, verify database connectivity (fast check)
                 db.session.execute(db.text('SELECT 1'))
                 app.logger.info("Database connection verified (production mode)")
-                
-                # AUTO-MIGRATION: Run migrations automatically in production
-                # This is a quick fix for Railway deployments
-                try:
-                    import alembic.config
-                    import os as migration_os
-                    
-                    migrations_path = migration_os.path.join(migration_os.path.dirname(migration_os.path.dirname(__file__)), 'migrations')
-                    alembic_cfg = alembic.config.Config()
-                    alembic_cfg.set_main_option('script_location', migrations_path)
-                    alembic_cfg.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
-                    
-                    app.logger.info("Running database migrations automatically...")
-                    from alembic import command
-                    command.upgrade(alembic_cfg, 'head')
-                    app.logger.info("✅ Database migrations completed successfully")
-                except Exception as migration_error:
-                    app.logger.warning(f"Auto-migration via Alembic failed: {str(migration_error)}")
-                    app.logger.info("Attempting direct column addition as fallback...")
-                    
-                    # Fallback: Add missing columns directly if they don't exist
-                    try:
-                        from sqlalchemy import inspect, text
-                        inspector = inspect(db.engine)
-                        
-                        # Check if subscription_plan table exists
-                        if 'subscription_plan' in inspector.get_table_names():
-                            columns = [col['name'] for col in inspector.get_columns('subscription_plan')]
-                            
-                            # Add social_media_integration column if missing
-                            if 'social_media_integration' not in columns:
-                                app.logger.info("Adding missing column: social_media_integration")
-                                db.session.execute(text(
-                                    'ALTER TABLE subscription_plan ADD COLUMN social_media_integration BOOLEAN DEFAULT false'
-                                ))
-                                db.session.commit()
-                                app.logger.info("✅ Added social_media_integration column")
-                            
-                            app.logger.info("✅ Database schema updated successfully")
-                    except Exception as fallback_error:
-                        app.logger.error(f"Fallback migration also failed: {str(fallback_error)}")
-                        app.logger.error("Manual migration may be required")
+                app.logger.info("Note: Migrations should be run separately before app startup")
             
             # Seed default subscription plans (only if db connection works)
             _seed_subscription_plans(app)
